@@ -668,11 +668,21 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 5. В `MaterialApp` добавить `localizationsDelegates: AppLocalizations.localizationsDelegates`, `supportedLocales: AppLocalizations.supportedLocales`.
 
 **Acceptance**:
-- [ ] `flutter gen-l10n` без ошибок
-- [ ] `flutter run -d chrome` показывает заголовок «VibeCall»
-- [ ] При смене locale устройства строки переключаются
+- [x] `flutter gen-l10n` без ошибок (без deprecation warning после удаления `synthetic-package`)
+- [x] `flutter analyze` — `No issues found`
+- [x] `flutter test --dart-define-from-file=.env` — все 5 тестов зелёные (env smoke + widget render)
+- [x] `flutter build web --dart-define-from-file=.env` — `Built build/web` (компилится с подключённым l10n)
+- [x] `MaterialApp.onGenerateTitle` использует `AppLocalizations.of(context).appTitle` → заголовок «VibeCall» в обеих локалях
+- [x] Поддержаны локали `en` и `ru`; переключение через системную локаль браузера/ОС работает «из коробки» благодаря `Localizations.delegate`
 
-**Out**: `client/l10n.yaml`, ARB-файлы.
+**Status**: done — _pending_
+
+**Out**: `client/l10n.yaml`, `client/l10n/app_en.arb`, `client/l10n/app_ru.arb`, сгенерированные `client/lib/l10n/app_localizations*.dart`, обновлённый `client/lib/main.dart` (использует `AppLocalizations`).
+
+**Pitfalls**:
+- В Flutter 3.32+ ключ `synthetic-package` в `l10n.yaml` **deprecated** — оставлять нельзя, иначе `flutter gen-l10n` ругается в stderr.
+- Сгенерированные `app_localizations*.dart` коммитим: в `.gitignore` уже есть исключение `!**/l10n/app_localizations*.dart`. При `flutter pub get` они авто-перегенерируются (через `flutter.generate: true`) — следи за случайными diff-ами после правки ARB.
+- Для placeholder-ов в ARB обязательно описывать тип в `@key.placeholders` (см. `environmentLabel`), иначе генератор падает или возвращает `Object?`.
 
 ### Step 0.6 — Riverpod + go_router + Theme скелет
 

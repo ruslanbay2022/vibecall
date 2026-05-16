@@ -1,0 +1,7 @@
+{
+  "@@locale": "ru",
+  "appTitle": "VibeCall",
+  "signIn": "Войти",
+  "signUp": "Регистрация",
+  "environmentLabel": "среда: {env}"
+}

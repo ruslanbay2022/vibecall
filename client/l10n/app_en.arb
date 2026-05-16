@@ -1,0 +1,24 @@
+{
+  "@@locale": "en",
+  "appTitle": "VibeCall",
+  "@appTitle": {
+    "description": "Application title shown in the app bar and OS task switcher"
+  },
+  "signIn": "Sign in",
+  "@signIn": {
+    "description": "Button to navigate to the sign-in screen"
+  },
+  "signUp": "Sign up",
+  "@signUp": {
+    "description": "Button to navigate to the sign-up screen"
+  },
+  "environmentLabel": "env: {env}",
+  "@environmentLabel": {
+    "description": "Label showing the current build environment (dev/prod)",
+    "placeholders": {
+      "env": {
+        "type": "String"
+      }
+    }
+  }
+}
