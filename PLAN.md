@@ -23,6 +23,11 @@
 7. **Branch naming**: `feat/<phase>-<step>-<slug>`, например `feat/p3-3.6-call-controller`.
 8. **PR title**: префиксом номер шага: `[3.6] feat(call): implement CallController`.
 9. **PR description**: ссылка на раздел плана (`#step-36`) + краткий чеклист из Acceptance.
+10. **Фиксация выполнения шага**. В том же PR, который реализует шаг:
+    - все чекбоксы Acceptance переводятся из `- [ ]` в `- [x]`;
+    - сразу после блока `**Acceptance**` добавляется строка `**Status**: done — <commit-sha>` (короткий SHA итогового merge-коммита или единственного коммита шага);
+    - если по объективным причинам какой-то пункт Acceptance не выполняется — оставить `- [ ]`, в `Status` указать `partial — <sha>` и добавить под Status строку `**Deferred**: <что и почему отложено>`.
+    Эти правки — единственный авторитетный индикатор прогресса. AI-агент, читающий `PLAN.md`, обязан пропускать любой шаг, у которого `Status: done` или `Status: partial`.
 
 ### Структура шага
 
@@ -32,6 +37,7 @@
 **Inputs**: предыдущие шаги, env-переменные, внешние сервисы.
 **Actions**: пронумерованный список действий с командами/кодом.
 **Acceptance**: чеклист проверяемых условий.
+**Status**: добавляется после выполнения (`done — <sha>` / `partial — <sha>`).
 **Out**: список созданных/изменённых файлов и артефактов.
 **Pitfalls**: типичные ошибки и их обход.
 ```
@@ -373,11 +379,13 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 6. Initial commit, push в `main`.
 
 **Acceptance**:
-- [ ] `git clone <repo>` работает в чистой папке
-- [ ] В корне есть `README.md`, `PLAN.md`, `.gitignore`
-- [ ] CI ещё не настроен — нормально
+- [x] `git clone <repo>` работает в чистой папке
+- [x] В корне есть `README.md`, `PLAN.md`, `.gitignore`
+- [x] CI ещё не настроен — нормально
 
-**Out**: `README.md`, `PLAN.md`, `.gitignore`.
+**Status**: done — f148eb5
+
+**Out**: `README.md`, `PLAN.md`, `.gitignore` (фактически также подтянут `LICENSE` MIT, добавленный при создании репозитория на GitHub).
 
 ### Step 0.2 — Flutter scaffold + зависимости
 
