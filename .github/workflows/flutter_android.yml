@@ -39,7 +39,8 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: '3.32.x'
+          # See flutter_web.yml for rationale on pinning 3.41.x (dev parity).
+          flutter-version: '3.41.x'
           cache: true
 
       - name: Pub get
