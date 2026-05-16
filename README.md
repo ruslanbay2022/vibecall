@@ -53,7 +53,7 @@ flutter build web --debug --dart-define-from-file=.env
 - 0.1 — bootstrap репозитория (`f148eb5`)
 - 0.2 — Flutter scaffold (`1ab4576`)
 - 0.3 — Supabase CLI scaffold (`ed50a1b`)
-- 0.4 — env-loading (в работе)
+- 0.4 — env-loading (`16ed893`)
 
 ## Лицензия
 

@@ -620,7 +620,7 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 - [x] README обновлён командой запуска
 - [x] **Бонус**: `client/test/env_smoke_test.dart` — постоянный регресс-тест, проверяющий что `--dart-define-from-file=.env` доставляет переменные и `Env.assertAll()` не падает
 
-**Status**: done — <set on commit>
+**Status**: done — 16ed893
 
 **Out**: `client/.env.example`, `client/lib/app/env.dart`, `client/lib/main.dart` (обновлён), `client/test/env_smoke_test.dart`, обновлённый `README.md`. `client/.env` остаётся локально, в репо его нет.
 
