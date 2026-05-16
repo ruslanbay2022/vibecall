@@ -1,6 +1,6 @@
 # VibeCall
 
-Кроссплатформенный аналог Skype: 1‑на‑1 аудио/видео-звонки, текстовый чат, демонстрация экрана. Web → Android → Desktop → iOS.
+Кроссплатформенный аналог Skype: 1‑на‑1 аудио/видео-звонки, текстовый чат, демонстрация экрана. Web → Android → Desktop → iOS.!
 
 Стек: Flutter + Supabase (Auth/DB/Realtime/Storage/Edge Functions) + self-hosted LiveKit. Бюджет на старте — $0.
 
@@ -47,13 +47,15 @@ flutter build web --debug --dart-define-from-file=.env
 
 ## Статус
 
-В разработке. Текущая фаза: **Phase 0 — Foundation**.
+В разработке. Текущая фаза: **Phase 0 — Foundation** (закрыто 6 из 7 шагов; следующий — Step 0.7 «CI: GitHub Actions»).
 
 Закрытые шаги:
 - 0.1 — bootstrap репозитория (`f148eb5`)
 - 0.2 — Flutter scaffold (`1ab4576`)
 - 0.3 — Supabase CLI scaffold (`ed50a1b`)
 - 0.4 — env-loading (`16ed893`)
+- 0.5 — Локализация ru/en (`34bba8b`)
+- 0.6 — Riverpod + go_router + Theme скелет (`c3912e6`, fix-up `38c6156`)
 
 ## Лицензия
 
