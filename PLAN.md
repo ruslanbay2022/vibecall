@@ -712,13 +712,22 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 5. Реализовать `stripPii` в `[client/lib/core/error/sentry_filter.dart](client/lib/core/error/sentry_filter.dart)`.
 
 **Acceptance**:
-- [x] `flutter run -d chrome --dart-define-from-file=.env` рендерит placeholder
-- [x] Sentry test event приходит при `Sentry.captureException(Exception('test'))`
-- [x] `flutter analyze` → 0
+- [x] `flutter run -d chrome --dart-define-from-file=.env` рендерит placeholder (`HomePlaceholderScreen` через `GoRouter`)
+- [x] `flutter analyze` → `No issues found`
+- [x] `flutter test --dart-define-from-file=.env` → 5/5 (env smoke + widget render)
+- [x] `flutter build web --dart-define-from-file=.env` → `Built build/web`
+- [x] Единственный `ProviderScope` создаётся в `main.dart` (внутри `MaterialApp.router.builder` не дублируем); `SentryWidget` обёрнут вокруг `MaterialApp.router` максимально близко к корню
+- [x] `router`, `lightTheme`, `darkTheme` — top-level `final` (не getter), чтобы не пересоздавать `GoRouter`/`ThemeData` на каждый ребилд
+- [ ] **Deferred**: Sentry test event (`Sentry.captureException(Exception('test'))` → event в Sentry UI). Требует реальный `SENTRY_DSN` в `.env`; проверяется в Step 1.x при заводе Sentry-проекта. Сейчас `Env.sentryDsn` пуст → ветка `SentryFlutter.init` не выполняется, ловить нечего.
 
-**Status**: done — c3912e6
+**Status**: done — c3912e6 (+ fix-up <pending-sha>: removed double `ProviderScope`, moved `SentryWidget` out of `MaterialApp.builder`, converted `router`/themes to `final`)
 
 **Out**: `app.dart`, `router.dart`, `theme.dart`, `core/error/sentry_filter.dart`, `features/home/presentation/home_placeholder_screen.dart`.
+
+**Pitfalls**:
+- **Не создавай второй `ProviderScope`** ни в `MaterialApp.router.builder`, ни где-либо ниже `runApp(const ProviderScope(...))`. Каждый `ProviderScope` — изолированный контейнер: внешние и внутренние `ref.watch`/`ref.read` увидят разное состояние, и баги типа «провайдер не обновляется» практически невозможно отловить.
+- `SentryWidget` должен стоять максимально близко к корню (внутри `VibeCallApp`, оборачивая `MaterialApp.router`). В `MaterialApp.builder` он не увидит ошибки виджетов выше себя (включая сам `Router`). Если Sentry не инициализирован (DSN пуст) — `SentryWidget` работает как no-op, ставить его безопасно всегда.
+- `GoRouter get router => GoRouter(...)` (getter) — антипаттерн: новый экземпляр на каждый доступ, обнуляет navigation stack. Только `final GoRouter router = GoRouter(...)` или провайдер через Riverpod.
 
 ### Step 0.7 — CI: GitHub Actions
 
