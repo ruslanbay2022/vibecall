@@ -14,20 +14,36 @@
 
 ### Правила для агента
 
-1. **Один шаг = один PR**. Не объединяй шаги в один коммит, кроме случаев, когда это прямо разрешено в шаге.
+1. **Один шаг = один PR — начиная с Phase 1**. Phase 0 (Foundation) — это короткие конфигурационные шаги без бизнес-логики и без CI, разрешается коммитить прямо в `main` отдельными коммитами на шаг. С момента **первого шага Phase 1 (Step 1.1)** каждый шаг = отдельная feature-ветка + Pull Request + merge в `main` (squash). См. также post-mortem ниже.
 2. **Не отступай от стека и версий** (Раздел 1). Если библиотека из плана не подходит — открой issue/комментарий, не подменяй молча.
 3. **Не клади секреты в репозиторий**. Все ключи — через `.env` (gitignored) или `supabase secrets set ...`.
 4. **Проверяй Acceptance перед закрытием шага**. Каждый чекбокс — это команда, которую можно запустить.
 5. **Конвенциональные коммиты**: `feat(scope): ...`, `fix(scope): ...`, `chore(scope): ...`. Scope = имя фичи (`auth`, `call`, `chat`, `infra`, ...).
 6. **Конфиденциальность**: никаких email/телефонов в логи и Sentry-events (см. Раздел 4 «Sentry»).
-7. **Branch naming**: `feat/<phase>-<step>-<slug>`, например `feat/p3-3.6-call-controller`.
-8. **PR title**: префиксом номер шага: `[3.6] feat(call): implement CallController`.
-9. **PR description**: ссылка на раздел плана (`#step-36`) + краткий чеклист из Acceptance.
-10. **Фиксация выполнения шага**. В том же PR, который реализует шаг:
+7. **Branch naming (с Phase 1)**: `feat/<phase>-<step>-<slug>`, например `feat/p3-3.6-call-controller`.
+8. **PR title (с Phase 1)**: префиксом номер шага: `[3.6] feat(call): implement CallController`.
+9. **PR description (с Phase 1)**: ссылка на раздел плана (`#step-36`) + краткий чеклист из Acceptance + список новых/изменённых файлов + ссылки на скриншоты/видео для UI-шагов.
+10. **Фиксация выполнения шага**. В том же PR (или коммите для Phase 0), который реализует шаг:
     - все чекбоксы Acceptance переводятся из `- [ ]` в `- [x]`;
     - сразу после блока `**Acceptance**` добавляется строка `**Status**: done — <commit-sha>` (короткий SHA итогового merge-коммита или единственного коммита шага);
     - если по объективным причинам какой-то пункт Acceptance не выполняется — оставить `- [ ]`, в `Status` указать `partial — <sha>` и добавить под Status строку `**Deferred**: <что и почему отложено>`.
     Эти правки — единственный авторитетный индикатор прогресса. AI-агент, читающий `PLAN.md`, обязан пропускать любой шаг, у которого `Status: done` или `Status: partial`.
+
+### Post-mortem: почему Phase 0 шла прямо в `main`
+
+Все 4 закрытых шага Phase 0 (`0.1` — `0.4`, коммиты `f148eb5`, `1ab4576`, `ed50a1b`, `16ed893`) выполнены прямыми коммитами в `main` без feature-веток и PR. Это **сознательно принятое решение** на основе следующих соображений:
+
+- Phase 0 — это короткие конфиг-шаги без бизнес-логики (≤7 шагов × ~30 сек overhead на PR = ~3.5 минуты «потерянного» времени)
+- CI ещё не настроен (это Step 0.7), значит PR-стадия не даёт автоматических проверок до merge
+- Пользователь ревьюит каждый шаг интерактивно в чате — внешний слой ревью PR-формата избыточен
+- История репо для Phase 0 уже в `main`, переписывать через `git rebase --interactive` + force-push — рискованно
+
+**Что меняется с Phase 1**:
+- Phase 1+ содержит SQL-миграции, RLS-политики, Flutter-фичи — там цена бага высока, PR + CI окупаются
+- Step 0.7 (CI) настраивает `flutter analyze` + `flutter test` + `supabase db lint` на PR — PR-workflow обязателен, иначе CI бесполезен
+- AI-агент с этого момента **обязан**: создать ветку → коммитить → пушить ветку → создавать PR через `gh pr create` → ждать зелёного CI → squash-merge в `main` → удалять ветку
+
+**Решение не переписывать историю Phase 0** объясняется тем, что коммиты уже в `origin/main` и refer/ed by external links (например, `Status: done — 16ed893`). Force-push в `main` сломал бы их.
 
 ### Структура шага
 
@@ -734,6 +750,38 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 ## 6. Phase 1 — Auth + Profiles
 
 Цель: пользователь может зарегистрироваться, подтвердить email, выбрать уникальный username, видеть и редактировать свой профиль (включая аватар).
+
+### Phase 1 prerequisites (обязательно выполнить до Step 1.1)
+
+С этой фазы вступает в силу PR-workflow (§0 правила 1, 7, 8, 9). Перед первым шагом убедиться:
+
+1. **GitHub CLI (`gh`) установлен и авторизован**:
+   - Если `winget`/`scoop` доступны: `winget install GitHub.cli` или `scoop install gh`
+   - Иначе — скачать релиз в локальную `.tools/` (уже gitignored):
+     ```powershell
+     $tag = (Invoke-RestMethod "https://api.github.com/repos/cli/cli/releases/latest").tag_name
+     $ver = $tag.TrimStart('v')
+     Invoke-WebRequest -Uri "https://github.com/cli/cli/releases/download/$tag/gh_${ver}_windows_amd64.zip" -OutFile .tools/gh.zip -UseBasicParsing
+     Expand-Archive -Force .tools/gh.zip -DestinationPath .tools/gh
+     ```
+     Использовать как `.\.tools\gh\bin\gh.exe <command>`.
+   - Авторизация (интерактивная, открывает браузер): `gh auth login` → GitHub.com → HTTPS → паролем браузера или device flow. Токен сохраняется локально в `~/.config/gh/hosts.yml`, в репозиторий не попадает.
+2. **`supabase link` выполнен** (см. §13 deferred-action):
+   ```powershell
+   supabase login                                        # opens browser
+   supabase link --project-ref olnbzcozwwcvuqhyikqp
+   ```
+   После `link` команда `supabase db push` начинает работать против cloud-проекта.
+3. **Docker Desktop запущен** — нужен для `supabase start` (миграции тестируем локально перед push на cloud).
+
+**PR-чек-лист на каждый шаг Phase 1+**:
+- [ ] Ветка создана: `git checkout -b feat/p<phase>-<step>-<slug>`
+- [ ] Коммиты в ветке (один или несколько, лишь бы PR логически отражал шаг)
+- [ ] `git push -u origin <branch>`
+- [ ] PR создан через `gh pr create --title "[X.Y] feat(scope): ..." --body "..."`
+- [ ] CI (Step 0.7) зелёный — без этого PR не мерджим
+- [ ] Squash-merge: `gh pr merge --squash --delete-branch`
+- [ ] Acceptance в `PLAN.md` поставлены `[x]`, добавлен `Status: done — <merge-sha>`
 
 ### Step 1.1 — Migration: profiles + trigger
 
