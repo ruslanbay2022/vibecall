@@ -675,7 +675,7 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 - [x] `MaterialApp.onGenerateTitle` использует `AppLocalizations.of(context).appTitle` → заголовок «VibeCall» в обеих локалях
 - [x] Поддержаны локали `en` и `ru`; переключение через системную локаль браузера/ОС работает «из коробки» благодаря `Localizations.delegate`
 
-**Status**: done — _pending_
+**Status**: done — 34bba8b
 
 **Out**: `client/l10n.yaml`, `client/l10n/app_en.arb`, `client/l10n/app_ru.arb`, сгенерированные `client/lib/l10n/app_localizations*.dart`, обновлённый `client/lib/main.dart` (использует `AppLocalizations`).
 
