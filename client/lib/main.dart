@@ -1,46 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:vibecall/app/app.dart';
 import 'package:vibecall/app/env.dart';
-import 'package:vibecall/l10n/app_localizations.dart';
+import 'package:vibecall/core/error/sentry_filter.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   Env.assertAll();
-  runApp(const _VibeCallBootstrap());
-}
-
-class _VibeCallBootstrap extends StatelessWidget {
-  const _VibeCallBootstrap();
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: const _Home(),
+  await Supabase.initialize(
+    url: Env.supabaseUrl,
+    anonKey: Env.supabaseAnonKey,
+  );
+  if (Env.sentryDsn.isNotEmpty) {
+    await SentryFlutter.init(
+      (options) {
+        options.dsn = Env.sentryDsn;
+        options.beforeSend = stripPii;
+        options.environment = Env.env;
+      },
+      appRunner: () => runApp(const ProviderScope(child: VibeCallApp())),
     );
-  }
-}
-
-class _Home extends StatelessWidget {
-  const _Home();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l10n.appTitle),
-            const SizedBox(height: 8),
-            Text(
-              l10n.environmentLabel(Env.env),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
-      ),
-    );
+  } else {
+    runApp(const ProviderScope(child: VibeCallApp()));
   }
 }
