@@ -47,15 +47,16 @@ flutter build web --debug --dart-define-from-file=.env
 
 ## Статус
 
-В разработке. Текущая фаза: **Phase 0 — Foundation** (закрыто 6 из 7 шагов; следующий — Step 0.7 «CI: GitHub Actions»).
+В разработке. Текущая фаза: **Phase 1 — Auth + Profiles** (Phase 0 — Foundation закрыта).
 
-Закрытые шаги:
+Закрытые шаги Phase 0:
 - 0.1 — bootstrap репозитория (`f148eb5`)
 - 0.2 — Flutter scaffold (`1ab4576`)
 - 0.3 — Supabase CLI scaffold (`ed50a1b`)
 - 0.4 — env-loading (`16ed893`)
 - 0.5 — Локализация ru/en (`34bba8b`)
 - 0.6 — Riverpod + go_router + Theme скелет (`c3912e6`, fix-up `38c6156`)
+- 0.7 — CI: GitHub Actions (`7c46ca7`)
 
 ## Лицензия
 
