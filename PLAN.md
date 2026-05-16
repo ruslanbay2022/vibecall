@@ -499,9 +499,59 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 - При апгрейде Flutter SDK перепроверить версии через `flutter pub outdated` — план фиксирует майскую 2026 связку.
 - `permission_handler` на Web бессмысленен (браузер сам спрашивает); не вызывать его из Web-кода.
 
-### Step 0.3 — Окружение и env-loading
+### Step 0.3 — Supabase project + CLI
 
-**Goal**: безопасная загрузка `.env` в приложение, единый класс `Env`.
+**Goal**: создан Supabase-проект (Free Tier), CLI настроен, репозиторий привязан к удалённому проекту, локальная разработка через `supabase start` готова. Этот шаг **исполняется до** Step 0.4 потому, что `URL` и `anon key`, получаемые здесь, требуются для прохождения Acceptance Step 0.4.
+
+**Inputs**: Step 0.2; учётная запись Supabase у пользователя; на машине должен быть установлен Docker (для `supabase start`).
+
+**Actions**:
+1. Создать аккаунт на https://supabase.com (бесплатный план, без карты).
+2. Создать новый проект `vibecall`, регион — ближайший к целевой аудитории (для RU/СНГ: `Frankfurt (eu-central-1)`). Сохранить database-пароль в надёжном месте — он понадобится для `supabase link`.
+3. Из Dashboard → Settings → API скопировать в надёжное локальное место (это нужно для Step 0.4):
+   - `Project URL` (формат `https://<ref>.supabase.co`)
+   - `Project Reference ID` (`<ref>`, 20 символов)
+   - `anon public key` (длинный JWT, начинается на `eyJ…`)
+   - `service_role key` (хранить отдельно от репозитория, понадобится только для Edge Functions в Phase 3)
+4. Установить `supabase` CLI ≥1.180. На Windows:
+   ```powershell
+   scoop install supabase
+   # или: winget install Supabase.CLI
+   ```
+5. В корне репозитория:
+   ```bash
+   supabase init
+   supabase link --project-ref <ref>
+   ```
+   После этого появляется `[supabase/config.toml](supabase/config.toml)` — закоммитить его.
+6. Создать пустой каталог миграций с трекером:
+   ```bash
+   New-Item -ItemType File supabase/migrations/.gitkeep
+   ```
+7. (Опц., но рекомендуется) поднять локальную Supabase для безопасного тестирования миграций:
+   ```bash
+   supabase start
+   ```
+   Команда поднимает локальный Postgres + Auth + Realtime + Studio через Docker. Используется в Phase 1+, на этом шаге достаточно проверить, что стартует без ошибок.
+
+**Acceptance**:
+- [ ] `supabase --version` ≥1.180
+- [ ] `supabase/config.toml` в репозитории, содержит `project_id = "<ref>"`
+- [ ] `supabase status` (при запущенном `supabase start`) показывает все сервисы Running
+- [ ] `URL`, `Project Ref`, `anon key`, `service_role key` сохранены локально вне репозитория (передаются в Step 0.4)
+
+**Out**: `supabase/config.toml`, `supabase/migrations/.gitkeep`, Supabase-проект в Cloud Dashboard. Секретные значения **не коммитятся**.
+
+**Pitfalls**:
+- `supabase start` требует **запущенный Docker Desktop** на Windows. Без него команда падает.
+- `service_role key` имеет полный доступ к БД в обход RLS. Никогда не клади его в `client/.env` — только в `supabase secrets set ...` (для Edge Functions, Phase 3).
+- Если регион выбран неверно — в Free Tier его нельзя сменить без пересоздания проекта. Это не критично сейчас, но лучше сразу выбрать правильный.
+
+### Step 0.4 — Окружение и env-loading
+
+**Goal**: безопасная загрузка `.env` в приложение, единый класс `Env`, проверка, что Flutter-клиент видит реальные Supabase-ключи.
+
+**Inputs**: Step 0.3 (нужны `Project URL` и `anon public key` из Supabase Dashboard).
 
 **Actions**:
 1. Создать `[client/.env.example](client/.env.example)`:
@@ -512,7 +562,15 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
    LIVEKIT_WS_URL=
    ENV=dev
    ```
-2. Создать локально `client/.env` (gitignored), наполнить.
+2. Создать локально `client/.env` (gitignored), заполнить **реальными** значениями из Step 0.3:
+   ```
+   SUPABASE_URL=https://<ref>.supabase.co
+   SUPABASE_ANON_KEY=eyJhbGciOiJI...
+   SENTRY_DSN=
+   LIVEKIT_WS_URL=
+   ENV=dev
+   ```
+   `SENTRY_DSN` и `LIVEKIT_WS_URL` пока пустые — заполняются позже (Sentry — в Step 0.6, LiveKit — в Step 3.2).
 3. Создать `[client/lib/app/env.dart](client/lib/app/env.dart)`:
    ```dart
    class Env {
@@ -528,38 +586,26 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
      }
    }
    ```
-4. Стандартный запуск: `flutter run --dart-define-from-file=.env`.
-5. Обновить README командой запуска.
-
-**Acceptance**:
-- [ ] `flutter run -d chrome --dart-define-from-file=.env` поднимает приложение
-- [ ] `Env.assertAll()` не падает в dev
-
-**Out**: `.env.example`, `client/lib/app/env.dart`, README с командой запуска.
-
-### Step 0.4 — Supabase project + CLI
-
-**Goal**: создан Supabase-проект (Free Tier), CLI настроен, локальная разработка через `supabase start` готова.
-
-**Actions**:
-1. Создать аккаунт и проект на https://supabase.com (бесплатный план).
-2. Установить `supabase` CLI ≥1.180.
-3. В корне:
+4. Стандартный запуск (зафиксировать в README):
    ```bash
-   supabase init
-   supabase link --project-ref <ref>
+   cd client
+   flutter run -d chrome --dart-define-from-file=.env
    ```
-4. Создать `[supabase/config.toml](supabase/config.toml)` (генерируется автоматически, проверить).
-5. Получить `URL` и `anon key` из Supabase Dashboard → положить в `client/.env`.
-6. Локальная Supabase для разработки: `supabase start` (поднимает локальный Postgres + Auth + Realtime через Docker).
-7. Создать `[supabase/migrations/.gitkeep](supabase/migrations/.gitkeep)`.
+5. Временно добавить в `main.dart` вызов `Env.assertAll()` для проверки (постоянное место — Step 0.6). После запуска убедиться, что не падает.
+6. Обновить корневой `[README.md](README.md)` секцией «Локальный запуск» с командой выше.
 
 **Acceptance**:
-- [ ] `supabase status` показывает Running
-- [ ] Project ref сохранён в `supabase/config.toml`
-- [ ] `client/.env` содержит реальные URL/anon key
+- [ ] `client/.env.example` запушен; `client/.env` существует локально, gitignored (`git status` его не показывает)
+- [ ] `cd client && flutter run -d chrome --dart-define-from-file=.env` запускает приложение в Chrome без assertion-ошибок
+- [ ] В DevTools вкладке Console приложение печатает плейсхолдер `VibeCall`
+- [ ] README обновлён командой запуска
 
-**Out**: `supabase/config.toml`, `.env` (локально), Supabase Dashboard проект.
+**Out**: `client/.env.example`, `client/lib/app/env.dart`, обновлённый `README.md`. `client/.env` остаётся локально, в репо его нет.
+
+**Pitfalls**:
+- `String.fromEnvironment` — **compile-time** константа. Любая правка `.env` требует **перезапуска** `flutter run` (hot reload не подхватит).
+- В CI (Step 0.7) `.env` нет — Web-сборка должна работать с stub-значениями через `--dart-define`. В CI этот шаг проверять не нужно.
+- Если `Env.assertAll()` падает с «SUPABASE_URL is empty» — проверь, что используешь `--dart-define-from-file=.env` (а не `--define`). На Flutter <3.7 этот флаг не работает; у нас требуется ≥3.32, проблем не должно быть.
 
 ### Step 0.5 — Локализация ru/en
 
