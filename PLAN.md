@@ -45,6 +45,96 @@
 
 **Решение не переписывать историю Phase 0** объясняется тем, что коммиты уже в `origin/main` и refer/ed by external links (например, `Status: done — 16ed893`). Force-push в `main` сломал бы их.
 
+### Review-and-fix workflow (двухагентная схема)
+
+Начиная со Step 0.6 в проекте применяется двухагентная схема: **executor-agent** реализует шаг по `PLAN.md`, **reviewer-agent** ревьюит, фиксит проблемы и закрывает шаг. Это контракт, обязательный для обоих агентов и для каждого следующего шага.
+
+#### Распределение ролей
+
+| Категория шага | Executor | Reviewer | Кто финализирует |
+|---|---|---|---|
+| Mechanical / scaffold (создание файлов по шаблону, `*.arb`, YAML CI, `pubspec.yaml`-правки, фича-папки) | executor-agent | reviewer-agent | reviewer |
+| SQL миграции + RLS-политики (Step 1.1–1.2 и аналоги) | executor-agent | reviewer-agent (обязательно строкой) | reviewer |
+| Любой Riverpod-провайдер / `GoRouter`-логика / Supabase init / Sentry init | executor-agent | reviewer-agent (обязательно строкой) | reviewer |
+| TS Edge Functions с криптографией (LiveKit JWT, webhook signature verify) | reviewer-agent (без посредника) | — | reviewer |
+| WebRTC negotiation / signaling / `livekit_client` интеграция | reviewer-agent (без посредника) | — | reviewer |
+| Архитектурные решения, где `PLAN.md` оставляет выбор | reviewer-agent (без посредника) | — | reviewer |
+| Дебаг production-багов | reviewer-agent (без посредника) | — | reviewer |
+
+«Без посредника» = executor-agent **не запускается** на этих шагах; reviewer-agent работает напрямую.
+
+#### Контракт executor-агента (обязателен на каждом шаге)
+
+1. **Прочитать `PLAN.md §0` полностью** (правила + этот блок + Структура шага) перед любым действием. Прочитать целиком тело своего шага (Goal/Inputs/Actions/Acceptance/Pitfalls).
+2. **Не отступать от Actions шага**: имена файлов, версии пакетов, структура папок — строго как в плане. Отступление → остановиться и спросить, не делать молча.
+3. **Acceptance отмечать `[x]` только при наличии воспроизводимого доказательства**. Для каждой галочки в commit message блок `Verification:` должен содержать соответствующий вывод команды (1–3 строки). Если проверка требует внешний сервис, который ещё не настроен (Sentry DSN, live LiveKit, GitHub PR с CI) — оставлять `[ ]`, ставить `**Status**: partial — <sha>` и добавлять `**Deferred**: <причина и в каком шаге будет проверено>`. **Запрещено** ставить `[x]` «оптимистично».
+4. **Перед каждым коммитом обязательны три проверки** (если шаг затрагивает Flutter-код):
+   ```
+   cd client && flutter analyze
+   cd client && flutter test --dart-define-from-file=.env
+   cd client && flutter build web --dart-define-from-file=.env
+   ```
+   Вывод (последние 5–10 строк) приклеить в commit message в блок `Verification:`. Если проверка не применима к шагу (например, чисто SQL-миграция) — указать `Verification: N/A — pure SQL/YAML/docs step`.
+5. **После коммита — push** (для Phase 0) или `gh pr create` (для Phase 1+). Шаг не считается завершённым, пока изменения не на `origin`. Reviewer-agent не запускается, пока нет push.
+6. **Commit message format** (поверх §0 правила 5):
+   ```
+   <type>(<scope>): step <N.M> — <короткое описание>
+
+   <bullet list изменений>
+
+   Verification:
+   - flutter analyze: <output line>
+   - flutter test: <output line>
+   - flutter build web: <output line>
+
+   <reference to PLAN.md §0 workflow если уместно>
+   ```
+7. **При сомнении — стоп**. Если шаг неоднозначен, если Action ссылается на несуществующий код, если возникает выбор между двумя реализациями — executor-agent **обязан** остановиться, не коммитить и оставить вопрос пользователю/reviewer-agent'у. Лучше потерять 5 минут на уточнение, чем 30 минут на rollback.
+
+#### Запрещённые паттерны (executor-agent ловит их сам до коммита; reviewer-agent — рефлексивно при review)
+
+- **Несколько `ProviderScope`** в одном дереве виджетов. ProviderScope создаётся **ровно один раз** в `main.dart` через `runApp(const ProviderScope(child: VibeCallApp()))`. Никогда не оборачивать что-либо в `ProviderScope` ниже по дереву.
+- **`GoRouter` / `ThemeData` как `get` getter** на top-level. Только `final GoRouter router = GoRouter(...)`, `final ThemeData lightTheme = ...`. Getter пересоздаёт объект на каждое чтение → теряется navigation state, бесполезно аллоцируется ThemeData.
+- **Виджет, размещённый в `MaterialApp.builder`, если он принципиально должен быть выше `MaterialApp`** (например, `SentryWidget`, error-boundary). Внутри `builder` он не увидит ошибки самого `Router`/`MaterialApp`.
+- **`flutter test` / `flutter run` без `--dart-define-from-file=.env`** для шагов, использующих `Env.*`. Иначе assert упадёт на пустых stub-значениях.
+- **Hardcoded user-facing строки** в Dart-коде. Любая видимая строка — через `AppLocalizations` + ARB.
+- **Любые ключи / DSN / пароли в коммитах**. Только `.env` (gitignored), `supabase secrets set`, GitHub Actions Secrets.
+- **Опциональные `?` и `!` в публичных API без обоснования**. Если `nullable-getter: false` в `l10n.yaml` — это сигнал стиля: non-nullable по умолчанию.
+- **`pub get` без проверки `flutter pub outdated` после обновления pubspec**. Любая правка зависимостей должна сопровождаться выводом `outdated` в commit body (что обновилось, что осталось).
+- **Закрытие шага без push в `origin`** (см. пункт 5 контракта).
+
+#### Контракт reviewer-агента
+
+1. **`git fetch && git status`** перед началом review. Подтянуть актуальный `origin/main`. Если executor-agent не запушил — review не начинается; вернуть executor'у запрос на push.
+2. **Прочитать каждый созданный/изменённый файл целиком** (не diff!). Diff скрывает контекст; reviewer должен видеть, как новый код вписан в окружение.
+3. **Прогнать три глобальные проверки** (analyze / test / build web) независимо от того, что executor написал в commit body. Доверяй, но проверяй.
+4. **Сравнить Acceptance с фактическими доказательствами**. Любой `[x]` без воспроизводимого вывода в commit → откат в `[ ]` + `Deferred`.
+5. **Применить запрещённые паттерны как чеклист**. Каждый пункт из списка выше — отдельный grep по новому коду.
+6. **Архитектурный review**: соответствует ли реализация Goal шага, нет ли логических багов, которые не ловит analyze (race conditions, unawaited futures, неконсистентные state-машины, RLS-дыры).
+7. **Фикс-коммит** (если нужен) — **отдельный** от executor-коммита, с типом `fix(...)`, в commit body — корневая причина для каждой правки и ссылка на executor-коммит. Это даёт ясную историю «что было не так и почему».
+8. **Закрытие шага в `PLAN.md`**:
+   - `Status: done — <executor-sha> (+ fix-up <reviewer-sha>: <короткое summary правок>)` если был фикс
+   - `Status: done — <executor-sha>` если правок не было
+   - `Status: partial — <executor-sha>` + `Deferred: <что>` если что-то намеренно не проверено
+9. **Push после фикса** (Phase 0) или approve+merge PR (Phase 1+).
+
+#### Эскалация к пользователю
+
+Reviewer-agent **обязан** прервать review и спросить пользователя, если:
+- Фикс требует изменения **Goal** или **Actions** самого шага в `PLAN.md` (а не только Acceptance / Pitfalls)
+- Обнаружен баг, который тянется из предыдущего, уже закрытого шага (нужно открывать «откатывающий» PR)
+- Executor-agent выбрал техническое решение, отличное от плана, и оно лучше планового (нужно решение, обновлять ли план)
+- Acceptance в принципе невыполним без внешнего ресурса, который пользователь не предоставил
+
+Executor-agent **обязан** прервать выполнение и спросить пользователя, если:
+- Action ссылается на файл/команду, которой не существует
+- `pub get` падает из-за конфликта зависимостей, не описанного в Pitfalls
+- Реальная среда (OS, версия Flutter, наличие CLI-утилиты) отличается от заявленной в `Inputs`
+
+#### Когда схема пересматривается
+
+Этот workflow закреплён на Phase 0 (хвост) и Phase 1 (Supabase + DB + auth + chat scaffolding). Перед началом **Phase 2 (вызовы / WebRTC)** пользователь и reviewer-agent совместно перечитывают этот блок и решают, оставлять ли executor-agent на WebRTC-шагах или переходить в режим «только reviewer-agent». Критерий — текущая доля фикс-коммитов: если на Phase 1 ≥ 40% шагов потребовали fix-up, executor-agent отключается на Phase 2.
+
 ### Структура шага
 
 ```
