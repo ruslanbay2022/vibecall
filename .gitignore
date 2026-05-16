@@ -84,6 +84,11 @@ supabase/.temp
 supabase/.env*
 
 # =========================
+# Local toolchain (supabase.exe, etc.)
+# =========================
+.tools/
+
+# =========================
 # Docker / Infra
 # =========================
 infra/**/.cf-tunnel-credentials.json

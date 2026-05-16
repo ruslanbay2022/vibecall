@@ -508,44 +508,63 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 **Actions**:
 1. Создать аккаунт на https://supabase.com (бесплатный план, без карты).
 2. Создать новый проект `vibecall`, регион — ближайший к целевой аудитории (для RU/СНГ: `Frankfurt (eu-central-1)`). Сохранить database-пароль в надёжном месте — он понадобится для `supabase link`.
-3. Из Dashboard → Settings → API скопировать в надёжное локальное место (это нужно для Step 0.4):
+3. Из Dashboard → Settings → API скопировать в надёжное локальное место (менеджер паролей):
    - `Project URL` (формат `https://<ref>.supabase.co`)
    - `Project Reference ID` (`<ref>`, 20 символов)
-   - `anon public key` (длинный JWT, начинается на `eyJ…`)
-   - `service_role key` (хранить отдельно от репозитория, понадобится только для Edge Functions в Phase 3)
-4. Установить `supabase` CLI ≥1.180. На Windows:
-   ```powershell
-   scoop install supabase
-   # или: winget install Supabase.CLI
-   ```
+   - `publishable key` (новый формат: `sb_publishable_*`; в проектах до сентября 2025 — `anon public key`, длинный JWT начинающийся на `eyJ…`). Это **публичный** ключ, безопасно отдавать клиенту. Понадобится в Step 0.4.
+   - `secret key` (новый формат: `sb_secret_*`; в старых проектах — `service_role key`). Имеет полный админский доступ в обход RLS. **Никогда** не пересылай его в чаты, мессенджеры или AI-ассистентам и не клади в репозиторий. Понадобится только в Phase 3, где загружается напрямую в Supabase Edge Function Secrets через Dashboard → Settings → Edge Functions → Secrets, либо локально через `supabase secrets set ...`.
+4. Установить `supabase` CLI. Доступные способы на Windows (в порядке предпочтения):
+   - `scoop install supabase`
+   - `winget install Supabase.CLI`
+   - Если ни scoop, ни winget недоступны — скачать релиз напрямую (вариант, использованный в текущем проекте):
+     ```powershell
+     New-Item -ItemType Directory -Force .tools | Out-Null
+     $tag = (Invoke-RestMethod "https://api.github.com/repos/supabase/cli/releases/latest").tag_name
+     Invoke-WebRequest -Uri "https://github.com/supabase/cli/releases/download/$tag/supabase_windows_amd64.tar.gz" -OutFile .tools/supabase.tar.gz -UseBasicParsing
+     tar -xzf .tools/supabase.tar.gz -C .tools/
+     ```
+     `.tools/` уже в [.gitignore](.gitignore), бинарник `.tools/supabase.exe` не попадает в репо. Вызывать как `.\.tools\supabase.exe <command>`.
 5. В корне репозитория:
    ```bash
    supabase init
-   supabase link --project-ref <ref>
    ```
-   После этого появляется `[supabase/config.toml](supabase/config.toml)` — закоммитить его.
-6. Создать пустой каталог миграций с трекером:
-   ```bash
+   Это создаёт `[supabase/config.toml](supabase/config.toml)` и `[supabase/.gitignore](supabase/.gitignore)`. В `config.toml` поле `project_id` — это **локальный** идентификатор для `supabase start` (Docker-стек), **не** cloud project ref. Установить `project_id = "vibecall"` (lowercase) для консистентности.
+6. Зафиксировать cloud project ref в комментарии в `supabase/config.toml` (см. шаблон ниже), чтобы он был виден следующему разработчику/агенту:
+   ```toml
+   # Cloud project ref: <ref>
+   # URL: https://<ref>.supabase.co
+   # To link CLI before db push:
+   #   supabase login
+   #   supabase link --project-ref <ref>
+   ```
+7. Создать трекер каталога миграций:
+   ```powershell
    New-Item -ItemType File supabase/migrations/.gitkeep
    ```
-7. (Опц., но рекомендуется) поднять локальную Supabase для безопасного тестирования миграций:
+8. `supabase link --project-ref <ref>` — **отложить до Step 1.1** (первый `supabase db push`). Команда требует `SUPABASE_ACCESS_TOKEN` (получается интерактивно через `supabase login` с открытием браузера) и database password (interactive prompt). Эти секреты не должны попадать в чат/AI-агенту/репозиторий — пользователь выполняет `supabase login` сам перед Step 1.1.
+9. (Опц., но рекомендуется) поднять локальную Supabase для безопасного тестирования миграций:
    ```bash
    supabase start
    ```
-   Команда поднимает локальный Postgres + Auth + Realtime + Studio через Docker. Используется в Phase 1+, на этом шаге достаточно проверить, что стартует без ошибок.
+   Поднимает локальный Postgres + Auth + Realtime + Studio через Docker. Используется в Phase 1+. На этом шаге достаточно проверить, что стартует без ошибок (требует запущенный Docker Desktop).
 
 **Acceptance**:
-- [ ] `supabase --version` ≥1.180
-- [ ] `supabase/config.toml` в репозитории, содержит `project_id = "<ref>"`
-- [ ] `supabase status` (при запущенном `supabase start`) показывает все сервисы Running
-- [ ] `URL`, `Project Ref`, `anon key`, `service_role key` сохранены локально вне репозитория (передаются в Step 0.4)
+- [x] `supabase --version` отдаёт версию (≥2.0) — фактически 2.98.2 в локальном `.tools/supabase.exe`
+- [x] `supabase/config.toml` в репозитории, `project_id = "vibecall"`, cloud ref зафиксирован в комментарии
+- [x] `supabase/migrations/.gitkeep` существует
+- [x] `URL`, `Project Ref`, `publishable key` сохранены локально вне репозитория (передаются в Step 0.4); `secret key` сохранён отдельно для Phase 3
+- [x] `supabase link` зафиксирован как deferred-action перед Step 1.1 (см. §13)
 
-**Out**: `supabase/config.toml`, `supabase/migrations/.gitkeep`, Supabase-проект в Cloud Dashboard. Секретные значения **не коммитятся**.
+**Status**: done — <set on commit>
+
+**Out**: `supabase/config.toml`, `supabase/migrations/.gitkeep`, `supabase/.gitignore` (создан `supabase init`), Supabase-проект в Cloud Dashboard. Секретные значения **не коммитятся**.
 
 **Pitfalls**:
-- `supabase start` требует **запущенный Docker Desktop** на Windows. Без него команда падает.
-- `service_role key` имеет полный доступ к БД в обход RLS. Никогда не клади его в `client/.env` — только в `supabase secrets set ...` (для Edge Functions, Phase 3).
-- Если регион выбран неверно — в Free Tier его нельзя сменить без пересоздания проекта. Это не критично сейчас, но лучше сразу выбрать правильный.
+- `supabase start` требует **запущенный Docker Desktop** на Windows. Без него команда падает; для Step 0.3 это нестрашно, для Phase 1+ обязательно.
+- `secret key` (`sb_secret_*`) / `service_role key` имеют полный доступ к БД в обход RLS. Никогда не клади в `client/.env`, в чат, в репозиторий — только в Supabase Edge Function Secrets (Phase 3).
+- `supabase link` требует ДВА секрета (access token + db password). Никогда не пересылай их в чат — выполняй интерактивно (`supabase login` + ввод пароля).
+- Cloud project ref ≠ local `project_id` в `config.toml`. Не пытайся проставить cloud ref в `project_id` — это сломает локальный Docker-стек.
+- Если регион выбран неверно — в Free Tier его нельзя сменить без пересоздания проекта.
 
 ### Step 0.4 — Окружение и env-loading
 
@@ -1813,6 +1832,11 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 - **Push-уведомления чата** — FCM Web + Android (через `firebase_messaging`). iOS — после Apple Dev.
 - **Блокировка пользователей** — `contact_status = 'blocked'` уже в схеме; нужен UI и фильтрация в search/incoming.
 - **Многоустройственность** — текущая схема позволяет нескольким сессиям одного user.id; звонок попадёт ко всем сессиям одновременно (звенят все вкладки на разных устройствах). Координация через Realtime Presence + первая принявшая отменяет остальные.
+- **`supabase link --project-ref <ref>`** — отложен с момента Step 0.3 до начала Step 1.1. Команда требует интерактивного `supabase login` (открывает браузер, кладёт `SUPABASE_ACCESS_TOKEN` в локальный `~/.supabase`) и database password — оба секрета не должны проходить через чат/AI/репозиторий. Перед первым `supabase db push` пользователь выполняет:
+  ```
+  supabase login
+  supabase link --project-ref olnbzcozwwcvuqhyikqp
+  ```
 - **`custom_lint` + `riverpod_lint`** — отложены с момента Step 0.2. На май 2026 последний `custom_lint 0.8.x` пинит `analyzer ^7.5/^8`, что конфликтует с `json_serializable ≥6.11` (требует `analyzer ≥9`). Действие: периодически проверять `flutter pub add --dev custom_lint riverpod_lint --dry-run`; как только пройдёт — вернуть оба пакета в `dev_dependencies` и раскомментировать секцию `analyzer.plugins` в `[client/analysis_options.yaml](client/analysis_options.yaml)`.
 
 ---
