@@ -48,7 +48,7 @@
 
 - `cd client && flutter analyze` — 0 ошибок, 0 предупреждений
 - `cd client && flutter test` — все тесты зелёные
-- `cd client && dart run build_runner build --delete-conflicting-outputs` — без ошибок
+- `cd client && dart run build_runner build` — без ошибок (флаг `--delete-conflicting-outputs` удалён в build_runner ≥2.15, поведение теперь по умолчанию)
 - `supabase db lint` — без ошибок
 - `supabase functions serve` — функции стартуют без ошибок
 - `docker compose -f infra/dev/docker-compose.yml config` — валидный YAML
@@ -59,9 +59,11 @@
 
 ### Стек
 
+Версии зафиксированы по факту резолва на машине разработчика в мае 2026 (Flutter 3.41.5 / Dart 3.11.3). При обновлении Flutter SDK перепроверять через `flutter pub outdated` и поднимать пины при необходимости.
+
 | Слой | Технология | Версия | Обоснование (для $0 + Web-first) |
 |---|---|---|---|
-| Клиент | Flutter / Dart | Flutter ≥3.24, Dart ≥3.5 | единый код для 5 платформ |
+| Клиент | Flutter / Dart | Flutter ≥3.32, Dart ≥3.8 | единый код для 5 платформ; нижние границы определены требованиями `freezed 3.x` и `json_serializable 6.13+` |
 | Auth / DB / Realtime / Storage | Supabase Cloud | Free Tier | 500 MB DB, 5 GB egress, 50K MAU, 1 GB Storage, 500K Edge Function invocations |
 | Серверная логика | Supabase Edge Functions (Deno) | runtime 1.45+ | бесплатно, скрывает LiveKit API Secret |
 | WebRTC SFU | LiveKit Server | `livekit/livekit-server:v1.7+` | open-source, без vendor lock |
@@ -69,15 +71,19 @@
 | LiveKit prod hosting (Phase 6) | Oracle Cloud Always Free, Ampere A1 | 4 vCPU + 24 GB RAM | бессрочно бесплатно, 10 TB egress/мес |
 | Домен (prod) | DuckDNS поддомен | — | бесплатно |
 | TLS (prod) | Caddy 2 + Let's Encrypt | `caddy:2-alpine` | автоматический ACME |
-| State management | Riverpod 2.x + riverpod_generator | `flutter_riverpod ^2.5.1` | low boilerplate, AsyncValue, code-gen |
-| Иммутабельные модели | Freezed + json_serializable | `freezed ^2.5.7` | стандарт |
-| Навигация | go_router | `^14.0.0` | declarative routing |
+| State management | Riverpod 3 + riverpod_generator | `flutter_riverpod ^3.3.0`, `riverpod_annotation ^4.0.0`, `riverpod_generator ^4.0.0` | low boilerplate, AsyncValue, code-gen |
+| Иммутабельные модели | Freezed + json_serializable | `freezed ^3.2.0`, `freezed_annotation ^3.1.0`, `json_serializable ^6.13.0`, `json_annotation ^4.11.0` | стандарт |
+| Навигация | go_router | `^17.2.0` | declarative routing |
+| Realtime/WebRTC SDK | livekit_client | `^2.7.0` | официальный клиент |
+| Auth/DB SDK | supabase_flutter | `^2.9.0` | официальный клиент |
 | Локализация | flutter_localizations + intl | sdk | ru/en с Phase 0 |
-| Crash reporting | Sentry Free | `sentry_flutter ^8.0.0` | 5K events/мес бесплатно |
+| Crash reporting | Sentry Free | `sentry_flutter ^9.20.0` | 5K events/мес бесплатно |
 | Web хостинг (Phase 6) | Cloudflare Pages | Free | unlimited bandwidth |
 | CI/CD | GitHub Actions | — | free для public repo |
-| Тесты | flutter_test + mocktail | `mocktail ^1.0.0` | стандарт |
-| Linting | flutter_lints | `^4.0.0` | стандарт |
+| Codegen runner | build_runner | `^2.15.0` | в 2.15 удалён `--delete-conflicting-outputs` (поведение теперь по умолчанию) |
+| Тесты | flutter_test + mocktail | `mocktail ^1.0.4` | стандарт |
+| Linting | flutter_lints | `^6.0.0` | стандарт |
+| Riverpod/custom lints | custom_lint + riverpod_lint | **отложены** | `custom_lint 0.8.x` пинит `analyzer ^7.5/^8`, конфликтует с `json_serializable 6.11+` (analyzer ≥9). Вернуть, когда выйдет `custom_lint` с поддержкой analyzer 9. См. §13. |
 
 ### Что НЕ входит в MVP
 
@@ -389,13 +395,13 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 
 ### Step 0.2 — Flutter scaffold + зависимости
 
-**Goal**: Flutter-проект в `client/` с фиксированным набором зависимостей и работающим codegen.
+**Goal**: Flutter-проект в `client/` с фиксированным набором зависимостей и работающим codegen (Freezed + Riverpod generator + json_serializable).
 
-**Inputs**: Step 0.1, установленный Flutter ≥3.24.
+**Inputs**: Step 0.1, установленный Flutter ≥3.32 / Dart ≥3.8.
 
 **Actions**:
 1. `flutter create --platforms=web,android,windows,linux --org com.vibecall --project-name vibecall client`
-2. Заменить `client/pubspec.yaml` — фиксированный набор:
+2. Заменить `[client/pubspec.yaml](client/pubspec.yaml)` — фиксированный набор (версии актуальны на май 2026):
    ```yaml
    name: vibecall
    description: VibeCall — Skype-like cross-platform app
@@ -403,8 +409,8 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
    version: 0.1.0+1
 
    environment:
-     sdk: ">=3.5.0 <4.0.0"
-     flutter: ">=3.24.0"
+     sdk: ">=3.8.0 <4.0.0"
+     flutter: ">=3.32.0"
 
    dependencies:
      flutter:
@@ -412,15 +418,15 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
      flutter_localizations:
        sdk: flutter
      intl: any
-     supabase_flutter: ^2.5.6
-     livekit_client: ^2.0.7
-     flutter_riverpod: ^2.5.1
-     riverpod_annotation: ^2.3.5
-     freezed_annotation: ^2.4.4
-     json_annotation: ^4.9.0
-     go_router: ^14.2.0
-     sentry_flutter: ^8.6.0
-     permission_handler: ^11.3.1
+     supabase_flutter: ^2.9.0
+     livekit_client: ^2.7.0
+     flutter_riverpod: ^3.3.0
+     riverpod_annotation: ^4.0.0
+     freezed_annotation: ^3.1.0
+     json_annotation: ^4.11.0
+     go_router: ^17.2.0
+     sentry_flutter: ^9.20.0
+     permission_handler: ^12.0.0
      cached_network_image: ^3.4.0
      url_launcher: ^6.3.0
      equatable: ^2.0.5
@@ -430,13 +436,15 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
    dev_dependencies:
      flutter_test:
        sdk: flutter
-     flutter_lints: ^4.0.0
-     build_runner: ^2.4.13
-     riverpod_generator: ^2.4.3
-     freezed: ^2.5.7
-     json_serializable: ^6.8.0
-     custom_lint: ^0.6.7
-     riverpod_lint: ^2.3.13
+     flutter_lints: ^6.0.0
+     build_runner: ^2.15.0
+     riverpod_generator: ^4.0.0
+     freezed: ^3.2.0
+     json_serializable: ^6.13.0
+     # custom_lint and riverpod_lint are temporarily disabled:
+     # custom_lint 0.8.x pins analyzer ^7.5 / ^8, while json_serializable 6.11+
+     # requires analyzer >=9. Re-enable once custom_lint adds analyzer 9 support.
+     # See §13 (Deferred).
      mocktail: ^1.0.4
 
    flutter:
@@ -446,11 +454,20 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 3. Создать `[client/analysis_options.yaml](client/analysis_options.yaml)`:
    ```yaml
    include: package:flutter_lints/flutter.yaml
+
+   # custom_lint plugin is temporarily disabled — see pubspec.yaml.
+   # When custom_lint adds analyzer >=9 support, uncomment:
+   # analyzer:
+   #   plugins:
+   #     - custom_lint
+
    analyzer:
-     plugins:
-       - custom_lint
      errors:
        invalid_annotation_target: ignore
+     exclude:
+       - "**/*.g.dart"
+       - "**/*.freezed.dart"
+
    linter:
      rules:
        avoid_print: true
@@ -461,20 +478,26 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
    ```
 4. `cd client && flutter pub get`
 5. Создать заглушку `[client/lib/main.dart](client/lib/main.dart)` (только `runApp(MaterialApp)` с placeholder Scaffold).
-6. Создать `[client/build.yaml](client/build.yaml)` с настройками для Freezed + Riverpod (по дефолту, можно опустить).
-7. `flutter analyze` (должно быть 0 issues).
+6. (Опционально) создать `[client/build.yaml](client/build.yaml)` с настройками для Freezed + Riverpod. По умолчанию не требуется — пресеты пакетов работают «из коробки».
+7. Прогнать smoke-тест codegen: создать временно `lib/_smoke_codegen.dart` с одним `@freezed sealed class` (+ `factory fromJson`) и одним `@riverpod` провайдером; запустить `dart run build_runner build`; убедиться, что появились `_smoke_codegen.freezed.dart` и `_smoke_codegen.g.dart`; удалить и сам файл, и оба генерата.
+8. `flutter analyze`, `flutter test`, `flutter build web --release`.
 
 **Acceptance**:
-- [ ] `cd client && flutter analyze` → 0 issues
-- [ ] `cd client && flutter test` → 1 passed (дефолтный smoke test)
-- [ ] `cd client && flutter build web --release` собирается
-- [ ] `dart run build_runner build --delete-conflicting-outputs` отрабатывает без ошибок (даже если файлов для генерации пока нет)
+- [x] `cd client && flutter analyze` → 0 issues
+- [x] `cd client && flutter test` → 1 passed (дефолтный smoke test)
+- [x] `cd client && flutter build web --release` собирается
+- [x] `cd client && dart run build_runner build` отрабатывает без ошибок и на smoke-сэмпле выдаёт `*.freezed.dart` + `*.g.dart`
 
-**Out**: `client/pubspec.yaml`, `client/analysis_options.yaml`, `client/lib/main.dart`, скелет Flutter-проекта.
+**Status**: done — <set on commit>
+
+**Out**: `client/pubspec.yaml`, `client/analysis_options.yaml`, `client/lib/main.dart`, скелет Flutter-проекта, `client/pubspec.lock` (зафиксирован для воспроизводимых сборок).
 
 **Pitfalls**:
-- `flutter_riverpod` ≥2.5 требует `dart >=3.0`. Не понижай Dart SDK.
-- На Web `permission_handler` бесполезен — браузер сам спрашивает; не пихать вызовы в Web-only код.
+- В **build_runner ≥2.15** флаг `--delete-conflicting-outputs` удалён (поведение теперь по умолчанию). При запуске генерации не передавать его.
+- На **Windows** `flutter pub get` ругается «Building with plugins requires symlink support». Лечится включением Developer Mode (`start ms-settings:developers`). Без него web-сборка работает, нативные плагины — нет.
+- `freezed 3.x` ожидает `sealed class X with _$X` либо `abstract class X with _$X`. Старый синтаксис `@freezed class X with _$X { factory X = _X; }` без `sealed`/`abstract` теперь даёт предупреждение.
+- При апгрейде Flutter SDK перепроверить версии через `flutter pub outdated` — план фиксирует майскую 2026 связку.
+- `permission_handler` на Web бессмысленен (браузер сам спрашивает); не вызывать его из Web-кода.
 
 ### Step 0.3 — Окружение и env-loading
 
@@ -1744,6 +1767,7 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 - **Push-уведомления чата** — FCM Web + Android (через `firebase_messaging`). iOS — после Apple Dev.
 - **Блокировка пользователей** — `contact_status = 'blocked'` уже в схеме; нужен UI и фильтрация в search/incoming.
 - **Многоустройственность** — текущая схема позволяет нескольким сессиям одного user.id; звонок попадёт ко всем сессиям одновременно (звенят все вкладки на разных устройствах). Координация через Realtime Presence + первая принявшая отменяет остальные.
+- **`custom_lint` + `riverpod_lint`** — отложены с момента Step 0.2. На май 2026 последний `custom_lint 0.8.x` пинит `analyzer ^7.5/^8`, что конфликтует с `json_serializable ≥6.11` (требует `analyzer ≥9`). Действие: периодически проверять `flutter pub add --dev custom_lint riverpod_lint --dry-run`; как только пройдёт — вернуть оба пакета в `dev_dependencies` и раскомментировать секцию `analyzer.plugins` в `[client/analysis_options.yaml](client/analysis_options.yaml)`.
 
 ---
 
