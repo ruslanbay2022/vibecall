@@ -720,7 +720,7 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 - [x] `router`, `lightTheme`, `darkTheme` — top-level `final` (не getter), чтобы не пересоздавать `GoRouter`/`ThemeData` на каждый ребилд
 - [ ] **Deferred**: Sentry test event (`Sentry.captureException(Exception('test'))` → event в Sentry UI). Требует реальный `SENTRY_DSN` в `.env`; проверяется в Step 1.x при заводе Sentry-проекта. Сейчас `Env.sentryDsn` пуст → ветка `SentryFlutter.init` не выполняется, ловить нечего.
 
-**Status**: done — c3912e6 (+ fix-up <pending-sha>: removed double `ProviderScope`, moved `SentryWidget` out of `MaterialApp.builder`, converted `router`/themes to `final`)
+**Status**: done — c3912e6 (+ fix-up 38c6156: removed double `ProviderScope`, moved `SentryWidget` out of `MaterialApp.builder`, converted `router`/themes to `final`)
 
 **Out**: `app.dart`, `router.dart`, `theme.dart`, `core/error/sentry_filter.dart`, `features/home/presentation/home_placeholder_screen.dart`.
 
