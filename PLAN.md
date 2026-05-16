@@ -488,7 +488,7 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 - [x] `cd client && flutter build web --release` собирается
 - [x] `cd client && dart run build_runner build` отрабатывает без ошибок и на smoke-сэмпле выдаёт `*.freezed.dart` + `*.g.dart`
 
-**Status**: done — <set on commit>
+**Status**: done — 1ab4576
 
 **Out**: `client/pubspec.yaml`, `client/analysis_options.yaml`, `client/lib/main.dart`, скелет Flutter-проекта, `client/pubspec.lock` (зафиксирован для воспроизводимых сборок).
 
