@@ -555,7 +555,7 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 - [x] `URL`, `Project Ref`, `publishable key` сохранены локально вне репозитория (передаются в Step 0.4); `secret key` сохранён отдельно для Phase 3
 - [x] `supabase link` зафиксирован как deferred-action перед Step 1.1 (см. §13)
 
-**Status**: done — <set on commit>
+**Status**: done — ed50a1b
 
 **Out**: `supabase/config.toml`, `supabase/migrations/.gitkeep`, `supabase/.gitignore` (создан `supabase init`), Supabase-проект в Cloud Dashboard. Секретные значения **не коммитятся**.
 
@@ -614,12 +614,15 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 6. Обновить корневой `[README.md](README.md)` секцией «Локальный запуск» с командой выше.
 
 **Acceptance**:
-- [ ] `client/.env.example` запушен; `client/.env` существует локально, gitignored (`git status` его не показывает)
-- [ ] `cd client && flutter run -d chrome --dart-define-from-file=.env` запускает приложение в Chrome без assertion-ошибок
-- [ ] В DevTools вкладке Console приложение печатает плейсхолдер `VibeCall`
-- [ ] README обновлён командой запуска
+- [x] `client/.env.example` запушен; `client/.env` существует локально, gitignored (`git check-ignore -v client/.env` подтверждает)
+- [x] `cd client && flutter run -d chrome --dart-define-from-file=.env` запускает приложение в Chrome без assertion-ошибок (проверено вживую: «Debug service listening», «Starting application from main method» без ошибок)
+- [x] В DevTools вкладке Console приложение печатает плейсхолдер `VibeCall`
+- [x] README обновлён командой запуска
+- [x] **Бонус**: `client/test/env_smoke_test.dart` — постоянный регресс-тест, проверяющий что `--dart-define-from-file=.env` доставляет переменные и `Env.assertAll()` не падает
 
-**Out**: `client/.env.example`, `client/lib/app/env.dart`, обновлённый `README.md`. `client/.env` остаётся локально, в репо его нет.
+**Status**: done — <set on commit>
+
+**Out**: `client/.env.example`, `client/lib/app/env.dart`, `client/lib/main.dart` (обновлён), `client/test/env_smoke_test.dart`, обновлённый `README.md`. `client/.env` остаётся локально, в репо его нет.
 
 **Pitfalls**:
 - `String.fromEnvironment` — **compile-time** константа. Любая правка `.env` требует **перезапуска** `flutter run` (hot reload не подхватит).
