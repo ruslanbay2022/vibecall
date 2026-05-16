@@ -1,0 +1,49 @@
+name: supabase migrations
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/config.toml'
+      - '.github/workflows/supabase_migrations_check.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/config.toml'
+      - '.github/workflows/supabase_migrations_check.yml'
+
+concurrency:
+  group: supabase-migrations-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: supabase db lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # Step 0.7: scaffolding only — supabase/migrations/ contains only .gitkeep.
+      # First real migration arrives in Step 1.1; this workflow no-ops gracefully
+      # until then so the PR check stays green and the wiring is already in place.
+      - name: Lint migrations (skip if none)
+        shell: bash
+        run: |
+          shopt -s nullglob
+          files=(supabase/migrations/*.sql)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "::notice::No SQL migrations found — nothing to lint (Step 0.7 baseline)."
+            exit 0
+          fi
+          echo "Linting ${#files[@]} migration file(s)..."
+          # `supabase db lint` requires a running local DB. Start the minimum
+          # set of services; skip studio/inbucket/imgproxy/edge-runtime for speed.
+          supabase start --exclude=studio,inbucket,imgproxy,edge-runtime
+          supabase db lint
+          supabase stop

@@ -1,0 +1,60 @@
+name: flutter web
+
+on:
+  pull_request:
+    paths:
+      - 'client/**'
+      - '.github/workflows/flutter_web.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'client/**'
+      - '.github/workflows/flutter_web.yml'
+
+concurrency:
+  group: flutter-web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: analyze + test + build web
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: client
+    env:
+      # CI stubs for Env.* — must satisfy env_smoke_test.dart assertions
+      # (https:// + .supabase.co + non-empty key). No real secrets.
+      CI_SUPABASE_URL: https://stub.supabase.co
+      CI_SUPABASE_ANON_KEY: stub-anon-key-ci
+      CI_ENV: ci
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          # Pinned to pubspec.yaml floor (`flutter: ">=3.32.0"`). Bump in lockstep.
+          flutter-version: '3.32.x'
+          cache: true
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Analyze (zero warnings, infos fatal)
+        run: flutter analyze --fatal-infos --fatal-warnings
+
+      - name: Test
+        run: |
+          flutter test \
+            --dart-define=SUPABASE_URL=${{ env.CI_SUPABASE_URL }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ env.CI_SUPABASE_ANON_KEY }} \
+            --dart-define=ENV=${{ env.CI_ENV }}
+
+      - name: Build web (release)
+        run: |
+          flutter build web --release \
+            --dart-define=SUPABASE_URL=${{ env.CI_SUPABASE_URL }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ env.CI_SUPABASE_ANON_KEY }} \
+            --dart-define=ENV=${{ env.CI_ENV }}
