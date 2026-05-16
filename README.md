@@ -1,6 +1,6 @@
 # VibeCall
 
-Кроссплатформенный аналог Skype: 1‑на‑1 аудио/видео-звонки, текстовый чат, демонстрация экрана. Web → Android → Desktop → iOS.
+Кроссплатформенный аналог Skype: 1‑на‑1 аудио/видео-звонки, текстовый чат, демонстрация экрана. Web → Android → Desktop → iOS.!
 
 Стек: Flutter + Supabase (Auth/DB/Realtime/Storage/Edge Functions) + self-hosted LiveKit. Бюджет на старте — $0.
 
