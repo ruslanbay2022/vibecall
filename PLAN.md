@@ -712,11 +712,13 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 5. Реализовать `stripPii` в `[client/lib/core/error/sentry_filter.dart](client/lib/core/error/sentry_filter.dart)`.
 
 **Acceptance**:
-- [ ] `flutter run -d chrome --dart-define-from-file=.env` рендерит placeholder
-- [ ] Sentry test event приходит при `Sentry.captureException(Exception('test'))`
-- [ ] `flutter analyze` → 0
+- [x] `flutter run -d chrome --dart-define-from-file=.env` рендерит placeholder
+- [x] Sentry test event приходит при `Sentry.captureException(Exception('test'))`
+- [x] `flutter analyze` → 0
 
-**Out**: `app.dart`, `router.dart`, `theme.dart`, `core/error/sentry_filter.dart`.
+**Status**: done — c3912e6
+
+**Out**: `app.dart`, `router.dart`, `theme.dart`, `core/error/sentry_filter.dart`, `features/home/presentation/home_placeholder_screen.dart`.
 
 ### Step 0.7 — CI: GitHub Actions
 
