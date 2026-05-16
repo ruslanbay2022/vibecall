@@ -1,0 +1,81 @@
+name: flutter desktop
+
+on:
+  pull_request:
+    paths:
+      - 'client/**'
+      - '.github/workflows/flutter_desktop.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'client/**'
+      - '.github/workflows/flutter_desktop.yml'
+
+concurrency:
+  # Cancel pending matrix runs as a group when a new push lands.
+  group: flutter-desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux
+          - os: windows-latest
+            target: windows
+    defaults:
+      run:
+        working-directory: client
+    env:
+      CI_SUPABASE_URL: https://stub.supabase.co
+      CI_SUPABASE_ANON_KEY: stub-anon-key-ci
+      CI_ENV: ci
+    steps:
+      - uses: actions/checkout@v4
+
+      # Linux desktop build deps:
+      # - Base set per https://docs.flutter.dev/get-started/install/linux/desktop
+      #   (clang/cmake/ninja-build/pkg-config/libgtk-3-dev/liblzma-dev/libstdc++-12-dev).
+      # - libcurl4-openssl-dev is required by sentry-native (transitive dep of
+      #   sentry_flutter ^9.20). Without it, CMake fails with "Could NOT find CURL"
+      #   inside .../build/linux/x64/release/_deps/sentry-native-src/CMakeLists.txt.
+      - name: Install Linux desktop deps
+        if: matrix.target == 'linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang \
+            cmake \
+            git \
+            ninja-build \
+            pkg-config \
+            libgtk-3-dev \
+            liblzma-dev \
+            libstdc++-12-dev \
+            libcurl4-openssl-dev
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          # See flutter_web.yml for rationale on pinning 3.41.x (dev parity).
+          flutter-version: '3.41.x'
+          cache: true
+
+      - name: Pub get
+        shell: bash
+        run: flutter pub get
+
+      - name: Build ${{ matrix.target }} (release)
+        shell: bash
+        run: |
+          flutter build ${{ matrix.target }} --release \
+            --dart-define=SUPABASE_URL=${{ env.CI_SUPABASE_URL }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ env.CI_SUPABASE_ANON_KEY }} \
+            --dart-define=ENV=${{ env.CI_ENV }}

@@ -1,0 +1,54 @@
+name: flutter android
+
+on:
+  pull_request:
+    paths:
+      - 'client/**'
+      - '.github/workflows/flutter_android.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'client/**'
+      - '.github/workflows/flutter_android.yml'
+
+concurrency:
+  group: flutter-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build apk (debug)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: client
+    env:
+      CI_SUPABASE_URL: https://stub.supabase.co
+      CI_SUPABASE_ANON_KEY: stub-anon-key-ci
+      CI_ENV: ci
+    steps:
+      - uses: actions/checkout@v4
+
+      # Java 17 is required for Android Gradle Plugin 8.x used by Flutter 3.32+.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          # See flutter_web.yml for rationale on pinning 3.41.x (dev parity).
+          flutter-version: '3.41.x'
+          cache: true
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Build APK (debug, all ABIs split)
+        run: |
+          flutter build apk --debug --split-per-abi \
+            --dart-define=SUPABASE_URL=${{ env.CI_SUPABASE_URL }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ env.CI_SUPABASE_ANON_KEY }} \
+            --dart-define=ENV=${{ env.CI_ENV }}

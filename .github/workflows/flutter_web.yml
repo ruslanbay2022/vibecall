@@ -1,0 +1,64 @@
+name: flutter web
+
+on:
+  pull_request:
+    paths:
+      - 'client/**'
+      - '.github/workflows/flutter_web.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'client/**'
+      - '.github/workflows/flutter_web.yml'
+
+concurrency:
+  group: flutter-web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: analyze + test + build web
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: client
+    env:
+      # CI stubs for Env.* — must satisfy env_smoke_test.dart assertions
+      # (https:// + .supabase.co + non-empty key). No real secrets.
+      CI_SUPABASE_URL: https://stub.supabase.co
+      CI_SUPABASE_ANON_KEY: stub-anon-key-ci
+      CI_ENV: ci
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          # Pinned to the dev-machine version (Flutter 3.41.5 / Dart 3.11.3 per
+          # PLAN.md §1 «Стек»). Pubspec floor (`flutter: ">=3.32.0"`) is the
+          # lower bound of intent, but transitive deps (riverpod 3.x, freezed 3.x,
+          # json_serializable 6.13+, sentry_flutter 9.20+) require Dart 3.10+ in
+          # practice. Bump in lockstep with the dev SDK.
+          flutter-version: '3.41.x'
+          cache: true
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Analyze (zero warnings, infos fatal)
+        run: flutter analyze --fatal-infos --fatal-warnings
+
+      - name: Test
+        run: |
+          flutter test \
+            --dart-define=SUPABASE_URL=${{ env.CI_SUPABASE_URL }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ env.CI_SUPABASE_ANON_KEY }} \
+            --dart-define=ENV=${{ env.CI_ENV }}
+
+      - name: Build web (release)
+        run: |
+          flutter build web --release \
+            --dart-define=SUPABASE_URL=${{ env.CI_SUPABASE_URL }} \
+            --dart-define=SUPABASE_ANON_KEY=${{ env.CI_SUPABASE_ANON_KEY }} \
+            --dart-define=ENV=${{ env.CI_ENV }}
