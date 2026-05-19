@@ -60,6 +60,7 @@ flutter build web --debug --dart-define-from-file=.env
 
 Закрытые шаги Phase 1:
 - 1.1 — profiles migration + auth trigger (`93d398c`)
+- 1.2 — profiles RLS policies (`e399864`)
 
 ## Лицензия
 

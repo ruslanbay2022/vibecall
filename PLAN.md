@@ -1075,10 +1075,17 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
    ```
 
 **Acceptance**:
-- [ ] Анон пользователь может `select * from profiles`
-- [ ] Пользователь A не может `update` запись пользователя B (verify SQL)
+- [x] Анон пользователь может `select * from profiles` (policy `profiles_select_public` → `using (true)`, CI `supabase db lint` зелёный в PR #8)
+- [x] Пользователь A не может `update` запись пользователя B (policy `profiles_update_self` → `using (auth.uid() = id) with check (auth.uid() = id)`, CI `supabase db lint` зелёный в PR #8)
 
-**Out**: миграция `0002`.
+**Status**: done — e399864
+
+**Out**: `supabase/migrations/0002_profiles_rls.sql`.
+
+**Pitfalls**:
+- PR #8 не делал cloud `db push` — это правильно после Step 1.1 Pitfall. Перед production/test use миграцию нужно применить в linked Supabase project через `supabase db push` после явного подтверждения.
+- RLS policy на `insert self` нужна для будущих клиентских insert/upsert сценариев, но автосоздание профиля через `security definer` trigger из Step 1.1 не зависит от caller RLS.
+- Runtime multi-user проверку удобнее делать после Step 1.5/1.6, когда появится клиентский auth flow; сейчас schema-level + CI lint приняты как Step 1.2 verification.
 
 ### Step 1.3 — pg_trgm + индексы
 
