@@ -1042,11 +1042,18 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 2. `supabase db push` (или `supabase migration up` локально).
 
 **Acceptance**:
-- [ ] `supabase db lint` без ошибок
-- [ ] После `supabase auth admin create-user` (или signUp через клиент) в `profiles` появляется запись
-- [ ] `username` уникален, регулярка ограничивает спецсимволы
+- [x] `supabase db lint` без ошибок (локально executor-agent: `No schema errors found`; CI PR #5: `supabase db lint` зелёный)
+- [x] После создания пользователя в Supabase Auth в `profiles` появляется запись (проверено в Dashboard/SQL Editor: `test@test.com` → `username = user_<uuid-prefix>`, `display_name = New User`; удаление пользователя очистило профиль через `on delete cascade`)
+- [x] `username` уникален, регулярка ограничивает спецсимволы (`unique not null` + `check (username ~ '^[a-z0-9_]{3,20}$')` в `0001_profiles.sql`)
 
-**Out**: миграция `0001`.
+**Status**: done — 93d398c
+
+**Out**: `supabase/migrations/0001_profiles.sql`.
+
+**Pitfalls**:
+- Executor-agent уже выполнил `supabase db push` в linked cloud project. Для следующих миграций cloud push делать только после явного подтверждения пользователя или в рамках согласованного PR-flow; локальный/CI lint — до push.
+- В SQL Editor не вставлять напрямую в `auth.users`: пользователя создавать через Supabase Auth UI/API, иначе можно обойти внутреннюю логику Auth.
+- `profiles` пока без RLS — это ожидаемо. Политики идут отдельным шагом 1.2.
 
 ### Step 1.2 — RLS для profiles
 

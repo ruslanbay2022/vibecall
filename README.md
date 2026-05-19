@@ -58,6 +58,9 @@ flutter build web --debug --dart-define-from-file=.env
 - 0.6 — Riverpod + go_router + Theme скелет (`c3912e6`, fix-up `38c6156`)
 - 0.7 — CI: GitHub Actions (`7c46ca7`)
 
+Закрытые шаги Phase 1:
+- 1.1 — profiles migration + auth trigger (`93d398c`)
+
 ## Лицензия
 
 MIT — см. [LICENSE](LICENSE).
