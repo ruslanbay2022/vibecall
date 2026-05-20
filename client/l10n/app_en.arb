@@ -80,10 +80,43 @@
   },
   "onboardingTitle": "Choose a username",
   "@onboardingTitle": {
-    "description": "Title of the onboarding screen (Step 1.6 placeholder)"
+    "description": "Title of the onboarding screen"
   },
   "onboardingBody": "Onboarding — Step 1.6",
   "@onboardingBody": {
     "description": "Body text of the onboarding placeholder screen"
+  },
+  "usernameLabel": "Username",
+  "@usernameLabel": {
+    "description": "Label for the username input field on onboarding"
+  },
+  "usernameRequired": "Username is required",
+  "@usernameRequired": {
+    "description": "Error when username field is empty"
+  },
+  "usernameFormat": "3-20 lowercase letters, digits, or underscores",
+  "@usernameFormat": {
+    "description": "Error when username format is invalid"
+  },
+  "usernameTaken": "This username is already taken",
+  "@usernameTaken": {
+    "description": "Error when username is not available"
+  },
+  "displayNameRequired": "Display name is required",
+  "@displayNameRequired": {
+    "description": "Error when display name field is empty"
+  },
+  "save": "Save",
+  "@save": {
+    "description": "Button text for saving onboarding form"
+  },
+  "onboardingError": "Error: {message}",
+  "@onboardingError": {
+    "description": "Error message shown when onboarding submit fails",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
   }
 }

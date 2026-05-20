@@ -18,5 +18,12 @@
   "passwordTooShort": "Пароль должен содержать не менее 6 символов",
   "authError": "Ошибка аутентификации: {message}",
   "onboardingTitle": "Выберите имя пользователя",
-  "onboardingBody": "Онбординг — Шаг 1.6"
+  "onboardingBody": "Онбординг — Шаг 1.6",
+  "usernameLabel": "Имя пользователя",
+  "usernameRequired": "Имя пользователя обязательно",
+  "usernameFormat": "От 3 до 20 строчных букв, цифр или знаков подчёркивания",
+  "usernameTaken": "Этот никнейм уже занят",
+  "displayNameRequired": "Отображаемое имя обязательно",
+  "save": "Сохранить",
+  "onboardingError": "Ошибка: {message}"
 }

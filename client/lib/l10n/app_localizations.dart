@@ -200,7 +200,7 @@ abstract class AppLocalizations {
   /// **'Authentication error: {message}'**
   String authError(String message);
 
-  /// Title of the onboarding screen (Step 1.6 placeholder)
+  /// Title of the onboarding screen
   ///
   /// In en, this message translates to:
   /// **'Choose a username'**
@@ -211,6 +211,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Onboarding — Step 1.6'**
   String get onboardingBody;
+
+  /// Label for the username input field on onboarding
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get usernameLabel;
+
+  /// Error when username field is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Username is required'**
+  String get usernameRequired;
+
+  /// Error when username format is invalid
+  ///
+  /// In en, this message translates to:
+  /// **'3-20 lowercase letters, digits, or underscores'**
+  String get usernameFormat;
+
+  /// Error when username is not available
+  ///
+  /// In en, this message translates to:
+  /// **'This username is already taken'**
+  String get usernameTaken;
+
+  /// Error when display name field is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Display name is required'**
+  String get displayNameRequired;
+
+  /// Button text for saving onboarding form
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// Error message shown when onboarding submit fails
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {message}'**
+  String onboardingError(String message);
 }
 
 class _AppLocalizationsDelegate
