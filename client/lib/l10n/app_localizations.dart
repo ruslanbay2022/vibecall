@@ -253,6 +253,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error: {message}'**
   String onboardingError(String message);
+
+  /// Title of the profile screen
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profileTitle;
+
+  /// Button to change the user's avatar
+  ///
+  /// In en, this message translates to:
+  /// **'Change avatar'**
+  String get changeAvatar;
+
+  /// Label for the bio input field
+  ///
+  /// In en, this message translates to:
+  /// **'Bio'**
+  String get bioLabel;
+
+  /// Error shown when avatar upload fails
+  ///
+  /// In en, this message translates to:
+  /// **'Avatar upload error: {message}'**
+  String avatarUploadError(String message);
+
+  /// Success message when profile is saved
+  ///
+  /// In en, this message translates to:
+  /// **'Profile saved'**
+  String get profileSaved;
+
+  /// Error shown when profile save fails
+  ///
+  /// In en, this message translates to:
+  /// **'Error saving profile: {message}'**
+  String profileSaveError(String message);
 }
 
 class _AppLocalizationsDelegate

@@ -93,4 +93,26 @@ class AppLocalizationsRu extends AppLocalizations {
   String onboardingError(String message) {
     return 'Ошибка: $message';
   }
+
+  @override
+  String get profileTitle => 'Профиль';
+
+  @override
+  String get changeAvatar => 'Сменить аватар';
+
+  @override
+  String get bioLabel => 'О себе';
+
+  @override
+  String avatarUploadError(String message) {
+    return 'Ошибка загрузки аватара: $message';
+  }
+
+  @override
+  String get profileSaved => 'Профиль сохранён';
+
+  @override
+  String profileSaveError(String message) {
+    return 'Ошибка сохранения профиля: $message';
+  }
 }
