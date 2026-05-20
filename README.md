@@ -63,6 +63,7 @@ flutter build web --debug --dart-define-from-file=.env
 - 1.2 — profiles RLS policies (`e399864`)
 - 1.3 — pg_trgm search indexes (`b1a3ba2`)
 - 1.4 — RPC username_available (`2c6d04d`)
+- 1.5 — auth sign up / in / out (`1baa915`)
 
 ## Лицензия
 
