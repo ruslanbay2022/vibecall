@@ -1170,17 +1170,22 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 5. Тесты: `AuthRepository` mock + проверка вызовов.
 
 **Acceptance**:
-- [ ] Можно зарегистрироваться, прийти на `ConfirmEmailScreen`
-- [ ] После confirmation сессия активна
-- [ ] `signOut` возвращает на `/sign-in`
-- [ ] `flutter analyze` → 0
-- [ ] Unit-тесты на AuthRepository
+- [x] Можно зарегистрироваться, прийти на `ConfirmEmailScreen` (PR #17, маршрут /confirm-email)
+- [x] После confirmation сессия активна (manual smoke / Dashboard Auth; Deferred: automated smoke test в Step 1.6)
+- [x] `signOut` возвращает на `/sign-in` (PR #17)
+- [x] `flutter analyze` → 0 (CI PR #17, 5 jobs green)
+- [x] Unit-тесты на AuthRepository (10 tests passed, auth_repository_test.dart)
 
-**Out**: фича `auth/` полностью.
+**Status**: done — 1baa915 (+ fix-up в squash: build_runner CI, profiles redirect, router cleanup)
+
+**Out**: фича `client/lib/features/auth/` + `router.dart` + `l10n` + CI `build_runner` step
 
 **Pitfalls**:
 - Supabase email confirmation на dev можно отключить через Dashboard → Auth → Providers. Не отключай в prod.
 - В Web confirmation link открывается в той же вкладке — `supabase_flutter` должен правильно разбирать `redirect_url`. Конфигурируется в Dashboard → Auth → URL Configuration.
+- `*.g.dart` в `.gitignore` — CI обязан запускать `build_runner` (уже в workflows)
+- onboarding redirect: `profiles.username` startsWith `user_`, не `userMetadata`
+- один PR на шаг (`gh pr create` один раз)
 
 ### Step 1.6 — Onboarding
 
