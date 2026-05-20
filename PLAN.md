@@ -1132,10 +1132,15 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
    ```
 
 **Acceptance**:
-- [ ] `select username_available('admin')` возвращает boolean
-- [ ] Anon роль имеет execute permission
+- [x] `select username_available('admin')` возвращает boolean (функция создана, CI supabase db lint в PR #14)
+- [x] Anon роль имеет execute permission (grant в 0004_username_rpc.sql)
 
-**Out**: миграция `0004`.
+**Status**: done — 2c6d04d
+
+**Out**: `supabase/migrations/0004_username_rpc.sql`
+
+**Pitfalls**:
+- Дубликат PR #14/#15 — создавать только один PR (`gh pr create` один раз)
 
 ### Step 1.5 — Auth feature (sign up / in / out)
 
