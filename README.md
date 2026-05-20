@@ -65,6 +65,9 @@ flutter build web --debug --dart-define-from-file=.env
 - 1.4 — RPC username_available (`2c6d04d`)
 - 1.5 — auth sign up / in / out (`1baa915`)
 - 1.6 — onboarding username + display name (`5939a91`)
+- 1.7 — profile + avatars storage (`0c39de1`)
+
+Phase 1 закрыта (`0c39de1`).
 
 ## Лицензия
 
