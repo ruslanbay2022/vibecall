@@ -63,4 +63,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String authError(String message) {
     return 'Authentication error: $message';
   }
+
+  @override
+  String get onboardingTitle => 'Choose a username';
+
+  @override
+  String get onboardingBody => 'Onboarding — Step 1.6';
 }

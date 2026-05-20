@@ -63,4 +63,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String authError(String message) {
     return 'Ошибка аутентификации: $message';
   }
+
+  @override
+  String get onboardingTitle => 'Выберите имя пользователя';
+
+  @override
+  String get onboardingBody => 'Онбординг — Шаг 1.6';
 }

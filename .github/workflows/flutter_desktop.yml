@@ -72,6 +72,10 @@ jobs:
         shell: bash
         run: flutter pub get
 
+      - name: Build codegen (riverpod + freezed)
+        shell: bash
+        run: dart run build_runner build --delete-conflicting-outputs
+
       - name: Build ${{ matrix.target }} (release)
         shell: bash
         run: |

@@ -199,6 +199,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Authentication error: {message}'**
   String authError(String message);
+
+  /// Title of the onboarding screen (Step 1.6 placeholder)
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a username'**
+  String get onboardingTitle;
+
+  /// Body text of the onboarding placeholder screen
+  ///
+  /// In en, this message translates to:
+  /// **'Onboarding — Step 1.6'**
+  String get onboardingBody;
 }
 
 class _AppLocalizationsDelegate

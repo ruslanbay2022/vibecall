@@ -45,6 +45,13 @@ final GoRouter router = GoRouter(
       return '/home';
     }
 
+    if (isAuthenticated) {
+      final username = session.user.userMetadata?['username'] as String?;
+      if (username != null && username.startsWith('user_')) {
+        return '/onboarding';
+      }
+    }
+
     return null;
   },
   routes: <RouteBase>[
