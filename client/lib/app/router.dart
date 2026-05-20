@@ -41,10 +41,6 @@ final GoRouter router = GoRouter(
       return '/sign-in';
     }
 
-    if (isAuthenticated && isAuthRoute) {
-      return '/home';
-    }
-
     if (isAuthenticated) {
       final response = await Supabase.instance.client
           .from('profiles')
