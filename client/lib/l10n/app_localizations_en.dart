@@ -92,4 +92,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String onboardingError(String message) {
     return 'Error: $message';
   }
+
+  @override
+  String get profileTitle => 'Profile';
+
+  @override
+  String get changeAvatar => 'Change avatar';
+
+  @override
+  String get bioLabel => 'Bio';
+
+  @override
+  String avatarUploadError(String message) {
+    return 'Avatar upload error: $message';
+  }
+
+  @override
+  String get profileSaved => 'Profile saved';
+
+  @override
+  String profileSaveError(String message) {
+    return 'Error saving profile: $message';
+  }
 }

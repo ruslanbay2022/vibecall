@@ -118,5 +118,39 @@
         "type": "String"
       }
     }
+  },
+  "profileTitle": "Profile",
+  "@profileTitle": {
+    "description": "Title of the profile screen"
+  },
+  "changeAvatar": "Change avatar",
+  "@changeAvatar": {
+    "description": "Button to change the user's avatar"
+  },
+  "bioLabel": "Bio",
+  "@bioLabel": {
+    "description": "Label for the bio input field"
+  },
+  "avatarUploadError": "Avatar upload error: {message}",
+  "@avatarUploadError": {
+    "description": "Error shown when avatar upload fails",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "profileSaved": "Profile saved",
+  "@profileSaved": {
+    "description": "Success message when profile is saved"
+  },
+  "profileSaveError": "Error saving profile: {message}",
+  "@profileSaveError": {
+    "description": "Error shown when profile save fails",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -25,5 +25,11 @@
   "usernameTaken": "Этот никнейм уже занят",
   "displayNameRequired": "Отображаемое имя обязательно",
   "save": "Сохранить",
-  "onboardingError": "Ошибка: {message}"
+  "onboardingError": "Ошибка: {message}",
+  "profileTitle": "Профиль",
+  "changeAvatar": "Сменить аватар",
+  "bioLabel": "О себе",
+  "avatarUploadError": "Ошибка загрузки аватара: {message}",
+  "profileSaved": "Профиль сохранён",
+  "profileSaveError": "Ошибка сохранения профиля: {message}"
 }
