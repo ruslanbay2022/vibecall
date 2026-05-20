@@ -1198,11 +1198,18 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 4. После успеха — redirect на `/home`.
 
 **Acceptance**:
-- [ ] Невалидный username показывает ошибку до отправки
-- [ ] Занятый username выдаёт «Этот никнейм уже занят»
-- [ ] Успех → `/home`
+- [x] Невалидный username показывает ошибку до отправки (client validator + usernameFormat, PR #19)
+- [x] Занятый username выдаёт «Этот никнейм уже занят» (RPC username_available + usernameTaken ru, PR #19; cloud 0004 — user db push)
+- [x] Успех → `/home` (profiles.update + context.go, PR #19)
 
-**Out**: фича `onboarding/`.
+**Status**: done — 5939a91
+
+**Out**: `client/lib/features/onboarding/` + router OnboardingScreen
+
+**Pitfalls**:
+- RPC `username_available` только после 0004 в cloud (`db push`)
+- При ошибке RPC live-check молча не показывает «занят» (catch в onboarding_screen)
+- Один PR на шаг
 
 ### Step 1.7 — Профиль + аватар
 
