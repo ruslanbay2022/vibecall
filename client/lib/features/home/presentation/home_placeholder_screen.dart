@@ -37,6 +37,11 @@ class _HomePlaceholderScreenState extends ConsumerState<HomePlaceholderScreen> {
     }
   }
 
+  Future<void> _openProfile() async {
+    await context.push('/profile');
+    _loadAvatarUrl();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -44,17 +49,22 @@ class _HomePlaceholderScreenState extends ConsumerState<HomePlaceholderScreen> {
       appBar: AppBar(
         title: Text(l10n.appTitle),
         actions: [
-          if (_avatarUrl != null)
-            GestureDetector(
-              onTap: () => context.push('/profile'),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: CircleAvatar(
-                  radius: 16,
-                  backgroundImage: CachedNetworkImageProvider(_avatarUrl!),
-                ),
+          GestureDetector(
+            onTap: _openProfile,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: CircleAvatar(
+                radius: 16,
+                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                backgroundImage: _avatarUrl != null
+                    ? CachedNetworkImageProvider(_avatarUrl!)
+                    : null,
+                child: _avatarUrl == null
+                    ? Icon(Icons.person, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant)
+                    : null,
               ),
             ),
+          ),
           TextButton(
             onPressed: () async {
               await ref.read(authRepositoryProvider).signOut();

@@ -172,10 +172,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              TextFormField(
-                controller: TextEditingController(text: _username),
-                enabled: false,
+              InputDecorator(
                 decoration: InputDecoration(labelText: l10n.usernameLabel),
+                child: Text(_username ?? ''),
               ),
               const SizedBox(height: 16),
               TextFormField(
