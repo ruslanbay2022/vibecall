@@ -29,7 +29,7 @@ final _authNotifier = AuthChangeNotifier();
 
 final GoRouter router = GoRouter(
   refreshListenable: _authNotifier,
-  redirect: (context, state) {
+  redirect: (context, state) async {
     final session = Supabase.instance.client.auth.currentSession;
     final isAuthenticated = session != null;
     final location = state.matchedLocation;
@@ -46,9 +46,16 @@ final GoRouter router = GoRouter(
     }
 
     if (isAuthenticated) {
-      final username = session.user.userMetadata?['username'] as String?;
+      final response = await Supabase.instance.client
+          .from('profiles')
+          .select('username')
+          .eq('id', session.user.id)
+          .maybeSingle();
+      final username = response?['username'] as String?;
       if (username != null && username.startsWith('user_')) {
-        return '/onboarding';
+        if (location != '/onboarding') return '/onboarding';
+      } else {
+        if (isAuthRoute || location == '/onboarding') return '/home';
       }
     }
 
