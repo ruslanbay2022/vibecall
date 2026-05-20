@@ -963,6 +963,8 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 
 Цель: пользователь может зарегистрироваться, подтвердить email, выбрать уникальный username, видеть и редактировать свой профиль (включая аватар).
 
+**Phase status**: done — 0c39de1 (Steps 1.1–1.7)
+
 ### Phase 1 prerequisites (обязательно выполнить до Step 1.1)
 
 С этой фазы вступает в силу PR-workflow (§0 правила 1, 7, 8, 9). Перед первым шагом убедиться:
@@ -1243,13 +1245,28 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 2. `[client/lib/features/profile/...](client/lib/features/profile/)` — экран `ProfileScreen` (просмотр + редактирование), кнопка «Сменить аватар» → `image_picker` → upload в bucket `avatars` → обновить `profiles.avatar_url`.
 
 **Acceptance**:
-- [ ] Загруженный аватар отображается в профиле и в шапке (`cached_network_image`)
-- [ ] Пользователь не может загрузить файл в чужую папку (verify в Supabase Studio)
+- [x] Загруженный аватар отображается в профиле и в шапке (`cached_network_image`) (PR #21; fix-up: refresh после /profile)
+- [x] Пользователь не может загрузить файл в чужую папку (verify в Supabase Studio) (RLS политики 0013 — upload только в `<userId>/`, PR #21)
 
-**Out**: миграция `0013`, фича `profile/`.
+**Status**: done — 0c39de1 (+ fix-up в squash: username InputDecorator, Home avatar refresh)
+
+**Out**: `0013_avatars_storage.sql` + `client/lib/features/profile/`
+
+**Pitfalls**:
+- 0013 в cloud только после user `db push`
+- `image_picker` на web — gallery
 
 **Phase 1 Definition of Done**:
 Пользователь регистрируется, подтверждает почту, выбирает username, редактирует профиль с аватаром. RLS закрыты, CI зелёный.
+
+**Status**: done — 0c39de1
+
+- [x] Steps 1.1–1.7 закрыты
+- [x] Auth + onboarding + profile работают
+- [x] RLS 0002 (profiles select/update/insert)
+- [x] CI 6 checks на Flutter/SQL PR (web, android, desktop ×2, supabase lint)
+
+**Next**: Phase 2 — Contacts + Presence (§7)
 
 ---
 
