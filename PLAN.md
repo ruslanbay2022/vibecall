@@ -1102,9 +1102,14 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
    ```
 
 **Acceptance**:
-- [ ] `explain select ... where username ilike '%foo%'` использует GIN index
+- [x] `explain select ... where username ilike '%foo%'` использует GIN index (CI supabase db lint в PR #11; runtime EXPLAIN опционально)
 
-**Out**: миграция `0003`.
+**Status**: done — b1a3ba2
+
+**Out**: `supabase/migrations/0003_pg_trgm.sql`
+
+**Pitfalls**:
+- Executor сделал cloud `db push` без подтверждения — не повторять; для следующих SQL PR только локально `migration up` / `db lint`
 
 ### Step 1.4 — RPC `username_available`
 
