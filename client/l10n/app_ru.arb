@@ -3,5 +3,20 @@
   "appTitle": "VibeCall",
   "signIn": "Войти",
   "signUp": "Регистрация",
-  "environmentLabel": "среда: {env}"
+  "environmentLabel": "среда: {env}",
+  "emailLabel": "Электронная почта",
+  "passwordLabel": "Пароль",
+  "displayNameLabel": "Отображаемое имя (необязательно)",
+  "noAccount": "Нет аккаунта?",
+  "hasAccount": "Уже есть аккаунт?",
+  "checkYourEmail": "Проверьте почту",
+  "confirmationSent": "Мы отправили ссылку для подтверждения на вашу почту. Проверьте входящие и перейдите по ссылке.",
+  "resendConfirmation": "Отправить повторно",
+  "backToSignIn": "Вернуться ко входу",
+  "signOut": "Выйти",
+  "invalidEmail": "Введите корректный адрес электронной почты",
+  "passwordTooShort": "Пароль должен содержать не менее 6 символов",
+  "authError": "Ошибка аутентификации: {message}",
+  "onboardingTitle": "Выберите имя пользователя",
+  "onboardingBody": "Онбординг — Шаг 1.6"
 }
