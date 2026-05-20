@@ -121,6 +121,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'env: {env}'**
   String environmentLabel(String env);
+
+  /// Label for the email input field
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get emailLabel;
+
+  /// Label for the password input field
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get passwordLabel;
+
+  /// Label for the optional display name input field
+  ///
+  /// In en, this message translates to:
+  /// **'Display name (optional)'**
+  String get displayNameLabel;
+
+  /// Text shown before the sign-up link on the sign-in screen
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account?'**
+  String get noAccount;
+
+  /// Text shown before the sign-in link on the sign-up screen
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account?'**
+  String get hasAccount;
+
+  /// Title of the confirmation email screen
+  ///
+  /// In en, this message translates to:
+  /// **'Check your email'**
+  String get checkYourEmail;
+
+  /// Message shown after successful sign-up
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a confirmation link to your email. Please check your inbox and follow the link.'**
+  String get confirmationSent;
+
+  /// Button to resend the confirmation email
+  ///
+  /// In en, this message translates to:
+  /// **'Resend confirmation'**
+  String get resendConfirmation;
+
+  /// Link to return to the sign-in screen
+  ///
+  /// In en, this message translates to:
+  /// **'Back to sign in'**
+  String get backToSignIn;
+
+  /// Button to sign out of the application
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get signOut;
+
+  /// Error shown when the email format is invalid
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email address'**
+  String get invalidEmail;
+
+  /// Error shown when the password is too short
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 6 characters'**
+  String get passwordTooShort;
+
+  /// Generic authentication error message
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication error: {message}'**
+  String authError(String message);
 }
 
 class _AppLocalizationsDelegate

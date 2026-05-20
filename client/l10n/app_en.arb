@@ -20,5 +20,62 @@
         "type": "String"
       }
     }
+  },
+  "emailLabel": "Email",
+  "@emailLabel": {
+    "description": "Label for the email input field"
+  },
+  "passwordLabel": "Password",
+  "@passwordLabel": {
+    "description": "Label for the password input field"
+  },
+  "displayNameLabel": "Display name (optional)",
+  "@displayNameLabel": {
+    "description": "Label for the optional display name input field"
+  },
+  "noAccount": "Don't have an account?",
+  "@noAccount": {
+    "description": "Text shown before the sign-up link on the sign-in screen"
+  },
+  "hasAccount": "Already have an account?",
+  "@hasAccount": {
+    "description": "Text shown before the sign-in link on the sign-up screen"
+  },
+  "checkYourEmail": "Check your email",
+  "@checkYourEmail": {
+    "description": "Title of the confirmation email screen"
+  },
+  "confirmationSent": "We sent a confirmation link to your email. Please check your inbox and follow the link.",
+  "@confirmationSent": {
+    "description": "Message shown after successful sign-up"
+  },
+  "resendConfirmation": "Resend confirmation",
+  "@resendConfirmation": {
+    "description": "Button to resend the confirmation email"
+  },
+  "backToSignIn": "Back to sign in",
+  "@backToSignIn": {
+    "description": "Link to return to the sign-in screen"
+  },
+  "signOut": "Sign out",
+  "@signOut": {
+    "description": "Button to sign out of the application"
+  },
+  "invalidEmail": "Please enter a valid email address",
+  "@invalidEmail": {
+    "description": "Error shown when the email format is invalid"
+  },
+  "passwordTooShort": "Password must be at least 6 characters",
+  "@passwordTooShort": {
+    "description": "Error shown when the password is too short"
+  },
+  "authError": "Authentication error: {message}",
+  "@authError": {
+    "description": "Generic authentication error message",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:vibecall/app/env.dart';
+import 'package:vibecall/features/auth/data/auth_repository.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
 class HomePlaceholderScreen extends ConsumerWidget {
@@ -12,6 +14,15 @@ class HomePlaceholderScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.appTitle),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await ref.read(authRepositoryProvider).signOut();
+              if (context.mounted) context.go('/sign-in');
+            },
+            child: Text(l10n.signOut),
+          ),
+        ],
       ),
       body: Center(
         child: Column(
