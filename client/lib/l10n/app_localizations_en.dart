@@ -69,4 +69,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingBody => 'Onboarding — Step 1.6';
+
+  @override
+  String get usernameLabel => 'Username';
+
+  @override
+  String get usernameRequired => 'Username is required';
+
+  @override
+  String get usernameFormat => '3-20 lowercase letters, digits, or underscores';
+
+  @override
+  String get usernameTaken => 'This username is already taken';
+
+  @override
+  String get displayNameRequired => 'Display name is required';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String onboardingError(String message) {
+    return 'Error: $message';
+  }
 }

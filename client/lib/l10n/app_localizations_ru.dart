@@ -69,4 +69,28 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get onboardingBody => 'Онбординг — Шаг 1.6';
+
+  @override
+  String get usernameLabel => 'Имя пользователя';
+
+  @override
+  String get usernameRequired => 'Имя пользователя обязательно';
+
+  @override
+  String get usernameFormat =>
+      'От 3 до 20 строчных букв, цифр или знаков подчёркивания';
+
+  @override
+  String get usernameTaken => 'Этот никнейм уже занят';
+
+  @override
+  String get displayNameRequired => 'Отображаемое имя обязательно';
+
+  @override
+  String get save => 'Сохранить';
+
+  @override
+  String onboardingError(String message) {
+    return 'Ошибка: $message';
+  }
 }

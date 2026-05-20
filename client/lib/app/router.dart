@@ -7,7 +7,7 @@ import 'package:vibecall/features/auth/presentation/screens/confirm_email_screen
 import 'package:vibecall/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:vibecall/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:vibecall/features/home/presentation/home_placeholder_screen.dart';
-import 'package:vibecall/features/onboarding/presentation/onboarding_placeholder_screen.dart';
+import 'package:vibecall/features/onboarding/presentation/screens/onboarding_screen.dart';
 
 class AuthChangeNotifier extends ChangeNotifier {
   late final StreamSubscription<AuthState> _subscription;
@@ -72,7 +72,7 @@ final GoRouter router = GoRouter(
     ),
     GoRoute(
       path: '/onboarding',
-      builder: (context, state) => const OnboardingPlaceholderScreen(),
+      builder: (context, state) => const OnboardingScreen(),
     ),
     GoRoute(
       path: '/home',
