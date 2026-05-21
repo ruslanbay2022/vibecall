@@ -69,6 +69,9 @@ flutter build web --debug --dart-define-from-file=.env
 
 Phase 1 закрыта (`0c39de1`).
 
+Закрытые шаги Phase 2:
+- 2.1 — contacts table + RLS (`d841c21`)
+
 ## Лицензия
 
 MIT — см. [LICENSE](LICENSE).
