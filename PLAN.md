@@ -1341,9 +1341,18 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
    grant execute on function public.search_users(text) to authenticated;
    ```
 
-**Acceptance**: вызов от анона выдаёт 401; от authenticated — список.
+**Acceptance**:
+- [x] вызов от анона выдаёт 401 (grant только authenticated, не anon, 0006)
+- [x] от authenticated — список (RPC + pg_trgm similarity, PR #25; runtime: из app / JWT, не SQL Editor — auth.uid() NULL → пустой результат)
 
-**Out**: миграция `0006`.
+**Status**: done — 2ffd066
+
+**Out**: `supabase/migrations/0006_search_users_rpc.sql`
+
+**Pitfalls**:
+- cloud: `db push --include-all` (0006 < 0013)
+- SQL Editor без JWT: `search_users` всегда пустой (`id <> auth.uid()`)
+- один PR на шаг
 
 ### Step 2.3 — Contacts feature
 
