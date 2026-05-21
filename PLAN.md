@@ -1309,9 +1309,17 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
      using (auth.uid() = user_id or auth.uid() = contact_id);
    ```
 
-**Acceptance**: `supabase db lint` ок, RLS работает (проверить SQL-сценариями).
+**Acceptance**:
+- [x] `supabase db lint` ок (CI PR #23 green)
+- [x] RLS работает (policies в 0005_contacts.sql: select/insert/update/delete; runtime SQL-сценарии — optional / user verify)
 
-**Out**: миграция `0005`.
+**Status**: done — d841c21
+
+**Out**: `supabase/migrations/0005_contacts.sql`
+
+**Pitfalls**:
+- cloud push: `db push --include-all` (0005 после 0013 в cloud — out-of-order)
+- один PR на шаг
 
 ### Step 2.2 — RPC `search_users`
 
