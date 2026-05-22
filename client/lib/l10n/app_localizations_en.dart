@@ -114,4 +114,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String profileSaveError(String message) {
     return 'Error saving profile: $message';
   }
+
+  @override
+  String get contactsTitle => 'Contacts';
+
+  @override
+  String get contactsTab => 'Contacts';
+
+  @override
+  String get incomingTab => 'Incoming';
+
+  @override
+  String get outgoingTab => 'Outgoing';
+
+  @override
+  String get noContacts => 'No contacts';
 }

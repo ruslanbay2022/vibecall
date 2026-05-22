@@ -152,5 +152,25 @@
         "type": "String"
       }
     }
+  },
+  "contactsTitle": "Contacts",
+  "@contactsTitle": {
+    "description": "Title of the contacts screen"
+  },
+  "contactsTab": "Contacts",
+  "@contactsTab": {
+    "description": "Tab label for accepted contacts"
+  },
+  "incomingTab": "Incoming",
+  "@incomingTab": {
+    "description": "Tab label for incoming requests"
+  },
+  "outgoingTab": "Outgoing",
+  "@outgoingTab": {
+    "description": "Tab label for outgoing requests"
+  },
+  "noContacts": "No contacts",
+  "@noContacts": {
+    "description": "Shown when contacts list is empty"
   }
 }
