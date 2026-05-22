@@ -115,4 +115,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String profileSaveError(String message) {
     return 'Ошибка сохранения профиля: $message';
   }
+
+  @override
+  String get contactsTitle => 'Контакты';
+
+  @override
+  String get contactsTab => 'Контакты';
+
+  @override
+  String get incomingTab => 'Входящие';
+
+  @override
+  String get outgoingTab => 'Исходящие';
+
+  @override
+  String get noContacts => 'Нет контактов';
 }

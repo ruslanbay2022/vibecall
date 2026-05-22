@@ -289,6 +289,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error saving profile: {message}'**
   String profileSaveError(String message);
+
+  /// Title of the contacts screen
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts'**
+  String get contactsTitle;
+
+  /// Tab label for accepted contacts
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts'**
+  String get contactsTab;
+
+  /// Tab label for incoming requests
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming'**
+  String get incomingTab;
+
+  /// Tab label for outgoing requests
+  ///
+  /// In en, this message translates to:
+  /// **'Outgoing'**
+  String get outgoingTab;
+
+  /// Shown when contacts list is empty
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts'**
+  String get noContacts;
 }
 
 class _AppLocalizationsDelegate

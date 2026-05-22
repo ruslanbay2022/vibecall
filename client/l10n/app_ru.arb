@@ -31,5 +31,10 @@
   "bioLabel": "О себе",
   "avatarUploadError": "Ошибка загрузки аватара: {message}",
   "profileSaved": "Профиль сохранён",
-  "profileSaveError": "Ошибка сохранения профиля: {message}"
+  "profileSaveError": "Ошибка сохранения профиля: {message}",
+  "contactsTitle": "Контакты",
+  "contactsTab": "Контакты",
+  "incomingTab": "Входящие",
+  "outgoingTab": "Исходящие",
+  "noContacts": "Нет контактов"
 }

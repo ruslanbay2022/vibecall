@@ -55,12 +55,15 @@ class _HomePlaceholderScreenState extends ConsumerState<HomePlaceholderScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: CircleAvatar(
                 radius: 16,
-                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                backgroundColor:
+                    Theme.of(context).colorScheme.surfaceContainerHighest,
                 backgroundImage: _avatarUrl != null
                     ? CachedNetworkImageProvider(_avatarUrl!)
                     : null,
                 child: _avatarUrl == null
-                    ? Icon(Icons.person, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant)
+                    ? Icon(Icons.person,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant)
                     : null,
               ),
             ),
@@ -83,6 +86,11 @@ class _HomePlaceholderScreenState extends ConsumerState<HomePlaceholderScreen> {
             Text(
               l10n.environmentLabel(Env.env),
               style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () => context.push('/contacts'),
+              child: Text(l10n.contactsTitle),
             ),
           ],
         ),
