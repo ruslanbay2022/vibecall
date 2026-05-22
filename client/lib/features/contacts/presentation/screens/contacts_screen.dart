@@ -88,7 +88,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen>
   }
 }
 
-class _ContactList extends StatelessWidget {
+class _ContactList extends ConsumerWidget {
   final List<ContactDto> contacts;
   final ContactsRepository repo;
   final bool showAccept;
@@ -106,7 +106,7 @@ class _ContactList extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (contacts.isEmpty) {
       return Center(
         child: Text(AppLocalizations.of(context).noContacts),
@@ -136,6 +136,7 @@ class _ContactList extends StatelessWidget {
                   icon: const Icon(Icons.check),
                   onPressed: () async {
                     await repo.acceptRequest(contact.id, contact.userId);
+                    ref.invalidate(contactsControllerProvider);
                   },
                 ),
               if (showReject)
@@ -143,6 +144,7 @@ class _ContactList extends StatelessWidget {
                   icon: const Icon(Icons.close),
                   onPressed: () async {
                     await repo.rejectRequest(contact.id);
+                    ref.invalidate(contactsControllerProvider);
                   },
                 ),
               if (showRemove)
@@ -150,6 +152,7 @@ class _ContactList extends StatelessWidget {
                   icon: const Icon(Icons.delete),
                   onPressed: () async {
                     await repo.remove(contact.id, contact.contactId);
+                    ref.invalidate(contactsControllerProvider);
                   },
                 ),
               if (showCancel)
@@ -157,6 +160,7 @@ class _ContactList extends StatelessWidget {
                   icon: const Icon(Icons.cancel),
                   onPressed: () async {
                     await repo.rejectRequest(contact.id);
+                    ref.invalidate(contactsControllerProvider);
                   },
                 ),
             ],

@@ -139,8 +139,8 @@ class SupabaseContactsRepository implements ContactsRepository {
     await _client
         .from('contacts')
         .delete()
-        .eq('user_id', currentUserId)
-        .eq('contact_id', otherUserId);
+        .eq('user_id', otherUserId)
+        .eq('contact_id', currentUserId);
   }
 
   @override
