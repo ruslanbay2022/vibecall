@@ -72,6 +72,7 @@ Phase 1 закрыта (`0c39de1`).
 Закрытые шаги Phase 2:
 - 2.1 — contacts table + RLS (`d841c21`)
 - 2.2 — RPC search_users (`2ffd066`)
+- 2.3 — contacts lists + realtime (`dd19671`)
 
 ## Лицензия
 

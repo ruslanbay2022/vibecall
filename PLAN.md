@@ -1362,10 +1362,17 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 3. UI: `ContactsScreen` с табами «Контакты / Входящие / Исходящие».
 
 **Acceptance**:
-- [ ] Двусторонняя дружба: при `accept` создаётся вторая запись `contacts (user_id=B, contact_id=A, status=accepted)` (через триггер или клиентский код — выбрать клиентский для простоты).
-- [ ] Тесты на repository.
+- [x] Двусторонняя дружба: при `accept` создаётся вторая запись `contacts (user_id=B, contact_id=A, status=accepted)` (клиентский reverse insert, PR #27).
+- [x] Тесты repository (mocktail: sendRequest, acceptRequest, remove — PR #27).
 
-**Out**: фича `contacts/`.
+**Status**: done — dd19671 (+ fix-up в squash: Realtime channel, ref.invalidate, remove both rows)
+
+**Out**: `client/lib/features/contacts/`
+
+**Pitfalls**:
+- Realtime: Dashboard → contacts → Enable Realtime (или publication `supabase_realtime`)
+- Дубликат PR #27/#28 — один `gh pr create`
+- sendRequest UI — Step 2.4 (SearchScreen); smoke через SQL/manual ok
 
 ### Step 2.4 — User search UI
 
