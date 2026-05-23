@@ -74,6 +74,9 @@ Phase 1 закрыта (`0c39de1`).
 - 2.2 — RPC search_users (`2ffd066`)
 - 2.3 — contacts lists + realtime (`dd19671`)
 - 2.4 — user search UI (`03f622a`)
+- 2.5 — global presence online indicators (`c0a11c5`)
+
+Phase 2 закрыта (`c0a11c5`).
 
 ## Лицензия
 
