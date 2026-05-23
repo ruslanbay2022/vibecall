@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:realtime_client/realtime_client.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vibecall/features/presence/presentation/providers/presence_controller.dart';
 
 SinglePresenceState _state(String key) {
