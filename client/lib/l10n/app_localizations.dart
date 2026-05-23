@@ -319,6 +319,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No contacts'**
   String get noContacts;
+
+  /// Title of the search screen
+  ///
+  /// In en, this message translates to:
+  /// **'Search users'**
+  String get searchTitle;
+
+  /// Hint text in the search field
+  ///
+  /// In en, this message translates to:
+  /// **'Search by username or display name'**
+  String get searchHint;
+
+  /// Button to add a user as a contact
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get searchAdd;
+
+  /// Status shown when the outgoing request is pending
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get searchPending;
+
+  /// Status shown when an incoming request exists
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming'**
+  String get searchIncoming;
+
+  /// Status shown when the user is already a contact
+  ///
+  /// In en, this message translates to:
+  /// **'In Contacts'**
+  String get searchInContacts;
+
+  /// Success message when a contact request is sent
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent'**
+  String get searchRequestSent;
+
+  /// Shown when search yields no results
+  ///
+  /// In en, this message translates to:
+  /// **'No users found'**
+  String get searchNoResults;
+
+  /// Error shown when adding a contact fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add user'**
+  String get searchAddError;
 }
 
 class _AppLocalizationsDelegate

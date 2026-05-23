@@ -172,5 +172,41 @@
   "noContacts": "No contacts",
   "@noContacts": {
     "description": "Shown when contacts list is empty"
+  },
+  "searchTitle": "Search users",
+  "@searchTitle": {
+    "description": "Title of the search screen"
+  },
+  "searchHint": "Search by username or display name",
+  "@searchHint": {
+    "description": "Hint text in the search field"
+  },
+  "searchAdd": "Add",
+  "@searchAdd": {
+    "description": "Button to add a user as a contact"
+  },
+  "searchPending": "Pending",
+  "@searchPending": {
+    "description": "Status shown when the outgoing request is pending"
+  },
+  "searchIncoming": "Incoming",
+  "@searchIncoming": {
+    "description": "Status shown when an incoming request exists"
+  },
+  "searchInContacts": "In Contacts",
+  "@searchInContacts": {
+    "description": "Status shown when the user is already a contact"
+  },
+  "searchRequestSent": "Request sent",
+  "@searchRequestSent": {
+    "description": "Success message when a contact request is sent"
+  },
+  "searchNoResults": "No users found",
+  "@searchNoResults": {
+    "description": "Shown when search yields no results"
+  },
+  "searchAddError": "Could not add user",
+  "@searchAddError": {
+    "description": "Error shown when adding a contact fails"
   }
 }

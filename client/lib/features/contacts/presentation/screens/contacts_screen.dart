@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:vibecall/features/contacts/data/contacts_repository.dart';
 import 'package:vibecall/features/contacts/presentation/providers/contacts_controller.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
@@ -38,6 +39,12 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.contactsTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () => context.push('/search'),
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: [

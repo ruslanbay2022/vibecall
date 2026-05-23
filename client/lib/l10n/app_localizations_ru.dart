@@ -130,4 +130,31 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get noContacts => 'Нет контактов';
+
+  @override
+  String get searchTitle => 'Поиск пользователей';
+
+  @override
+  String get searchHint => 'Поиск по имени или никнейму';
+
+  @override
+  String get searchAdd => 'Добавить';
+
+  @override
+  String get searchPending => 'Ожидание';
+
+  @override
+  String get searchIncoming => 'Входящая';
+
+  @override
+  String get searchInContacts => 'В контактах';
+
+  @override
+  String get searchRequestSent => 'Запрос отправлен';
+
+  @override
+  String get searchNoResults => 'Пользователи не найдены';
+
+  @override
+  String get searchAddError => 'Не удалось добавить пользователя';
 }

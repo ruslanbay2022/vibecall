@@ -129,4 +129,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noContacts => 'No contacts';
+
+  @override
+  String get searchTitle => 'Search users';
+
+  @override
+  String get searchHint => 'Search by username or display name';
+
+  @override
+  String get searchAdd => 'Add';
+
+  @override
+  String get searchPending => 'Pending';
+
+  @override
+  String get searchIncoming => 'Incoming';
+
+  @override
+  String get searchInContacts => 'In Contacts';
+
+  @override
+  String get searchRequestSent => 'Request sent';
+
+  @override
+  String get searchNoResults => 'No users found';
+
+  @override
+  String get searchAddError => 'Could not add user';
 }

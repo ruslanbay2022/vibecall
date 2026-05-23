@@ -8,6 +8,7 @@ import 'package:vibecall/features/auth/presentation/screens/sign_in_screen.dart'
 import 'package:vibecall/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:vibecall/features/contacts/presentation/screens/contacts_screen.dart';
 import 'package:vibecall/features/home/presentation/home_placeholder_screen.dart';
+import 'package:vibecall/features/search/presentation/screens/search_screen.dart';
 import 'package:vibecall/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:vibecall/features/profile/presentation/screens/profile_screen.dart';
 
@@ -83,6 +84,10 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/profile',
       builder: (context, state) => const ProfileScreen(),
+    ),
+    GoRoute(
+      path: '/search',
+      builder: (context, state) => const SearchScreen(),
     ),
     GoRoute(
       path: '/contacts',

@@ -36,5 +36,14 @@
   "contactsTab": "Контакты",
   "incomingTab": "Входящие",
   "outgoingTab": "Исходящие",
-  "noContacts": "Нет контактов"
+  "noContacts": "Нет контактов",
+  "searchTitle": "Поиск пользователей",
+  "searchHint": "Поиск по имени или никнейму",
+  "searchAdd": "Добавить",
+  "searchPending": "Ожидание",
+  "searchIncoming": "Входящая",
+  "searchInContacts": "В контактах",
+  "searchRequestSent": "Запрос отправлен",
+  "searchNoResults": "Пользователи не найдены",
+  "searchAddError": "Не удалось добавить пользователя"
 }
