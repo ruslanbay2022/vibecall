@@ -157,4 +157,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get searchAddError => 'Не удалось добавить пользователя';
+
+  @override
+  String get onlineStatus => 'В сети';
+
+  @override
+  String get offlineStatus => 'Не в сети';
 }

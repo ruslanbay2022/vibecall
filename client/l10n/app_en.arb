@@ -208,5 +208,13 @@
   "searchAddError": "Could not add user",
   "@searchAddError": {
     "description": "Error shown when adding a contact fails"
+  },
+  "onlineStatus": "Online",
+  "@onlineStatus": {
+    "description": "Status label shown when a contact is online"
+  },
+  "offlineStatus": "Offline",
+  "@offlineStatus": {
+    "description": "Status label shown when a contact is offline"
   }
 }
