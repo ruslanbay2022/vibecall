@@ -39,12 +39,6 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.contactsTitle),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () => context.push('/search'),
-          ),
-        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: [
@@ -54,42 +48,58 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen>
           ],
         ),
       ),
-      body: contactsAsync.when(
-        data: (contacts) {
-          final accepted =
-              contacts.where((c) => c.status == 'accepted').toList();
-          final incoming = contacts
-              .where((c) =>
-                  c.status == 'pending' && c.contactId == currentUserId)
-              .toList();
-          final outgoing = contacts
-              .where((c) => c.status == 'pending' && c.userId == currentUserId)
-              .toList();
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+            child: FilledButton.tonalIcon(
+              onPressed: () => context.push('/search'),
+              icon: const Icon(Icons.search),
+              label: Text(l10n.searchTitle),
+            ),
+          ),
+          Expanded(
+            child: contactsAsync.when(
+              data: (contacts) {
+                final accepted =
+                    contacts.where((c) => c.status == 'accepted').toList();
+                final incoming = contacts
+                    .where((c) =>
+                        c.status == 'pending' && c.contactId == currentUserId)
+                    .toList();
+                final outgoing = contacts
+                    .where((c) =>
+                        c.status == 'pending' && c.userId == currentUserId)
+                    .toList();
 
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _ContactList(
-                contacts: accepted,
-                repo: repo,
-                showRemove: true,
-              ),
-              _ContactList(
-                contacts: incoming,
-                repo: repo,
-                showAccept: true,
-                showReject: true,
-              ),
-              _ContactList(
-                contacts: outgoing,
-                repo: repo,
-                showCancel: true,
-              ),
-            ],
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text(e.toString())),
+                return TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _ContactList(
+                      contacts: accepted,
+                      repo: repo,
+                      showRemove: true,
+                    ),
+                    _ContactList(
+                      contacts: incoming,
+                      repo: repo,
+                      showAccept: true,
+                      showReject: true,
+                    ),
+                    _ContactList(
+                      contacts: outgoing,
+                      repo: repo,
+                      showCancel: true,
+                    ),
+                  ],
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, st) => Center(child: Text(e.toString())),
+            ),
+          ),
+        ],
       ),
     );
   }
