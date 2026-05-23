@@ -1274,6 +1274,8 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 
 Цель: добавление в контакты по поиску, заявки pending/accepted, presence online/offline в реальном времени.
 
+**Phase status**: done — c0a11c5 (Steps 2.1–2.5)
+
 ### Step 2.1 — Migration: contacts + RLS
 
 **Actions**:
@@ -1405,15 +1407,31 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 4. На lifecycle `paused`/`detached` — `untrack`.
 
 **Acceptance**:
-- [ ] Открыть две вкладки разными аккаунтами — оба видят онлайн друг друга
-- [ ] Закрыть одну вкладку — у другого через ~30s статус меняется на offline
+- [x] Две вкладки разными аккаунтами — оба видят online друг друга (Contacts green dot, PR #33; smoke user)
+- [x] Закрыть вкладку — у другого через ~30s offline (Realtime timeout; smoke user, PR #33)
 
-**Out**: фича `presence/`.
+**Status**: done — c0a11c5 (+ fix-up в squash: test import supabase_flutter for CI analyze)
+
+**Out**: `client/lib/features/presence/` (+ lifecycle handler в app.dart, OnlineIndicator в contacts)
 
 **Pitfalls**:
-- В Web `WidgetsBindingObserver` срабатывает не на закрытие вкладки. Дополнительно слушать `dart:html` `beforeunload` (через `package:web` или conditional import). Допустимо опираться на серверный таймаут Realtime.
+- Web: `WidgetsBindingObserver` не ловит закрытие вкладки — offline через Realtime timeout ~30s (ok по PLAN)
+- Chat UI presence — Phase 4 (Step 4.3); Step 2.5 — только ContactsScreen
+- client-only PR: `supabase db lint` path filter → owner bypass
+- CI: test не импортировать `realtime_client` напрямую — только `supabase_flutter`
+- один `gh pr create` на шаг
 
-**Phase 2 DoD**: контакты добавляются, presence работает, поиск работает, CI зелёный.
+**Phase 2 Definition of Done**:
+Контакты добавляются по поиску, заявки pending/accepted, presence online/offline в реальном времени, CI зелёный.
+
+**Phase status**: done — c0a11c5 (Steps 2.1–2.5)
+
+- [x] Steps 2.1–2.5 закрыты
+- [x] Contacts + search + presence (smoke user)
+- [x] Миграции 0005–0006 + client features contacts/search/presence
+- [x] CI green на feature PRs Phase 2
+
+**Next**: Phase 3 — 1-на-1 Calls (§8)
 
 ---
 
