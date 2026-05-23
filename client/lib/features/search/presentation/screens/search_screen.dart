@@ -20,6 +20,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Timer? _debounce;
   List<SearchUserDto> _results = [];
   bool _loading = false;
+  int _searchGeneration = 0;
 
   @override
   void initState() {
@@ -40,6 +41,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     _debounce = Timer(const Duration(milliseconds: 250), () {
       final query = _searchController.text.trim();
       if (query.isEmpty) {
+        _searchGeneration++;
         setState(() {
           _results = [];
           _loading = false;
@@ -47,7 +49,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         return;
       }
       if (query.length < 2) {
-        setState(() => _results = []);
+        _searchGeneration++;
+        setState(() {
+          _results = [];
+          _loading = false;
+        });
         return;
       }
       _search(query);
@@ -56,23 +62,22 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   Future<void> _search(String q) async {
     if (!mounted) return;
+    final generation = ++_searchGeneration;
     setState(() => _loading = true);
     try {
       final repo = ref.read(searchRepositoryProvider);
       final results = await repo.searchUsers(q);
-      if (mounted) {
-        setState(() {
-          _results = results;
-          _loading = false;
-        });
-      }
+      if (!mounted || generation != _searchGeneration) return;
+      setState(() {
+        _results = results;
+        _loading = false;
+      });
     } catch (_) {
-      if (mounted) {
-        setState(() {
-          _results = [];
-          _loading = false;
-        });
-      }
+      if (!mounted || generation != _searchGeneration) return;
+      setState(() {
+        _results = [];
+        _loading = false;
+      });
     }
   }
 
@@ -87,10 +92,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           SnackBar(content: Text(l10n.searchRequestSent)),
         );
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(content: Text(l10n.searchAddError)),
         );
       }
     }
@@ -127,6 +132,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         ? IconButton(
                             icon: const Icon(Icons.clear),
                             onPressed: () {
+                              _searchGeneration++;
                               _searchController.clear();
                               setState(() {
                                 _results = [];
@@ -142,9 +148,21 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           Expanded(
             child: contactsAsync.when(
               data: (contacts) {
+                final query = _searchController.text.trim();
                 if (_results.isEmpty && !_loading) {
+                  final message = query.length < 2
+                      ? l10n.searchHint
+                      : l10n.searchNoResults;
                   return Center(
-                    child: Text(l10n.searchNoResults),
+                    child: Text(
+                      message,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
                   );
                 }
                 return ListView.builder(
