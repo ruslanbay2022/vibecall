@@ -73,6 +73,7 @@ Phase 1 закрыта (`0c39de1`).
 - 2.1 — contacts table + RLS (`d841c21`)
 - 2.2 — RPC search_users (`2ffd066`)
 - 2.3 — contacts lists + realtime (`dd19671`)
+- 2.4 — user search UI (`03f622a`)
 
 ## Лицензия
 
