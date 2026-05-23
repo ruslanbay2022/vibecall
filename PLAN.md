@@ -1380,9 +1380,19 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 1. `SearchScreen` с `TextField` (debounce 250ms) → `supabase.rpc('search_users', {q})`.
 2. Карточка результата: аватар, display_name, username, кнопка «Добавить» / статус.
 
-**Acceptance**: поиск выдаёт результаты, кнопка добавления отправляет заявку.
+**Acceptance**:
+- [x] Поиск выдаёт результаты (SearchScreen + RPC search_users, debounce 250ms, min 2 chars; smoke user, PR #30)
+- [x] Кнопка «Добавить» отправляет заявку (ContactsRepository.sendRequest → Outgoing/Incoming; smoke user, PR #30)
 
-**Out**: экран `SearchScreen`.
+**Status**: done — 03f622a (+ fix-up в squash: empty-state hint, searchAddError l10n, stale RPC guard)
+
+**Out**: `client/lib/features/search/` (+ route `/search`, nav из ContactsScreen)
+
+**Pitfalls**:
+- client-only PR: `supabase db lint` не запускается (path filter в workflow) — merge через owner bypass
+- Web: hash-route `/#/search`; IconButton в AppBar на web малозаметна — smoke через URL ok
+- `search_users` в SQL Editor без JWT → пустой результат (как Step 2.2)
+- один `gh pr create` на шаг
 
 ### Step 2.5 — Presence
 
