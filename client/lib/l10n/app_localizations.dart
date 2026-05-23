@@ -373,6 +373,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not add user'**
   String get searchAddError;
+
+  /// Status label shown when a contact is online
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get onlineStatus;
+
+  /// Status label shown when a contact is offline
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get offlineStatus;
 }
 
 class _AppLocalizationsDelegate

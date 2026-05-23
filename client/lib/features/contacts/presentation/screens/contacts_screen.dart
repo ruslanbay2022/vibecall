@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vibecall/features/contacts/data/contacts_repository.dart';
 import 'package:vibecall/features/contacts/presentation/providers/contacts_controller.dart';
+import 'package:vibecall/features/presence/presentation/providers/presence_controller.dart';
+import 'package:vibecall/features/presence/presentation/widgets/online_indicator.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
 class ContactsScreen extends ConsumerStatefulWidget {
@@ -35,6 +37,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen>
     final contactsAsync = ref.watch(contactsControllerProvider);
     final repo = ref.watch(contactsRepositoryProvider);
     final currentUserId = repo.currentUserId;
+    final onlineUserIds = ref.watch(presenceControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -73,27 +76,30 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen>
                         c.status == 'pending' && c.userId == currentUserId)
                     .toList();
 
-                return TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _ContactList(
-                      contacts: accepted,
-                      repo: repo,
-                      showRemove: true,
-                    ),
-                    _ContactList(
-                      contacts: incoming,
-                      repo: repo,
-                      showAccept: true,
-                      showReject: true,
-                    ),
-                    _ContactList(
-                      contacts: outgoing,
-                      repo: repo,
-                      showCancel: true,
-                    ),
-                  ],
-                );
+                  return TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _ContactList(
+                        contacts: accepted,
+                        repo: repo,
+                        onlineUserIds: onlineUserIds,
+                        showRemove: true,
+                      ),
+                      _ContactList(
+                        contacts: incoming,
+                        repo: repo,
+                        onlineUserIds: onlineUserIds,
+                        showAccept: true,
+                        showReject: true,
+                      ),
+                      _ContactList(
+                        contacts: outgoing,
+                        repo: repo,
+                        onlineUserIds: onlineUserIds,
+                        showCancel: true,
+                      ),
+                    ],
+                  );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, st) => Center(child: Text(e.toString())),
@@ -108,6 +114,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen>
 class _ContactList extends ConsumerWidget {
   final List<ContactDto> contacts;
   final ContactsRepository repo;
+  final Set<String> onlineUserIds;
   final bool showAccept;
   final bool showReject;
   final bool showRemove;
@@ -116,6 +123,7 @@ class _ContactList extends ConsumerWidget {
   const _ContactList({
     required this.contacts,
     required this.repo,
+    required this.onlineUserIds,
     this.showAccept = false,
     this.showReject = false,
     this.showRemove = false,
@@ -133,13 +141,27 @@ class _ContactList extends ConsumerWidget {
       itemCount: contacts.length,
       itemBuilder: (context, index) {
         final contact = contacts[index];
+        final otherUserId = contact.userId == repo.currentUserId
+            ? contact.contactId
+            : contact.userId;
+        final isOnline = onlineUserIds.contains(otherUserId);
         return ListTile(
-          leading: contact.avatarUrl != null
-              ? CircleAvatar(
-                  backgroundImage:
-                      CachedNetworkImageProvider(contact.avatarUrl!),
-                )
-              : const CircleAvatar(child: Icon(Icons.person)),
+          leading: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              contact.avatarUrl != null
+                  ? CircleAvatar(
+                      backgroundImage:
+                          CachedNetworkImageProvider(contact.avatarUrl!),
+                    )
+                  : const CircleAvatar(child: Icon(Icons.person)),
+              Positioned(
+                bottom: -2,
+                right: -2,
+                child: OnlineIndicator(isOnline: isOnline),
+              ),
+            ],
+          ),
           title: Text(contact.displayName ?? contact.username ?? ''),
           subtitle:
               contact.displayName != null && contact.username != null

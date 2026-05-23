@@ -45,5 +45,7 @@
   "searchInContacts": "В контактах",
   "searchRequestSent": "Запрос отправлен",
   "searchNoResults": "Пользователи не найдены",
-  "searchAddError": "Не удалось добавить пользователя"
+  "searchAddError": "Не удалось добавить пользователя",
+  "onlineStatus": "В сети",
+  "offlineStatus": "Не в сети"
 }

@@ -156,4 +156,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchAddError => 'Could not add user';
+
+  @override
+  String get onlineStatus => 'Online';
+
+  @override
+  String get offlineStatus => 'Offline';
 }
