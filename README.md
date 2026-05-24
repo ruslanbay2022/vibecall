@@ -78,6 +78,9 @@ Phase 1 закрыта (`0c39de1`).
 
 Phase 2 закрыта (`c0a11c5`).
 
+Закрытые шаги Phase 3:
+- 3.1 — call_invitations + call_history migrations (`53c8db4`)
+
 ## Лицензия
 
 MIT — см. [LICENSE](LICENSE).

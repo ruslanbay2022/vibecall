@@ -1501,9 +1501,19 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
      using (auth.uid() in (caller_id, receiver_id));
    ```
 
-**Acceptance**: миграции применяются, RLS закрывает чужие звонки.
+**Acceptance**:
+- [x] Миграции применяются (`supabase db lint` green, CI PR #35; local `db reset` 0007→0009 OK)
+- [x] RLS закрывает чужие звонки (policies в 0009: ci_select/insert/update_*, ch_select; PR #35)
 
-**Out**: миграции `0007`, `0008`, `0009`.
+**Status**: done — 53c8db4
+
+**Out**: `supabase/migrations/0007_call_invitations.sql`, `0008_call_history.sql`, `0009_call_rls.sql`
+
+**Pitfalls**:
+- cloud push: `db push --include-all` (0007–0009 < 0013 в cloud — out-of-order; user approval required)
+- один `gh pr create` на шаг
+- SQL-only PR: CI `supabase db lint` runs; Flutter jobs path-filtered
+- 0008: `NOT NULL` + `ON DELETE SET NULL` на caller/receiver — как в PLAN; runtime delete profile с history может fail (deferred fix)
 
 ### Step 3.2 — LiveKit dev: Docker + Cloudflare Tunnel
 
