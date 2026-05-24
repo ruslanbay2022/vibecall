@@ -9,6 +9,7 @@
 client/.env
 infra/**/.env
 infra/**/*.env
+!infra/dev/cloudflared.example.env
 supabase/.env*
 supabase/functions/**/.env
 
