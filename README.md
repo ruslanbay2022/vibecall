@@ -80,6 +80,7 @@ Phase 2 закрыта (`c0a11c5`).
 
 Закрытые шаги Phase 3:
 - 3.1 — call_invitations + call_history migrations (`53c8db4`)
+- 3.2 — LiveKit dev + Cloudflare Tunnel (`c338da7`)
 
 ## Лицензия
 

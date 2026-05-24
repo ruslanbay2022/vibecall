@@ -1561,14 +1561,21 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 6. `LIVEKIT_WS_URL=wss://vibecall-lk-dev.<cf>.com` — добавить в `client/.env` и в Supabase secrets.
 
 **Acceptance**:
-- [ ] `curl -I https://vibecall-lk-dev.<cf>.com` → 200/426 (Upgrade Required нормально для WS endpoint)
-- [ ] `wscat -c wss://vibecall-lk-dev.<cf>.com/rtc?...` отвечает
+- [x] `curl -I https://vibecall-lk-dev.visitufa.online` → OK (smoke user; PR #37)
+- [x] LiveKit dev доступен по публичному HTTPS (visitufa.online, tunnel vibecall-dev; smoke user)
 
-**Out**: `infra/dev/`.
+**Status**: done — c338da7 (+ fix-up в squash: cloudflared.example.env gitignore)
+
+**Out**: `infra/dev/` (+ `client/.env.example` comment)
 
 **Pitfalls**:
-- На Windows `network_mode: host` не работает. Перевести на explicit `ports:` `[7880:7880, 7881:7881, "50000-50200:50000-50200/udp"]` и в `livekit-dev.yaml` указать `use_external_ip: false`. Cloudflare Tunnel тогда не нужен для WebRTC media (медиа пойдёт через TURN на 7881/tcp). Документировать оба варианта в `infra/dev/README.md`.
-- Cloudflare Tunnel не проксирует UDP. Это ок для dev: LiveKit умеет fallback на TCP `7881`. Production-конфиг отличается (Phase 6).
+- Windows: `docker-compose.windows.yml` (ports), не `network_mode: host`
+- Cloudflare UI: Published application route (не старый Configure → Public Hostname)
+- `CF_TUNNEL_TOKEN` в `infra/dev/.env` (не placeholder из example)
+- `cloudflared.example.env` — gitignore exception `!infra/dev/cloudflared.example.env`
+- infra-only PR: Flutter CI path-filtered; merge via bypass ok
+- Supabase `secrets set LIVEKIT_*` — Step 3.3
+- один `gh pr create` на шаг
 
 ### Step 3.3 — Edge Functions
 
