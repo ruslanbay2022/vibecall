@@ -1,0 +1,14 @@
+services:
+  livekit:
+    image: livekit/livekit-server:v1.7.2
+    command: --config /etc/livekit.yaml
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./livekit-dev.yaml:/etc/livekit.yaml:ro
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    network_mode: host
+    command: tunnel --no-autoupdate run --token ${CF_TUNNEL_TOKEN}
+    env_file: .env
