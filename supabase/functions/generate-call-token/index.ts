@@ -5,11 +5,20 @@ import { createServiceClient } from "../_shared/supabase.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method !== "POST") {
+    return new Response("Method not allowed", { status: 405, headers: corsHeaders });
+  }
   try {
     const { user } = await getUser(req);
     const { receiverId, hasVideo } = await req.json();
     if (!receiverId || typeof hasVideo !== "boolean") {
       return new Response("Bad request", { status: 400, headers: corsHeaders });
+    }
+
+    if (receiverId === user.id) {
+      return new Response(JSON.stringify({ error: "self_call" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const adminSupa = createServiceClient();
@@ -25,7 +34,15 @@ Deno.serve(async (req) => {
     const { error: insertErr } = await adminSupa.from("call_invitations").insert({
       room_name: roomName, caller_id: user.id, receiver_id: receiverId, has_video: hasVideo,
     });
-    if (insertErr) throw insertErr;
+    if (insertErr) {
+      const msg = insertErr.message ?? "";
+      if (insertErr.code === "23505" || msg.includes("call_inv_one_active_per_receiver")) {
+        return new Response(JSON.stringify({ error: "busy" }), {
+          status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      throw insertErr;
+    }
 
     const at = new AccessToken(
       Deno.env.get("LIVEKIT_API_KEY")!,

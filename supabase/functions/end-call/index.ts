@@ -4,6 +4,9 @@ import { createServiceClient } from "../_shared/supabase.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method !== "POST") {
+    return new Response("Method not allowed", { status: 405, headers: corsHeaders });
+  }
   try {
     const { user } = await getUser(req);
     const { invitationId, durationSec } = await req.json();
@@ -45,7 +48,7 @@ Deno.serve(async (req) => {
       receiver_id: inv.receiver_id,
       outcome,
       has_video: inv.has_video,
-      duration_sec: durationSec ?? null,
+      duration_sec: typeof durationSec === "number" && durationSec >= 0 ? durationSec : 0,
       started_at: inv.created_at,
       ended_at: new Date().toISOString(),
     });

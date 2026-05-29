@@ -4,6 +4,9 @@ import { createServiceClient } from "../_shared/supabase.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method !== "POST") {
+    return new Response("Method not allowed", { status: 405, headers: corsHeaders });
+  }
   try {
     const { user } = await getUser(req);
     const { invitationId } = await req.json();
