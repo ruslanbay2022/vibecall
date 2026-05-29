@@ -1668,12 +1668,27 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 7. `[supabase/functions/end-call/index.ts](supabase/functions/end-call/index.ts)`: вычислить duration, вставить в `call_history`, обновить state соответствующе или удалить запись.
 
 **Acceptance**:
-- [ ] `curl -X POST .../generate-call-token` от authenticated клиента возвращает JWT
-- [ ] От не-caller возвращает 401/403
-- [ ] При активном звонке возвращает 409 busy
-- [ ] JWT валидируется LiveKit-сервером (`livekit-cli token verify`)
+- [x] `curl POST .../generate-call-token` от authenticated клиента → JWT + wsUrl + roomName (smoke user; #39+#40 deploy)
+- [x] Без auth → 401; `accept-call` от caller → 403 (smoke user)
+- [x] Активный ringing → 409 busy (smoke user)
+- [ ] JWT валидируется LiveKit (`livekit-cli token verify`) — **Deferred → Step 3.5** (JWT выдаётся, verify при client connect)
 
-**Out**: 4 функции + `_shared/`.
+**Status**: done — d6a9d93 (+ fix-up c929d30: TrackSource enum, _shared/livekit.ts)
+
+**Deferred**: `livekit-cli token verify` → Step 3.5 (client LiveKit connect)
+
+**Out**: `supabase/functions/` — 4 функции + `_shared/` (`cors`, `auth`, `supabase`, `livekit`)
+
+**Pitfalls**:
+- `canPublishSources`: SDK v2 требует `TrackSource` enum, не строки → 500 без fix (#40)
+- `_shared/livekit.ts` — общий `issueLiveKitToken()` (после #40)
+- `supabase secrets set LIVEKIT_*` + `functions deploy` — в cloud, не в git; user approval
+- PowerShell curl: JSON через `ConvertTo-Json` / одинарные кавычки (не `\"` в `-d`)
+- race busy: unique index → 409 (fix в #39); pre-check + insert
+- `end-call`: `duration_sec NOT NULL` → default 0 (fix в #39)
+- smoke orphan `ringing` если JWT упал до fix #40 — cleanup через `end-call`
+- functions-only PR: Flutter CI path-filtered; merge via bypass ok
+- один `gh pr create` на шаг
 
 ### Step 3.4 — pg_cron timeout
 
