@@ -1,6 +1,6 @@
-import { AccessToken } from "https://esm.sh/livekit-server-sdk@2.6.1";
 import { getUser } from "../_shared/auth.ts";
 import { corsHeaders } from "../_shared/cors.ts";
+import { issueLiveKitToken } from "../_shared/livekit.ts";
 import { createServiceClient } from "../_shared/supabase.ts";
 
 Deno.serve(async (req) => {
@@ -44,21 +44,8 @@ Deno.serve(async (req) => {
       .eq("id", invitationId);
     if (updateErr) throw updateErr;
 
-    const at = new AccessToken(
-      Deno.env.get("LIVEKIT_API_KEY")!,
-      Deno.env.get("LIVEKIT_API_SECRET")!,
-      { identity: user.id, ttl: 60 * 60 },
-    );
-    at.addGrant({
-      roomJoin: true, room: inv.room_name,
-      canPublish: true, canSubscribe: true, canPublishData: true,
-      canPublishSources: inv.has_video
-        ? ["camera", "microphone", "screen_share", "screen_share_audio"]
-        : ["microphone"],
-    });
-
     return new Response(JSON.stringify({
-      token: await at.toJwt(),
+      token: await issueLiveKitToken(user.id, inv.room_name, inv.has_video),
       wsUrl: Deno.env.get("LIVEKIT_WS_URL"),
       roomName: inv.room_name,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
