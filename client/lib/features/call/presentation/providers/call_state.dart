@@ -30,14 +30,20 @@ class CallStateConnecting extends CallState {
 class CallStateActive extends CallState {
   final Room room;
   final RemoteParticipant peer;
+  final bool hasVideo;
 
-  const CallStateActive({required this.room, required this.peer});
+  const CallStateActive({
+    required this.room,
+    required this.peer,
+    this.hasVideo = true,
+  });
 }
 
 class CallStateEnded extends CallState {
   final CallOutcome outcome;
+  final int durationSec;
 
-  const CallStateEnded({required this.outcome});
+  const CallStateEnded({required this.outcome, this.durationSec = 0});
 }
 
 class CallStateError extends CallState {

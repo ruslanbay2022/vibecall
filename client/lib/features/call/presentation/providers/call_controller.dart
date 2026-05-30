@@ -16,6 +16,7 @@ class CallController extends _$CallController {
   Room? _room;
   DateTime? _connectedAt;
   String? _currentInvitationId;
+  bool _hasVideo = true;
   StreamSubscription<CallInvitation>? _outgoingSub;
   CancelListenFunc? _onParticipantConnected;
   CancelListenFunc? _onParticipantDisconnected;
@@ -46,11 +47,25 @@ class CallController extends _$CallController {
     }
   }
 
+  int _computeDuration() {
+    final connectedAt = _connectedAt;
+    return connectedAt != null
+        ? DateTime.now().difference(connectedAt).inSeconds
+        : 0;
+  }
+
+  void _setEnded(CallOutcome outcome) {
+    final durationSec = _computeDuration();
+    _cleanup();
+    state = CallStateEnded(outcome: outcome, durationSec: durationSec);
+  }
+
   Future<void> startCall({
     required String receiverId,
     required bool video,
   }) async {
     if (state is! CallStateIdle) return;
+    _hasVideo = video;
     state = const CallStateConnecting();
 
     try {
@@ -64,8 +79,7 @@ class CallController extends _$CallController {
       );
       await _connectRoom(token, video: video);
     } on CallBusyException {
-      _cleanup();
-      state = const CallStateEnded(outcome: CallOutcome.busy);
+      _setEnded(CallOutcome.busy);
     } catch (e) {
       _cleanup();
       state = CallStateError(message: e.toString());
@@ -74,6 +88,7 @@ class CallController extends _$CallController {
 
   Future<void> accept(CallInvitation inv) async {
     if (state is! CallStateIncoming) return;
+    _hasVideo = inv.hasVideo;
     state = const CallStateConnecting();
 
     try {
@@ -92,8 +107,7 @@ class CallController extends _$CallController {
       final repo = ref.read(callRepositoryProvider);
       await repo.rejectCall(inv.id);
     } catch (_) {}
-    _cleanup();
-    state = const CallStateEnded(outcome: CallOutcome.rejected);
+    _setEnded(CallOutcome.rejected);
   }
 
   Future<void> cancel() async {
@@ -103,18 +117,14 @@ class CallController extends _$CallController {
         await repo.cancelCall(_currentInvitationId!);
       } catch (_) {}
     }
-    _cleanup();
-    state = const CallStateEnded(outcome: CallOutcome.cancelled);
+    _setEnded(CallOutcome.cancelled);
   }
 
   Future<void> hangup() async {
     if (_hangupInProgress) return;
     _hangupInProgress = true;
     try {
-      final connectedAt = _connectedAt;
-      final durationSec = connectedAt != null
-          ? DateTime.now().difference(connectedAt).inSeconds
-          : 0;
+      final durationSec = _computeDuration();
       if (_currentInvitationId != null) {
         try {
           final repo = ref.read(callRepositoryProvider);
@@ -122,7 +132,7 @@ class CallController extends _$CallController {
         } catch (_) {}
       }
       _cleanup();
-      state = const CallStateEnded(outcome: CallOutcome.accepted);
+      state = CallStateEnded(outcome: CallOutcome.accepted, durationSec: durationSec);
     } finally {
       _hangupInProgress = false;
     }
@@ -138,6 +148,17 @@ class CallController extends _$CallController {
     final participant = _room?.localParticipant;
     if (participant == null) return;
     await participant.setCameraEnabled(!participant.isCameraEnabled());
+  }
+
+  Future<void> switchCamera() async {
+    final track = _room?.localParticipant?.videoTrackPublications.firstOrNull?.track;
+    if (track == null) return;
+    await track.switchCamera('');
+  }
+
+  void resetToIdle() {
+    _cleanup();
+    state = const CallStateIdle();
   }
 
   Future<String> _resolveInvitationId(String roomName) async {
@@ -158,17 +179,13 @@ class CallController extends _$CallController {
     _outgoingSub = repo.outgoingCallUpdates(invitationId).listen((inv) {
       switch (inv.state) {
         case 'rejected':
-          _cleanup();
-          state = const CallStateEnded(outcome: CallOutcome.rejected);
+          _setEnded(CallOutcome.rejected);
         case 'missed':
-          _cleanup();
-          state = const CallStateEnded(outcome: CallOutcome.missed);
+          _setEnded(CallOutcome.missed);
         case 'cancelled':
-          _cleanup();
-          state = const CallStateEnded(outcome: CallOutcome.cancelled);
+          _setEnded(CallOutcome.cancelled);
         case 'timeout':
-          _cleanup();
-          state = const CallStateEnded(outcome: CallOutcome.timeout);
+          _setEnded(CallOutcome.timeout);
       }
     });
   }
@@ -185,7 +202,11 @@ class CallController extends _$CallController {
     _onParticipantConnected =
         room.events.on<ParticipantConnectedEvent>((event) {
       _connectedAt = DateTime.now();
-      state = CallStateActive(room: room, peer: event.participant);
+      state = CallStateActive(
+        room: room,
+        peer: event.participant,
+        hasVideo: _hasVideo,
+      );
     });
 
     _onParticipantDisconnected =
@@ -194,8 +215,9 @@ class CallController extends _$CallController {
     });
 
     _onRoomDisconnected = room.events.on<RoomDisconnectedEvent>((event) {
+      final durationSec = _computeDuration();
       _cleanup();
-      state = const CallStateEnded(outcome: CallOutcome.accepted);
+      state = CallStateEnded(outcome: CallOutcome.accepted, durationSec: durationSec);
     });
 
     await room.connect(token.wsUrl, token.token);

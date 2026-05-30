@@ -421,6 +421,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reject'**
   String get rejectCall;
+
+  /// Label shown while connecting to a call
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get callConnecting;
+
+  /// Label shown while calling someone
+  ///
+  /// In en, this message translates to:
+  /// **'Calling {name}…'**
+  String callOutgoing(String name);
+
+  /// Title of the call ended screen
+  ///
+  /// In en, this message translates to:
+  /// **'Call ended'**
+  String get callEndedTitle;
+
+  /// Button to close the ended call screen
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get callEndedClose;
+
+  /// Label when a call was accepted and then ended
+  ///
+  /// In en, this message translates to:
+  /// **'Call ended'**
+  String get callOutcomeAccepted;
+
+  /// Label when a call was rejected
+  ///
+  /// In en, this message translates to:
+  /// **'Call rejected'**
+  String get callOutcomeRejected;
+
+  /// Label when a call was missed
+  ///
+  /// In en, this message translates to:
+  /// **'Missed call'**
+  String get callOutcomeMissed;
+
+  /// Label when a call was cancelled
+  ///
+  /// In en, this message translates to:
+  /// **'Call cancelled'**
+  String get callOutcomeCancelled;
+
+  /// Label when the callee is busy
+  ///
+  /// In en, this message translates to:
+  /// **'Busy'**
+  String get callOutcomeBusy;
+
+  /// Label when the call timed out
+  ///
+  /// In en, this message translates to:
+  /// **'No answer'**
+  String get callOutcomeTimeout;
+
+  /// Button to end an active call
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get callEndButton;
+
+  /// Button to cancel an outgoing call
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get callCancelButton;
+
+  /// Button to mute microphone
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get callMute;
+
+  /// Button to unmute microphone
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get callUnmute;
+
+  /// Button to turn camera off
+  ///
+  /// In en, this message translates to:
+  /// **'Camera off'**
+  String get callCameraOff;
+
+  /// Button to turn camera on
+  ///
+  /// In en, this message translates to:
+  /// **'Camera on'**
+  String get callCameraOn;
+
+  /// Button to switch between front and back camera
+  ///
+  /// In en, this message translates to:
+  /// **'Flip'**
+  String get callSwitchCamera;
+
+  /// Button stub for screen share (Phase 5)
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get callScreenShareStub;
+
+  /// Accessibility label for video call button on contacts
+  ///
+  /// In en, this message translates to:
+  /// **'Video call'**
+  String get callVideoButton;
+
+  /// Accessibility label for audio call button on contacts
+  ///
+  /// In en, this message translates to:
+  /// **'Audio call'**
+  String get callAudioButton;
 }
 
 class _AppLocalizationsDelegate

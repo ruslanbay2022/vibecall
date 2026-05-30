@@ -2,6 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:vibecall/features/call/presentation/providers/call_controller.dart';
+import 'package:vibecall/features/call/presentation/providers/call_state.dart';
 import 'package:vibecall/features/contacts/data/contacts_repository.dart';
 import 'package:vibecall/features/contacts/presentation/providers/contacts_controller.dart';
 import 'package:vibecall/features/presence/presentation/providers/presence_controller.dart';
@@ -84,6 +86,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen>
                         repo: repo,
                         onlineUserIds: onlineUserIds,
                         showRemove: true,
+                        showCall: true,
                       ),
                       _ContactList(
                         contacts: incoming,
@@ -119,6 +122,7 @@ class _ContactList extends ConsumerWidget {
   final bool showReject;
   final bool showRemove;
   final bool showCancel;
+  final bool showCall;
 
   const _ContactList({
     required this.contacts,
@@ -128,6 +132,7 @@ class _ContactList extends ConsumerWidget {
     this.showReject = false,
     this.showRemove = false,
     this.showCancel = false,
+    this.showCall = false,
   });
 
   @override
@@ -170,6 +175,34 @@ class _ContactList extends ConsumerWidget {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (showCall) ...[
+                Consumer(
+                  builder: (context, ref, _) {
+                    final idle = ref.watch(callControllerProvider) is CallStateIdle;
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.phone),
+                          onPressed: idle
+                              ? () => ref
+                                  .read(callControllerProvider.notifier)
+                                  .startCall(receiverId: otherUserId, video: false)
+                              : null,
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.videocam),
+                          onPressed: idle
+                              ? () => ref
+                                  .read(callControllerProvider.notifier)
+                                  .startCall(receiverId: otherUserId, video: true)
+                              : null,
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
               if (showAccept)
                 IconButton(
                   icon: const Icon(Icons.check),

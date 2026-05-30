@@ -182,4 +182,66 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rejectCall => 'Reject';
+
+  @override
+  String get callConnecting => 'Connecting…';
+
+  @override
+  String callOutgoing(String name) {
+    return 'Calling $name…';
+  }
+
+  @override
+  String get callEndedTitle => 'Call ended';
+
+  @override
+  String get callEndedClose => 'Close';
+
+  @override
+  String get callOutcomeAccepted => 'Call ended';
+
+  @override
+  String get callOutcomeRejected => 'Call rejected';
+
+  @override
+  String get callOutcomeMissed => 'Missed call';
+
+  @override
+  String get callOutcomeCancelled => 'Call cancelled';
+
+  @override
+  String get callOutcomeBusy => 'Busy';
+
+  @override
+  String get callOutcomeTimeout => 'No answer';
+
+  @override
+  String get callEndButton => 'End';
+
+  @override
+  String get callCancelButton => 'Cancel';
+
+  @override
+  String get callMute => 'Mute';
+
+  @override
+  String get callUnmute => 'Unmute';
+
+  @override
+  String get callCameraOff => 'Camera off';
+
+  @override
+  String get callCameraOn => 'Camera on';
+
+  @override
+  String get callSwitchCamera => 'Flip';
+
+  @override
+  String get callScreenShareStub => 'Share';
+
+  @override
+  String get callVideoButton => 'Video call';
+
+  @override
+  String get callAudioButton => 'Audio call';
 }
