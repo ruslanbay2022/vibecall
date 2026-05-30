@@ -82,6 +82,7 @@ Phase 2 закрыта (`c0a11c5`).
 - 3.1 — call_invitations + call_history migrations (`53c8db4`)
 - 3.2 — LiveKit dev + Cloudflare Tunnel (`c338da7`)
 - 3.3 — Edge Functions for LiveKit tokens (`d6a9d93`, fix-up `c929d30`)
+- 3.4 — pg_cron call invitation timeout (`d211234`)
 
 ## Лицензия
 
