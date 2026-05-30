@@ -1794,9 +1794,24 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
    ```
 2. Подписаться на `room.events` (`ParticipantConnected`, `ParticipantDisconnected`, `Disconnected`) и обновлять state.
 
-**Acceptance**: интеграционно — два клиента в одной сети могут установить соединение через локальный LiveKit (manual test).
+**Acceptance**:
+- [x] Unit-level: CallController + state machine (12 tests, PR #46 CI)
+- [ ] Manual: два клиента connect via LiveKit dev — **Deferred → Step 3.8** (нужны 3.7 listener + ActiveCallScreen UI)
 
-**Out**: `CallController`.
+**Status**: done — 5b9b081 (+ fix-up in squash: notifyIncoming, hangup guard, timeout outcome)
+
+**Deferred**: manual LiveKit e2e (2 clients) → Step 3.8 после 3.7 overlay + 3.8 screen
+
+**Out**: `client/lib/features/call/presentation/providers/call_controller.dart`, `call_state.dart`, `domain/call_outcome.dart`, `test/.../call_controller_test.dart`
+
+**Pitfalls**:
+- CallState: Dart 3 sealed classes, не Freezed (как 3.5)
+- `notifyIncoming()` — entry point для Step 3.7 listener (accept требует `CallStateIncoming`)
+- `invitationId`: query by `room_name` после `startCall` (не в CallToken)
+- LiveKit `ParticipantConnectedEvent.participant` — typed RemoteParticipant в SDK 2.7
+- hangup re-entry guard — avoid double `endCall`
+- client-only PR: supabase db lint path-filtered; merge via bypass ok
+- один `gh pr create` на шаг
 
 ### Step 3.7 — Incoming call listener + BroadcastChannel
 
