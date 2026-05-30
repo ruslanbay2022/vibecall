@@ -1713,11 +1713,22 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
    );
    ```
 
-**Acceptance**: создать invitation вручную с `expires_at = now() - interval '1 minute'`, через минуту state = missed.
+**Acceptance**:
+- [x] Миграция `0010` применена (local lint/reset CI #42; cloud — SQL Editor + `schema_migrations` 0010; user)
+- [x] `expire_old_call_invitations()`: ringing + `expires_at < now()` → `missed` (cloud: функция + cron job `expire-call-invitations`; cron каждую минуту)
 
-**Out**: миграция `0010`.
+**Status**: done — d211234
 
-**Pitfalls**: `pg_cron` не входит в Free Tier некоторых регионов Supabase. Если недоступен — fallback: серверный таймер в Flutter-клиенте получателя, который через 45s отправляет `update state=missed` (RLS уже разрешает receiver-у это делать).
+**Out**: `supabase/migrations/0010_pg_cron_call_timeout.sql`
+
+**Pitfalls**:
+- cloud `db push`: timeout TCP 5432 (firewall/ISP) → fallback Dashboard SQL Editor + `insert into supabase_migrations.schema_migrations (version) values ('0010')`
+- pg_cron: включить в Dashboard → Extensions до push/SQL
+- cron granularity `*/1 * * * *` (не 30s — как в PLAN Action)
+- `security definer` + `search_path = public` — как в миграции
+- SQL-only PR: CI `supabase db lint`; Flutter path-filtered
+- client-side missed fallback — если pg_cron недоступен (не нужен — pg_cron работает у user)
+- один `gh pr create` на шаг
 
 ### Step 3.5 — Call data layer
 
