@@ -162,4 +162,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get offlineStatus => 'Offline';
+
+  @override
+  String get incomingCallTitle => 'Incoming call';
+
+  @override
+  String incomingCallFrom(String callerName) {
+    return '$callerName is calling';
+  }
+
+  @override
+  String get incomingCallVideo => 'Video call';
+
+  @override
+  String get incomingCallAudio => 'Audio call';
+
+  @override
+  String get acceptCall => 'Accept';
+
+  @override
+  String get rejectCall => 'Reject';
 }

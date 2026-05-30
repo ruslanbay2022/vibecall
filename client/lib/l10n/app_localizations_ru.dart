@@ -163,4 +163,24 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get offlineStatus => 'Не в сети';
+
+  @override
+  String get incomingCallTitle => 'Входящий звонок';
+
+  @override
+  String incomingCallFrom(String callerName) {
+    return '$callerName звонит';
+  }
+
+  @override
+  String get incomingCallVideo => 'Видеозвонок';
+
+  @override
+  String get incomingCallAudio => 'Аудиозвонок';
+
+  @override
+  String get acceptCall => 'Ответить';
+
+  @override
+  String get rejectCall => 'Отклонить';
 }

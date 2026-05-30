@@ -47,5 +47,11 @@
   "searchNoResults": "Пользователи не найдены",
   "searchAddError": "Не удалось добавить пользователя",
   "onlineStatus": "В сети",
-  "offlineStatus": "Не в сети"
+  "offlineStatus": "Не в сети",
+  "incomingCallTitle": "Входящий звонок",
+  "incomingCallFrom": "{callerName} звонит",
+  "incomingCallVideo": "Видеозвонок",
+  "incomingCallAudio": "Аудиозвонок",
+  "acceptCall": "Ответить",
+  "rejectCall": "Отклонить"
 }

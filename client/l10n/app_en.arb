@@ -216,5 +216,34 @@
   "offlineStatus": "Offline",
   "@offlineStatus": {
     "description": "Status label shown when a contact is offline"
+  },
+  "incomingCallTitle": "Incoming call",
+  "@incomingCallTitle": {
+    "description": "Title of the incoming call overlay"
+  },
+  "incomingCallFrom": "{callerName} is calling",
+  "@incomingCallFrom": {
+    "description": "Message shown when someone is calling",
+    "placeholders": {
+      "callerName": {
+        "type": "String"
+      }
+    }
+  },
+  "incomingCallVideo": "Video call",
+  "@incomingCallVideo": {
+    "description": "Label shown when the incoming call is a video call"
+  },
+  "incomingCallAudio": "Audio call",
+  "@incomingCallAudio": {
+    "description": "Label shown when the incoming call is an audio call"
+  },
+  "acceptCall": "Accept",
+  "@acceptCall": {
+    "description": "Button to accept an incoming call"
+  },
+  "rejectCall": "Reject",
+  "@rejectCall": {
+    "description": "Button to reject an incoming call"
   }
 }
