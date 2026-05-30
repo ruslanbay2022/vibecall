@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vibecall/features/call/data/call_repository.dart';
 import 'package:vibecall/features/call/domain/call_invitation.dart';
 import 'package:vibecall/features/call/presentation/providers/call_controller.dart';
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
@@ -96,8 +97,12 @@ class IncomingCallOverlay extends ConsumerWidget {
     ref.read(callControllerProvider.notifier).accept(inv);
   }
 
-  void _reject(BuildContext context, WidgetRef ref, CallInvitation inv) {
-    ref.read(callControllerProvider.notifier).reject(inv);
+  Future<void> _reject(BuildContext context, WidgetRef ref, CallInvitation inv) async {
+    final repo = ref.read(callRepositoryProvider);
+    try {
+      await repo.rejectCall(inv.id);
+    } catch (_) {}
+    ref.read(callControllerProvider.notifier).clearIncoming();
     ref.read(callCoordinatorProvider).postDismiss(inv.id);
   }
 }

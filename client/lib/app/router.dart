@@ -75,12 +75,16 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const ConfirmEmailScreen(),
     ),
     GoRoute(
-      path: '/onboarding',
-      builder: (context, state) => const OnboardingScreen(),
+      path: '/',
+      redirect: (context, state) => '/home',
     ),
     ShellRoute(
       builder: (context, state, child) => CallAppShell(child: child),
       routes: [
+        GoRoute(
+          path: '/onboarding',
+          builder: (context, state) => const OnboardingScreen(),
+        ),
         GoRoute(
           path: '/home',
           builder: (context, state) => const HomePlaceholderScreen(),
@@ -99,9 +103,6 @@ final GoRouter router = GoRouter(
         ),
       ],
     ),
-    GoRoute(
-      path: '/',
-      redirect: (context, state) => '/home',
-    ),
+
   ],
 );

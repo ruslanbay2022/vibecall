@@ -35,10 +35,16 @@ extension JsMessageEventExt on JsMessageEvent {
   external JSAny? get data;
 }
 
+class _ElectionState {
+  final List<Map<String, dynamic>> claims = [];
+  bool externalRing = false;
+}
+
 class WebCallTabCoordinator implements CallTabCoordinator {
   final String _tabId;
   final JsBroadcastChannel _channel;
   final _dismissController = StreamController<String>.broadcast();
+  final _pendingElections = <String, _ElectionState>{};
   bool _isLeader = false;
   String? _activeInvitationId;
 
@@ -58,6 +64,9 @@ class WebCallTabCoordinator implements CallTabCoordinator {
   Future<bool> tryBecomeLeader(String invitationId) async {
     if (_isLeader && _activeInvitationId == invitationId) return true;
 
+    final election = _ElectionState();
+    _pendingElections[invitationId] = election;
+
     _postMsg({
       'type': 'claim',
       'invitationId': invitationId,
@@ -66,6 +75,24 @@ class WebCallTabCoordinator implements CallTabCoordinator {
     });
 
     await Future.delayed(const Duration(milliseconds: 200));
+
+    _pendingElections.remove(invitationId);
+
+    if (election.externalRing) return false;
+
+    election.claims.add({
+      'tabId': _tabId,
+      'ts': DateTime.now().millisecondsSinceEpoch.toString(),
+    });
+
+    final unique = <String, Map<String, dynamic>>{};
+    for (final c in election.claims) {
+      unique[c['tabId'] as String] = c;
+    }
+    final sorted = unique.values.toList()
+      ..sort((a, b) => (a['tabId'] as String).compareTo(b['tabId'] as String));
+
+    if (sorted.isEmpty || sorted.first['tabId'] != _tabId) return false;
 
     _isLeader = true;
     _activeInvitationId = invitationId;
@@ -95,9 +122,27 @@ class WebCallTabCoordinator implements CallTabCoordinator {
     if (str is! String) return;
     final parsed = jsonDecode(str) as Map<String, dynamic>;
 
-    final type = parsed['type'];
-    if (type == 'dismiss' && parsed['invitationId'] is String) {
-      final invId = parsed['invitationId'] as String;
+    final type = parsed['type'] as String?;
+    final invId = parsed['invitationId'] as String?;
+    final tabId = parsed['tabId'] as String?;
+
+    if (type == null || invId == null) return;
+
+    if (type == 'claim' && tabId != null) {
+      _pendingElections[invId]?.claims.add(parsed);
+      return;
+    }
+
+    if (type == 'ring' && tabId != null && tabId != _tabId) {
+      _pendingElections[invId]?.externalRing = true;
+      if (_isLeader && _activeInvitationId == invId) {
+        _isLeader = false;
+        _activeInvitationId = null;
+      }
+      return;
+    }
+
+    if (type == 'dismiss') {
       _dismissController.add(invId);
       if (_activeInvitationId == invId) {
         _isLeader = false;
