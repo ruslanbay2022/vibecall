@@ -85,6 +85,7 @@ Phase 2 закрыта (`c0a11c5`).
 - 3.4 — pg_cron call invitation timeout (`d211234`)
 - 3.5 — Call data layer (`e0f818d`)
 - 3.6 — CallController (`5b9b081`)
+- 3.7 — incoming call listener + overlay (`966f117`)
 
 ## Лицензия
 

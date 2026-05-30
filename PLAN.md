@@ -1825,10 +1825,23 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 3. Реализовать через `go_router` `ShellRoute` + `Overlay`.
 
 **Acceptance**:
-- [ ] Открыть 2 вкладки одного аккаунта → звонок звенит только в одной
-- [ ] Reject в одной вкладке закрывает overlay в обеих (через BroadcastChannel)
+- [x] Unit: listener + coordinator (15 call tests: 11 coordinator + 4 listener; 61 total, PR #48 CI)
+- [x] `flutter analyze` / `flutter build web` — PR #48 CI
+- [ ] Manual: 2 вкладки одного аккаунта → overlay только в одной — **Deferred → user QA** (нет UI исходящего звонка до 3.8; можно через DevTools `startCall` или после 3.8)
+- [ ] Manual: Reject → overlay закрыт, второй incoming снова показывается — **Deferred → user QA**
 
-**Out**: `IncomingCallOverlay`, `incomingCallListenerProvider`.
+**Status**: done — 966f117 (+ fix-up in squash: web leader election, reject→idle, onboarding in shell)
+
+**Deferred**: manual 2-tab BroadcastChannel QA → user после merge (или вместе с Step 3.8 e2e)
+
+**Out**: `incoming_call_listener.dart`, `call_tab_coordinator*.dart`, `incoming_call_overlay.dart`, `call_app_shell.dart`, `router.dart` (ShellRoute), l10n keys, `test/.../incoming_call_listener_test.dart`, `test/.../call_tab_coordinator_test.dart`; `call_controller.dart` (+`clearIncoming()`)
+
+**Pitfalls**:
+- Web leader election: claim/ring + 200ms window + lexicographic min `tabId`; `navigator.locks` не использован (fallback voting)
+- Reject из overlay: `rejectCall` + `clearIncoming()` + `postDismiss` — не `CallController.reject()` (иначе `CallStateEnded`)
+- `CallAppShell` eager-watches `incomingCallListenerProvider`
+- Election logic дублирована в test `_pickLeader` vs web impl — при изменении синхронизировать
+- Residual race: election может завершиться до чужого `claim` (>200ms) — маловероятно для BroadcastChannel
 
 ### Step 3.8 — Active call screen
 
