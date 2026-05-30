@@ -62,6 +62,52 @@ void main() {
       expect(controller.state, isA<CallStateIdle>());
     });
 
+    test('notifyIncoming sets incoming when idle', () {
+      final controller = createController();
+      final invitation = CallInvitation(
+        id: 'inv-1',
+        roomName: 'dm_a__b_1000',
+        callerId: 'user-c',
+        receiverId: 'user-a',
+        hasVideo: true,
+        state: 'ringing',
+        createdAt: DateTime.now(),
+        expiresAt: DateTime.now().add(const Duration(seconds: 45)),
+      );
+
+      controller.notifyIncoming(invitation);
+
+      expect(controller.state, isA<CallStateIncoming>());
+      expect(
+        (controller.state as CallStateIncoming).invitation.id,
+        'inv-1',
+      );
+    });
+
+    test('notifyIncoming ignored when not idle', () async {
+      when(() => mockRepo.startCall(
+            any(),
+            hasVideo: any(named: 'hasVideo'),
+          )).thenThrow(CallBusyException());
+
+      final controller = createController();
+      await controller.startCall(receiverId: 'user-b', video: true);
+      final afterBusy = controller.state;
+
+      controller.notifyIncoming(CallInvitation(
+        id: 'inv-2',
+        roomName: 'dm_x__y_2000',
+        callerId: 'user-x',
+        receiverId: 'user-a',
+        hasVideo: false,
+        state: 'ringing',
+        createdAt: DateTime.now(),
+        expiresAt: DateTime.now().add(const Duration(seconds: 45)),
+      ));
+
+      expect(controller.state, same(afterBusy));
+    });
+
     test('startCall with busy transitions to ended(busy)', () async {
       when(() => mockRepo.startCall(
             any(),

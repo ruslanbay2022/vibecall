@@ -20,6 +20,7 @@ class CallController extends _$CallController {
   CancelListenFunc? _onParticipantConnected;
   CancelListenFunc? _onParticipantDisconnected;
   CancelListenFunc? _onRoomDisconnected;
+  bool _hangupInProgress = false;
 
   /// Override in tests to mock LiveKit connection.
   Future<void> Function(CallToken token, {required bool video})?
@@ -29,6 +30,12 @@ class CallController extends _$CallController {
   CallState build() {
     ref.onDispose(_dispose);
     return const CallStateIdle();
+  }
+
+  /// Called by incoming-call listener (Step 3.7) when a ringing invitation arrives.
+  void notifyIncoming(CallInvitation invitation) {
+    if (state is! CallStateIdle) return;
+    state = CallStateIncoming(invitation: invitation);
   }
 
   Future<void> startCall({
@@ -93,18 +100,24 @@ class CallController extends _$CallController {
   }
 
   Future<void> hangup() async {
-    final connectedAt = _connectedAt;
-    final durationSec = connectedAt != null
-        ? DateTime.now().difference(connectedAt).inSeconds
-        : 0;
-    if (_currentInvitationId != null) {
-      try {
-        final repo = ref.read(callRepositoryProvider);
-        await repo.endCall(_currentInvitationId!, durationSec);
-      } catch (_) {}
+    if (_hangupInProgress) return;
+    _hangupInProgress = true;
+    try {
+      final connectedAt = _connectedAt;
+      final durationSec = connectedAt != null
+          ? DateTime.now().difference(connectedAt).inSeconds
+          : 0;
+      if (_currentInvitationId != null) {
+        try {
+          final repo = ref.read(callRepositoryProvider);
+          await repo.endCall(_currentInvitationId!, durationSec);
+        } catch (_) {}
+      }
+      _cleanup();
+      state = const CallStateEnded(outcome: CallOutcome.accepted);
+    } finally {
+      _hangupInProgress = false;
     }
-    _cleanup();
-    state = const CallStateEnded(outcome: CallOutcome.accepted);
   }
 
   Future<void> toggleMute() async {
@@ -145,6 +158,9 @@ class CallController extends _$CallController {
         case 'cancelled':
           _cleanup();
           state = const CallStateEnded(outcome: CallOutcome.cancelled);
+        case 'timeout':
+          _cleanup();
+          state = const CallStateEnded(outcome: CallOutcome.timeout);
       }
     });
   }
