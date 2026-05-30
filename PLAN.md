@@ -1743,9 +1743,21 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
    - `Stream<CallInvitation> incomingCallStream()` — Realtime подписка на INSERT в call_invitations where receiver_id = auth.uid
    - `Stream<CallInvitation> outgoingCallUpdates(id)` — UPDATE на конкретное приглашение
 
-**Acceptance**: unit-тесты с mock Supabase-клиента.
+**Acceptance**:
+- [x] Unit-тесты с mock Supabase-клиента (10 tests, `call_repository_test.dart`; PR #44 CI)
 
-**Out**: `features/call/data/`.
+**Status**: done — e0f818d
+
+**Out**: `client/lib/features/call/data/` + `client/lib/features/call/domain/call_invitation.dart` + `client/test/features/call/data/call_repository_test.dart`
+
+**Pitfalls**:
+- plain Dart classes вместо Freezed (PLAN Action 1 — Freezed; реализация по конвенции репо, Freezed 3.2.5 + Dart 3.8+)
+- `endCall`: `invitationId` + `durationSec` (§12.2), не `roomName`
+- `cancelCall`: direct DB update `state=cancelled`, не Edge Function
+- `call_repository.g.dart`: CI `build_runner`, не коммитится (как другие providers)
+- `FunctionException` 409 → `CallBusyException`
+- client-only PR: `supabase db lint` path-filtered; merge via bypass ok
+- один `gh pr create` на шаг
 
 ### Step 3.6 — CallController (Riverpod)
 
