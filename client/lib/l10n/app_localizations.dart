@@ -385,6 +385,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Offline'**
   String get offlineStatus;
+
+  /// Title of the incoming call overlay
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming call'**
+  String get incomingCallTitle;
+
+  /// Message shown when someone is calling
+  ///
+  /// In en, this message translates to:
+  /// **'{callerName} is calling'**
+  String incomingCallFrom(String callerName);
+
+  /// Label shown when the incoming call is a video call
+  ///
+  /// In en, this message translates to:
+  /// **'Video call'**
+  String get incomingCallVideo;
+
+  /// Label shown when the incoming call is an audio call
+  ///
+  /// In en, this message translates to:
+  /// **'Audio call'**
+  String get incomingCallAudio;
+
+  /// Button to accept an incoming call
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get acceptCall;
+
+  /// Button to reject an incoming call
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get rejectCall;
 }
 
 class _AppLocalizationsDelegate

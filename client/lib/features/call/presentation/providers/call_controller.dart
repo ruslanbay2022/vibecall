@@ -38,6 +38,14 @@ class CallController extends _$CallController {
     state = CallStateIncoming(invitation: invitation);
   }
 
+  /// Reset from incoming state to idle (used by overlay on reject/dismiss).
+  void clearIncoming() {
+    if (state is CallStateIncoming) {
+      _cleanup();
+      state = const CallStateIdle();
+    }
+  }
+
   Future<void> startCall({
     required String receiverId,
     required bool video,

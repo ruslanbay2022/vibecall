@@ -7,6 +7,7 @@ import 'package:vibecall/features/auth/presentation/screens/confirm_email_screen
 import 'package:vibecall/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:vibecall/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:vibecall/features/contacts/presentation/screens/contacts_screen.dart';
+import 'package:vibecall/features/call/presentation/widgets/call_app_shell.dart';
 import 'package:vibecall/features/home/presentation/home_placeholder_screen.dart';
 import 'package:vibecall/features/search/presentation/screens/search_screen.dart';
 import 'package:vibecall/features/onboarding/presentation/screens/onboarding_screen.dart';
@@ -74,28 +75,34 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const ConfirmEmailScreen(),
     ),
     GoRoute(
-      path: '/onboarding',
-      builder: (context, state) => const OnboardingScreen(),
-    ),
-    GoRoute(
-      path: '/home',
-      builder: (context, state) => const HomePlaceholderScreen(),
-    ),
-    GoRoute(
-      path: '/profile',
-      builder: (context, state) => const ProfileScreen(),
-    ),
-    GoRoute(
-      path: '/search',
-      builder: (context, state) => const SearchScreen(),
-    ),
-    GoRoute(
-      path: '/contacts',
-      builder: (context, state) => const ContactsScreen(),
-    ),
-    GoRoute(
       path: '/',
       redirect: (context, state) => '/home',
     ),
+    ShellRoute(
+      builder: (context, state, child) => CallAppShell(child: child),
+      routes: [
+        GoRoute(
+          path: '/onboarding',
+          builder: (context, state) => const OnboardingScreen(),
+        ),
+        GoRoute(
+          path: '/home',
+          builder: (context, state) => const HomePlaceholderScreen(),
+        ),
+        GoRoute(
+          path: '/profile',
+          builder: (context, state) => const ProfileScreen(),
+        ),
+        GoRoute(
+          path: '/search',
+          builder: (context, state) => const SearchScreen(),
+        ),
+        GoRoute(
+          path: '/contacts',
+          builder: (context, state) => const ContactsScreen(),
+        ),
+      ],
+    ),
+
   ],
 );
