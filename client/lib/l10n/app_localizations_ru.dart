@@ -183,4 +183,70 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get rejectCall => 'Отклонить';
+
+  @override
+  String get callConnecting => 'Подключение…';
+
+  @override
+  String callOutgoing(String name) {
+    return 'Звонок $name…';
+  }
+
+  @override
+  String get callEndedTitle => 'Звонок завершён';
+
+  @override
+  String get callEndedClose => 'Закрыть';
+
+  @override
+  String get callOutcomeAccepted => 'Звонок завершён';
+
+  @override
+  String get callOutcomeRejected => 'Отклонён';
+
+  @override
+  String get callOutcomeMissed => 'Пропущен';
+
+  @override
+  String get callOutcomeCancelled => 'Отменён';
+
+  @override
+  String get callOutcomeBusy => 'Занято';
+
+  @override
+  String get callOutcomeTimeout => 'Нет ответа';
+
+  @override
+  String get callEndButton => 'Завершить';
+
+  @override
+  String get callCancelButton => 'Отменить';
+
+  @override
+  String get callMute => 'Выкл. звук';
+
+  @override
+  String get callUnmute => 'Вкл. звук';
+
+  @override
+  String get callCameraOff => 'Выкл. камеру';
+
+  @override
+  String get callCameraOn => 'Вкл. камеру';
+
+  @override
+  String get callCameraEnableFailed =>
+      'Камера недоступна — возможно, её использует собеседник или другое приложение';
+
+  @override
+  String get callSwitchCamera => 'Повернуть';
+
+  @override
+  String get callScreenShareStub => 'Экран';
+
+  @override
+  String get callVideoButton => 'Видеозвонок';
+
+  @override
+  String get callAudioButton => 'Аудиозвонок';
 }

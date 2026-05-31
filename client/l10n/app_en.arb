@@ -245,5 +245,94 @@
   "rejectCall": "Reject",
   "@rejectCall": {
     "description": "Button to reject an incoming call"
+  },
+  "callConnecting": "Connecting\u2026",
+  "@callConnecting": {
+    "description": "Label shown while connecting to a call"
+  },
+  "callOutgoing": "Calling {name}\u2026",
+  "@callOutgoing": {
+    "description": "Label shown while calling someone",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callEndedTitle": "Call ended",
+  "@callEndedTitle": {
+    "description": "Title of the call ended screen"
+  },
+  "callEndedClose": "Close",
+  "@callEndedClose": {
+    "description": "Button to close the ended call screen"
+  },
+  "callOutcomeAccepted": "Call ended",
+  "@callOutcomeAccepted": {
+    "description": "Label when a call was accepted and then ended"
+  },
+  "callOutcomeRejected": "Call rejected",
+  "@callOutcomeRejected": {
+    "description": "Label when a call was rejected"
+  },
+  "callOutcomeMissed": "Missed call",
+  "@callOutcomeMissed": {
+    "description": "Label when a call was missed"
+  },
+  "callOutcomeCancelled": "Call cancelled",
+  "@callOutcomeCancelled": {
+    "description": "Label when a call was cancelled"
+  },
+  "callOutcomeBusy": "Busy",
+  "@callOutcomeBusy": {
+    "description": "Label when the callee is busy"
+  },
+  "callOutcomeTimeout": "No answer",
+  "@callOutcomeTimeout": {
+    "description": "Label when the call timed out"
+  },
+  "callEndButton": "End",
+  "@callEndButton": {
+    "description": "Button to end an active call"
+  },
+  "callCancelButton": "Cancel",
+  "@callCancelButton": {
+    "description": "Button to cancel an outgoing call"
+  },
+  "callMute": "Mute",
+  "@callMute": {
+    "description": "Button to mute microphone"
+  },
+  "callUnmute": "Unmute",
+  "@callUnmute": {
+    "description": "Button to unmute microphone"
+  },
+  "callCameraOff": "Camera off",
+  "@callCameraOff": {
+    "description": "Button to turn camera off"
+  },
+  "callCameraOn": "Camera on",
+  "@callCameraOn": {
+    "description": "Button to turn camera on"
+  },
+  "callCameraEnableFailed": "Camera unavailable — it may be in use by the other participant or another app",
+  "@callCameraEnableFailed": {
+    "description": "Snackbar when local camera cannot be opened"
+  },
+  "callSwitchCamera": "Flip",
+  "@callSwitchCamera": {
+    "description": "Button to switch between front and back camera"
+  },
+  "callScreenShareStub": "Share",
+  "@callScreenShareStub": {
+    "description": "Button stub for screen share (Phase 5)"
+  },
+  "callVideoButton": "Video call",
+  "@callVideoButton": {
+    "description": "Accessibility label for video call button on contacts"
+  },
+  "callAudioButton": "Audio call",
+  "@callAudioButton": {
+    "description": "Accessibility label for audio call button on contacts"
   }
 }

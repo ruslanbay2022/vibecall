@@ -6,8 +6,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vibecall/features/auth/presentation/screens/confirm_email_screen.dart';
 import 'package:vibecall/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:vibecall/features/auth/presentation/screens/sign_up_screen.dart';
-import 'package:vibecall/features/contacts/presentation/screens/contacts_screen.dart';
+import 'package:vibecall/features/call/presentation/screens/active_call_screen.dart';
 import 'package:vibecall/features/call/presentation/widgets/call_app_shell.dart';
+import 'package:vibecall/features/contacts/presentation/screens/contacts_screen.dart';
 import 'package:vibecall/features/home/presentation/home_placeholder_screen.dart';
 import 'package:vibecall/features/search/presentation/screens/search_screen.dart';
 import 'package:vibecall/features/onboarding/presentation/screens/onboarding_screen.dart';
@@ -100,6 +101,10 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: '/contacts',
           builder: (context, state) => const ContactsScreen(),
+        ),
+        GoRoute(
+          path: '/call',
+          builder: (context, state) => const ActiveCallScreen(),
         ),
       ],
     ),
