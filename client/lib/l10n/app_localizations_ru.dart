@@ -235,6 +235,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get callCameraOn => 'Вкл. камеру';
 
   @override
+  String get callCameraEnableFailed =>
+      'Камера недоступна — возможно, её использует собеседник или другое приложение';
+
+  @override
   String get callSwitchCamera => 'Повернуть';
 
   @override

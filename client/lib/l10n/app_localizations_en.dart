@@ -234,6 +234,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callCameraOn => 'Camera on';
 
   @override
+  String get callCameraEnableFailed =>
+      'Camera unavailable — it may be in use by the other participant or another app';
+
+  @override
   String get callSwitchCamera => 'Flip';
 
   @override

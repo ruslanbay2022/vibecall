@@ -315,6 +315,10 @@
   "@callCameraOn": {
     "description": "Button to turn camera on"
   },
+  "callCameraEnableFailed": "Camera unavailable — it may be in use by the other participant or another app",
+  "@callCameraEnableFailed": {
+    "description": "Snackbar when local camera cannot be opened"
+  },
   "callSwitchCamera": "Flip",
   "@callSwitchCamera": {
     "description": "Button to switch between front and back camera"

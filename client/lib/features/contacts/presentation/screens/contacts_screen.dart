@@ -178,13 +178,16 @@ class _ContactList extends ConsumerWidget {
               if (showCall) ...[
                 Consumer(
                   builder: (context, ref, _) {
-                    final idle = ref.watch(callControllerProvider) is CallStateIdle;
+                    final callState = ref.watch(callControllerProvider);
+                    final canCall = callState is! CallStateConnecting &&
+                        callState is! CallStateOutgoing &&
+                        callState is! CallStateActive;
                     return Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
                           icon: const Icon(Icons.phone),
-                          onPressed: idle
+                          onPressed: canCall
                               ? () => ref
                                   .read(callControllerProvider.notifier)
                                   .startCall(receiverId: otherUserId, video: false)
@@ -192,7 +195,7 @@ class _ContactList extends ConsumerWidget {
                         ),
                         IconButton(
                           icon: const Icon(Icons.videocam),
-                          onPressed: idle
+                          onPressed: canCall
                               ? () => ref
                                   .read(callControllerProvider.notifier)
                                   .startCall(receiverId: otherUserId, video: true)

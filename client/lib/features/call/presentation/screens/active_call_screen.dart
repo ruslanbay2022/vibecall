@@ -5,6 +5,7 @@ import 'package:vibecall/features/call/domain/call_outcome.dart';
 import 'package:vibecall/features/call/presentation/providers/call_controller.dart';
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
 import 'package:vibecall/features/call/presentation/widgets/call_hud.dart';
+import 'package:vibecall/features/call/presentation/widgets/call_media_utils.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
 class ActiveCallScreen extends ConsumerWidget {
@@ -82,21 +83,84 @@ class _OutgoingView extends ConsumerWidget {
   }
 }
 
-class _ActiveView extends StatelessWidget {
+class _ActiveView extends ConsumerStatefulWidget {
   final CallStateActive state;
 
   const _ActiveView({required this.state});
 
   @override
+  ConsumerState<_ActiveView> createState() => _ActiveViewState();
+}
+
+class _ActiveViewState extends ConsumerState<_ActiveView> {
+  final List<CancelListenFunc> _mediaListeners = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _subscribeRoomMedia(widget.state.room);
+  }
+
+  @override
+  void didUpdateWidget(covariant _ActiveView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.state.room, widget.state.room)) {
+      _unsubscribeRoomMedia();
+      _subscribeRoomMedia(widget.state.room);
+    } else if (oldWidget.state.mediaTick != widget.state.mediaTick) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    _unsubscribeRoomMedia();
+    super.dispose();
+  }
+
+  void _subscribeRoomMedia(Room room) {
+    void refresh(_) {
+      if (mounted) setState(() {});
+    }
+
+    _mediaListeners.addAll([
+      room.events.on<LocalTrackPublishedEvent>(refresh),
+      room.events.on<LocalTrackUnpublishedEvent>(refresh),
+      room.events.on<TrackPublishedEvent>(refresh),
+      room.events.on<TrackUnpublishedEvent>(refresh),
+      room.events.on<TrackMutedEvent>(refresh),
+      room.events.on<TrackUnmutedEvent>(refresh),
+    ]);
+  }
+
+  void _unsubscribeRoomMedia() {
+    for (final cancel in _mediaListeners) {
+      cancel();
+    }
+    _mediaListeners.clear();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final remoteTrack = state.peer.videoTrackPublications.firstOrNull?.track;
-    final localTrack = state.room.localParticipant?.videoTrackPublications.firstOrNull?.track;
+    final callState = ref.watch(callControllerProvider);
+    final active = callState is CallStateActive ? callState : widget.state;
+
+    final remoteTrack = active.hasVideo
+        ? participantCameraTrack(active.peer)
+        : null;
+    final localTrack = active.hasVideo
+        ? participantCameraTrack(active.room.localParticipant)
+        : null;
 
     return Stack(
       children: [
-        if (state.hasVideo && remoteTrack != null)
+        if (remoteTrack != null)
           Positioned.fill(
-            child: VideoTrackRenderer(remoteTrack, fit: VideoViewFit.cover),
+            child: VideoTrackRenderer(
+              key: ValueKey('remote-${remoteTrack.sid}'),
+              remoteTrack,
+              fit: VideoViewFit.cover,
+            ),
           )
         else
           const Positioned.fill(
@@ -110,7 +174,7 @@ class _ActiveView extends StatelessWidget {
               ),
             ),
           ),
-        if (state.hasVideo && localTrack != null)
+        if (localTrack != null)
           Positioned(
             top: 48,
             right: 16,
@@ -118,14 +182,18 @@ class _ActiveView extends StatelessWidget {
             height: 180,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: VideoTrackRenderer(localTrack, fit: VideoViewFit.cover),
+              child: VideoTrackRenderer(
+                key: ValueKey('local-${localTrack.sid}'),
+                localTrack,
+                fit: VideoViewFit.cover,
+              ),
             ),
           ),
         Positioned(
           left: 0,
           right: 0,
           bottom: 0,
-          child: CallHud(state: state),
+          child: CallHud(state: active),
         ),
       ],
     );

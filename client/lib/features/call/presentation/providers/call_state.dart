@@ -31,11 +31,13 @@ class CallStateActive extends CallState {
   final Room room;
   final RemoteParticipant peer;
   final bool hasVideo;
+  final int mediaTick;
 
   const CallStateActive({
     required this.room,
     required this.peer,
     this.hasVideo = true,
+    this.mediaTick = 0,
   });
 }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vibecall/features/call/presentation/providers/call_controller.dart';
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
+import 'package:vibecall/features/call/presentation/widgets/call_media_utils.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
 class CallHud extends ConsumerWidget {
@@ -11,12 +12,13 @@ class CallHud extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final callState = ref.watch(callControllerProvider);
+    final active = callState is CallStateActive ? callState : state;
     final l10n = AppLocalizations.of(context);
     final notifier = ref.read(callControllerProvider.notifier);
-    final room = state.room;
-    final local = room.localParticipant;
-    final isMuted = local?.isMicrophoneEnabled() ?? true;
-    final isCameraOn = local?.isCameraEnabled() ?? true;
+    final local = active.room.localParticipant;
+    final isMuted = !(local?.isMicrophoneEnabled() ?? false);
+    final isCameraOn = isParticipantCameraOn(local);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -37,16 +39,24 @@ class CallHud extends ConsumerWidget {
               label: isMuted ? l10n.callUnmute : l10n.callMute,
               onPressed: () => notifier.toggleMute(),
             ),
-            if (state.hasVideo)
+            if (active.hasVideo)
               _IconLabel(
                 icon: isCameraOn ? Icons.videocam : Icons.videocam_off,
                 label: isCameraOn ? l10n.callCameraOff : l10n.callCameraOn,
-                onPressed: () => notifier.toggleCamera(),
+                onPressed: () async {
+                  final ok = await notifier.toggleCamera();
+                  if (!ok && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.callCameraEnableFailed)),
+                    );
+                  }
+                },
               ),
-            if (state.hasVideo)
+            if (active.hasVideo)
               _IconLabel(
                 icon: Icons.flip_camera_ios,
                 label: l10n.callSwitchCamera,
+                enabled: isCameraOn,
                 onPressed: () => notifier.switchCamera(),
               ),
             _IconLabel(

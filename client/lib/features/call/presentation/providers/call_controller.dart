@@ -21,6 +21,7 @@ class CallController extends _$CallController {
   CancelListenFunc? _onParticipantConnected;
   CancelListenFunc? _onParticipantDisconnected;
   CancelListenFunc? _onRoomDisconnected;
+  CancelListenFunc? _onRoomMediaChanged;
   bool _hangupInProgress = false;
 
   /// Override in tests to mock LiveKit connection.
@@ -33,9 +34,17 @@ class CallController extends _$CallController {
     return const CallStateIdle();
   }
 
+  /// True when not in the middle of an active call flow (connecting/outgoing/active).
+  bool get _canStartNewCall {
+    return switch (state) {
+      CallStateConnecting() || CallStateOutgoing() || CallStateActive() => false,
+      _ => true,
+    };
+  }
+
   /// Called by incoming-call listener (Step 3.7) when a ringing invitation arrives.
   void notifyIncoming(CallInvitation invitation) {
-    if (state is! CallStateIdle) return;
+    if (!_canStartNewCall) return;
     state = CallStateIncoming(invitation: invitation);
   }
 
@@ -64,7 +73,7 @@ class CallController extends _$CallController {
     required String receiverId,
     required bool video,
   }) async {
-    if (state is! CallStateIdle) return;
+    if (!_canStartNewCall) return;
     _hasVideo = video;
     state = const CallStateConnecting();
 
@@ -77,7 +86,11 @@ class CallController extends _$CallController {
         roomName: token.roomName,
         receiverId: receiverId,
       );
-      await _connectRoom(token, video: video);
+      await _connectRoom(
+        token,
+        video: video,
+        enableLocalCamera: video,
+      );
     } on CallBusyException {
       _setEnded(CallOutcome.busy);
     } catch (e) {
@@ -95,7 +108,11 @@ class CallController extends _$CallController {
       final repo = ref.read(callRepositoryProvider);
       final token = await repo.acceptCall(inv.id);
       _currentInvitationId = inv.id;
-      await _connectRoom(token, video: inv.hasVideo);
+      await _connectRoom(
+        token,
+        video: inv.hasVideo,
+        enableLocalCamera: false,
+      );
     } catch (e) {
       _cleanup();
       state = CallStateError(message: e.toString());
@@ -141,13 +158,32 @@ class CallController extends _$CallController {
   Future<void> toggleMute() async {
     final participant = _room?.localParticipant;
     if (participant == null) return;
-    await participant.setMicrophoneEnabled(!participant.isMicrophoneEnabled());
+    try {
+      await participant.setMicrophoneEnabled(!participant.isMicrophoneEnabled());
+      _refreshActiveState();
+    } catch (_) {}
   }
 
-  Future<void> toggleCamera() async {
+  /// Returns false when enabling the camera failed (e.g. device in use).
+  Future<bool> toggleCamera() async {
     final participant = _room?.localParticipant;
-    if (participant == null) return;
-    await participant.setCameraEnabled(!participant.isCameraEnabled());
+    if (participant == null) return false;
+
+    final pub = participant.getTrackPublicationBySource(TrackSource.camera);
+    final cameraOn = pub != null && !pub.muted;
+
+    try {
+      if (cameraOn) {
+        await participant.removePublishedTrack(pub.sid);
+      } else {
+        await participant.setCameraEnabled(true);
+      }
+      _refreshActiveState();
+      return true;
+    } catch (_) {
+      _refreshActiveState();
+      return false;
+    }
   }
 
   Future<void> switchCamera() async {
@@ -190,7 +226,11 @@ class CallController extends _$CallController {
     });
   }
 
-  Future<void> _connectRoom(CallToken token, {required bool video}) async {
+  Future<void> _connectRoom(
+    CallToken token, {
+    required bool video,
+    required bool enableLocalCamera,
+  }) async {
     if (connectRoomOverride != null) {
       await connectRoomOverride!(token, video: video);
       return;
@@ -201,12 +241,7 @@ class CallController extends _$CallController {
 
     _onParticipantConnected =
         room.events.on<ParticipantConnectedEvent>((event) {
-      _connectedAt = DateTime.now();
-      state = CallStateActive(
-        room: room,
-        peer: event.participant,
-        hasVideo: _hasVideo,
-      );
+      _promoteToActive(room, peer: event.participant);
     });
 
     _onParticipantDisconnected =
@@ -220,11 +255,78 @@ class CallController extends _$CallController {
       state = CallStateEnded(outcome: CallOutcome.accepted, durationSec: durationSec);
     });
 
+    _subscribeRoomMedia(room);
+
     await room.connect(token.wsUrl, token.token);
-    await room.localParticipant?.setMicrophoneEnabled(true);
-    if (video) {
-      await room.localParticipant?.setCameraEnabled(true);
+    await _enableLocalTracks(
+      room.localParticipant,
+      enableLocalCamera: enableLocalCamera,
+    );
+
+    // Callee accept: caller may already be in the room — ParticipantConnected
+    // does not re-fire for existing remotes; check after connect.
+    _promoteToActive(room);
+  }
+
+  /// Enables mic/camera without failing the call when hardware is busy or denied.
+  Future<void> _enableLocalTracks(
+    LocalParticipant? participant, {
+    required bool enableLocalCamera,
+  }) async {
+    if (participant == null) return;
+    try {
+      await participant.setMicrophoneEnabled(true);
+    } catch (_) {}
+    if (!enableLocalCamera) return;
+    try {
+      await participant.setCameraEnabled(true);
+    } catch (_) {}
+  }
+
+  void _subscribeRoomMedia(Room room) {
+    _onRoomMediaChanged?.call();
+    final cancels = <CancelListenFunc>[
+      room.events.on<LocalTrackPublishedEvent>((_) => _refreshActiveState()),
+      room.events.on<LocalTrackUnpublishedEvent>((_) => _refreshActiveState()),
+      room.events.on<TrackPublishedEvent>((_) => _refreshActiveState()),
+      room.events.on<TrackUnpublishedEvent>((_) => _refreshActiveState()),
+      room.events.on<TrackMutedEvent>((_) => _refreshActiveState()),
+      room.events.on<TrackUnmutedEvent>((_) => _refreshActiveState()),
+    ];
+    _onRoomMediaChanged = () async {
+      for (final cancel in cancels) {
+        await cancel();
+      }
+    };
+  }
+
+  /// Re-emits [CallStateActive] so HUD/video views rebuild after media changes.
+  void _refreshActiveState() {
+    final current = state;
+    if (current is! CallStateActive || _room == null) return;
+    state = CallStateActive(
+      room: current.room,
+      peer: current.peer,
+      hasVideo: current.hasVideo,
+      mediaTick: current.mediaTick + 1,
+    );
+  }
+
+  void _promoteToActive(Room room, {RemoteParticipant? peer}) {
+    if (state is CallStateActive) return;
+    if (state is! CallStateConnecting && state is! CallStateOutgoing) {
+      return;
     }
+
+    final remote = peer ?? room.remoteParticipants.values.firstOrNull;
+    if (remote == null) return;
+
+    _connectedAt = DateTime.now();
+    state = CallStateActive(
+      room: room,
+      peer: remote,
+      hasVideo: _hasVideo,
+    );
   }
 
   void _cleanup() {
@@ -233,9 +335,11 @@ class CallController extends _$CallController {
     _onParticipantConnected?.call();
     _onParticipantDisconnected?.call();
     _onRoomDisconnected?.call();
+    _onRoomMediaChanged?.call();
     _onParticipantConnected = null;
     _onParticipantDisconnected = null;
     _onRoomDisconnected = null;
+    _onRoomMediaChanged = null;
     _room?.disconnect();
     _room = null;
     _currentInvitationId = null;

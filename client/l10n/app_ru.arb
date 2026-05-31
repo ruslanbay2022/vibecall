@@ -70,6 +70,7 @@
   "callUnmute": "Вкл. звук",
   "callCameraOff": "Выкл. камеру",
   "callCameraOn": "Вкл. камеру",
+  "callCameraEnableFailed": "Камера недоступна — возможно, её использует собеседник или другое приложение",
   "callSwitchCamera": "Повернуть",
   "callScreenShareStub": "Экран",
   "callVideoButton": "Видеозвонок",

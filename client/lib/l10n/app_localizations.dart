@@ -518,6 +518,12 @@ abstract class AppLocalizations {
   /// **'Camera on'**
   String get callCameraOn;
 
+  /// Snackbar when local camera cannot be opened
+  ///
+  /// In en, this message translates to:
+  /// **'Camera unavailable — it may be in use by the other participant or another app'**
+  String get callCameraEnableFailed;
+
   /// Button to switch between front and back camera
   ///
   /// In en, this message translates to:
