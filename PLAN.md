@@ -1796,11 +1796,11 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 
 **Acceptance**:
 - [x] Unit-level: CallController + state machine (12 tests, PR #46 CI)
-- [ ] Manual: два клиента connect via LiveKit dev — **Deferred → Step 3.8** (нужны 3.7 listener + ActiveCallScreen UI)
+- [x] Manual: два клиента connect via LiveKit dev — **user QA 2026-05-20** (вместе с Step 3.8 e2e)
 
 **Status**: done — 5b9b081 (+ fix-up in squash: notifyIncoming, hangup guard, timeout outcome)
 
-**Deferred**: manual LiveKit e2e (2 clients) → Step 3.8 после 3.7 overlay + 3.8 screen
+**Deferred**: —
 
 **Out**: `client/lib/features/call/presentation/providers/call_controller.dart`, `call_state.dart`, `domain/call_outcome.dart`, `test/.../call_controller_test.dart`
 
@@ -1827,12 +1827,13 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 **Acceptance**:
 - [x] Unit: listener + coordinator (15 call tests: 11 coordinator + 4 listener; 61 total, PR #48 CI)
 - [x] `flutter analyze` / `flutter build web` — PR #48 CI
-- [ ] Manual: 2 вкладки одного аккаунта → overlay только в одной — **Deferred → user QA** (нет UI исходящего звонка до 3.8; можно через DevTools `startCall` или после 3.8)
-- [ ] Manual: Reject → overlay закрыт, второй incoming снова показывается — **Deferred → user QA**
+- [x] Manual: incoming overlay + accept/reject + переход на ActiveCallScreen — **user QA 2026-05-20** (Chrome + Edge, два аккаунта)
+- [ ] Manual: 2 вкладки одного аккаунта → overlay только в одной (BroadcastChannel leader) — **Deferred → optional smoke** (не прогонялся явно; A1 из MANUAL-QA)
+- [ ] Manual: Reject sync между вкладками — **Deferred → optional smoke** (A2 из MANUAL-QA)
 
 **Status**: done — 966f117 (+ fix-up in squash: web leader election, reject→idle, onboarding in shell)
 
-**Deferred**: manual 2-tab BroadcastChannel QA → user после merge (или вместе с Step 3.8 e2e)
+**Deferred**: 2-tab BroadcastChannel tests (leader election, reject sync) — optional smoke; не прогонялись явно
 
 **Out**: `incoming_call_listener.dart`, `call_tab_coordinator*.dart`, `incoming_call_overlay.dart`, `call_app_shell.dart`, `router.dart` (ShellRoute), l10n keys, `test/.../incoming_call_listener_test.dart`, `test/.../call_tab_coordinator_test.dart`; `call_controller.dart` (+`clearIncoming()`)
 
@@ -1846,15 +1847,43 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 ### Step 3.8 — Active call screen
 
 **Actions**:
-1. `ActiveCallScreen` — два `VideoTrackWidget` (local + remote), HUD с кнопками: mute, camera off, end, switch camera, screen share (stub до Phase 5).
+1. `ActiveCallScreen` — два `VideoTrackRenderer` (local + remote), HUD с кнопками: mute, camera off, end, switch camera, screen share (stub до Phase 5).
 2. Аудио-only режим (если `has_video=false`) — крупный аватар собеседника + анимация уровня звука.
 3. По `CallState.ended` — экран «Звонок завершён» с длительностью.
 
 **Acceptance**:
-- [ ] Видео-звонок между двумя клиентами работает (manual e2e)
-- [ ] Mute/camera toggle реально перестаёт публиковать трек
+- [x] Unit / CI: `flutter analyze`, `flutter test` (66/66 в feature; call suite после fix-up), `flutter build web` — PR #50 CI green (+ Linux GStreamer fix)
+- [x] Manual: video-звонок между двумя клиентами через LiveKit dev — **user QA 2026-05-20** (Chrome + Edge; localhost + tunnel)
+- [x] Manual: mute/camera toggle перестаёт публиковать трек — **user QA 2026-05-20**
+- [ ] Manual: audio-only UI с **анимацией уровня звука** — **Deferred** (avatar есть, level animation не реализована; polish позже)
 
-**Out**: экран звонка.
+**Status**: done — `9122161` (+ fix-up in squash: ringtone, camera toggle/removePublishedTrack, callee enableLocalCamera=false, _promoteToActive, repeat call from ended, GStreamer CI)
+
+**Deferred**: audio level animation для `has_video=false`; ringback tone для caller (не в scope 3.8)
+
+**Out**:
+- `client/lib/features/call/presentation/screens/active_call_screen.dart`
+- `client/lib/features/call/presentation/widgets/call_hud.dart`
+- `client/lib/features/call/presentation/widgets/call_media_utils.dart`
+- `client/lib/features/call/presentation/widgets/call_app_shell.dart` (CallNavigationListener, ringtone watch)
+- `client/lib/features/call/presentation/providers/call_controller.dart` (+ switchCamera, resetToIdle, media fixes)
+- `client/lib/features/call/presentation/providers/incoming_ringtone.dart`
+- `client/assets/sounds/incoming_ring.wav`
+- `client/lib/app/router.dart` (`/call` GoRoute)
+- `client/lib/features/contacts/presentation/screens/contacts_screen.dart` (audio/video call buttons)
+- l10n keys en/ru; tests in `client/test/features/call/`
+- `MANUAL-QA-phase-3-e2e.md`; `infra/dev/livekit-dev.yaml`, `docker-compose.windows.yml`, `infra/dev/README.md` (ICE/tunnel notes)
+- `.github/workflows/flutter_desktop.yml` (GStreamer deps)
+
+**Pitfalls**:
+- Callee **accept** без auto-camera (`enableLocalCamera: false`) — одна камера на Windows
+- `_promoteToActive()` после connect — иначе callee зависает на «Подключение…»
+- `toggleCamera()` off → `removePublishedTrack`, не только mute
+- `_canStartNewCall` из `ended`/`error` — повторный звонок после ended screen
+- Incoming ringtone: `audioplayers` + loop пока `CallStateIncoming`
+- LiveKit ICE локально: `node_ip: 127.0.0.1`; tunnel на Windows Docker → Dashboard `http://host.docker.internal:7880`
+- CI Linux desktop: после `audioplayers` нужны `libgstreamer1.0-dev` packages
+- Screen share — stub до Phase 5 (ожидаемо)
 
 ### Step 3.9 — Call history
 
