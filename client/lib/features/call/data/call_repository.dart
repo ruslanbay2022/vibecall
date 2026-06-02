@@ -12,6 +12,17 @@ part 'call_repository.g.dart';
 
 enum CallHistoryFilter { all, missed }
 
+const incomingMissedHistoryOutcomes = ['missed', 'timeout', 'cancelled'];
+
+/// Invitation states that should dismiss callee incoming UI (not [accepted]).
+const incomingCallDismissStates = {
+  'cancelled',
+  'rejected',
+  'missed',
+  'timeout',
+  'busy',
+};
+
 class CallBusyException implements Exception {
   final String message;
   CallBusyException([this.message = 'User is busy']);
@@ -37,6 +48,7 @@ abstract class CallRepository {
   Future<void> cancelCall(String invitationId);
   Future<void> endCall(String invitationId, int durationSec);
   Stream<CallInvitation> incomingCallStream();
+  Stream<String> incomingCallDismissStream();
   Stream<CallInvitation> outgoingCallUpdates(String invitationId);
   Future<List<CallHistoryEntry>> fetchCallHistory({
     CallHistoryFilter filter = CallHistoryFilter.all,
@@ -47,6 +59,8 @@ class SupabaseCallRepository implements CallRepository {
   final SupabaseClient _client;
   StreamController<CallInvitation>? _incomingController;
   RealtimeChannel? _incomingChannel;
+  StreamController<String>? _incomingDismissController;
+  RealtimeChannel? _incomingDismissChannel;
   final Map<String, StreamController<CallInvitation>> _updateControllers = {};
   final Map<String, RealtimeChannel> _updateChannels = {};
 
@@ -144,7 +158,7 @@ class SupabaseCallRepository implements CallRepository {
     if (filter == CallHistoryFilter.missed) {
       query = query
           .eq('receiver_id', userId)
-          .inFilter('outcome', ['missed', 'timeout']);
+          .inFilter('outcome', incomingMissedHistoryOutcomes);
     } else {
       query = query.or('caller_id.eq.$userId,receiver_id.eq.$userId');
     }
@@ -187,10 +201,68 @@ class SupabaseCallRepository implements CallRepository {
             value: currentUserId,
           ),
           callback: (payload) {
-            final dto = CallInvitationDto.fromJson(
+            final dto = CallInvitationDto.fromRealtime(
               Map<String, dynamic>.from(payload.newRecord),
             );
             controller.add(CallInvitation.fromDto(dto));
+          },
+        )
+        .subscribe();
+
+    return controller.stream;
+  }
+
+  @override
+  Stream<String> incomingCallDismissStream() {
+    _incomingDismissController?.close();
+    _incomingDismissChannel?.unsubscribe();
+
+    final controller = StreamController<String>.broadcast(
+      onCancel: () {
+        _incomingDismissChannel?.unsubscribe();
+        _incomingDismissChannel = null;
+        _incomingDismissController = null;
+      },
+    );
+    _incomingDismissController = controller;
+
+    final channel = _client.channel('calls:incoming-dismiss:$currentUserId');
+    _incomingDismissChannel = channel;
+
+    void emitDismiss(String? id) {
+      if (id != null && id.isNotEmpty) controller.add(id);
+    }
+
+    channel
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'call_invitations',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'receiver_id',
+            value: currentUserId,
+          ),
+          callback: (payload) {
+            final record = Map<String, dynamic>.from(payload.newRecord);
+            final state = record['state'] as String?;
+            if (state != null && incomingCallDismissStates.contains(state)) {
+              emitDismiss(record['id'] as String?);
+            }
+          },
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.delete,
+          schema: 'public',
+          table: 'call_invitations',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'receiver_id',
+            value: currentUserId,
+          ),
+          callback: (payload) {
+            final record = Map<String, dynamic>.from(payload.oldRecord);
+            emitDismiss(record['id'] as String?);
           },
         )
         .subscribe();
@@ -215,6 +287,15 @@ class SupabaseCallRepository implements CallRepository {
     final channel = _client.channel('calls:update:$invitationId');
     _updateChannels[invitationId] = channel;
 
+    void emitInvitation(Map<String, dynamic> record) {
+      try {
+        final dto = CallInvitationDto.fromRealtime(record);
+        controller.add(CallInvitation.fromDto(dto));
+      } catch (_) {
+        // Malformed or incomplete Realtime payload — safe to ignore.
+      }
+    }
+
     channel
         .onPostgresChanges(
           event: PostgresChangeEvent.update,
@@ -226,10 +307,24 @@ class SupabaseCallRepository implements CallRepository {
             value: invitationId,
           ),
           callback: (payload) {
-            final dto = CallInvitationDto.fromJson(
-              Map<String, dynamic>.from(payload.newRecord),
-            );
-            controller.add(CallInvitation.fromDto(dto));
+            emitInvitation(Map<String, dynamic>.from(payload.newRecord));
+          },
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.delete,
+          schema: 'public',
+          table: 'call_invitations',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'id',
+            value: invitationId,
+          ),
+          callback: (payload) {
+            final record = Map<String, dynamic>.from(payload.oldRecord);
+            record['id'] ??= invitationId;
+            // Some Realtime DELETE payloads omit state; row was removed after terminal UPDATE.
+            record['state'] ??= 'cancelled';
+            emitInvitation(record);
           },
         )
         .subscribe();

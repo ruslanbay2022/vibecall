@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vibecall/features/call/data/call_repository.dart';
@@ -5,6 +7,7 @@ import 'package:vibecall/features/call/domain/call_invitation.dart';
 import 'package:vibecall/features/call/presentation/providers/call_controller.dart';
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
 import 'package:vibecall/features/call/presentation/providers/incoming_call_listener.dart';
+import 'package:vibecall/features/call/presentation/providers/incoming_ringtone.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
 class IncomingCallOverlay extends ConsumerWidget {
@@ -94,10 +97,12 @@ class IncomingCallOverlay extends ConsumerWidget {
   }
 
   void _accept(BuildContext context, WidgetRef ref, CallInvitation inv) {
+    unawaited(ref.read(incomingRingtoneProvider.notifier).unlockForNextRing());
     ref.read(callControllerProvider.notifier).accept(inv);
   }
 
   Future<void> _reject(BuildContext context, WidgetRef ref, CallInvitation inv) async {
+    unawaited(ref.read(incomingRingtoneProvider.notifier).unlockForNextRing());
     final repo = ref.read(callRepositoryProvider);
     try {
       await repo.rejectCall(inv.id);

@@ -111,6 +111,10 @@ class WebCallTabCoordinator implements CallTabCoordinator {
 
   @override
   void postDismiss(String invitationId) {
+    if (_activeInvitationId == invitationId) {
+      _isLeader = false;
+      _activeInvitationId = null;
+    }
     _postMsg({'type': 'dismiss', 'invitationId': invitationId});
   }
 
