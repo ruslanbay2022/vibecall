@@ -42,7 +42,9 @@ class CallInvitationDto {
     final id = json['id'] as String?;
     final state = json['state'] as String?;
     if (id == null || state == null) {
-      throw FormatException('invitation realtime payload missing id or state');
+      throw const FormatException(
+        'invitation realtime payload missing id or state',
+      );
     }
     final createdAt = json['created_at'] as String?;
     final expiresAt = json['expires_at'] as String?;
