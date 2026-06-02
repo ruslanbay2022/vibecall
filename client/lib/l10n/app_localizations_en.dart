@@ -248,4 +248,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get callAudioButton => 'Audio call';
+
+  @override
+  String get callHistoryTitle => 'Call history';
+
+  @override
+  String get callHistoryLink => 'Call history';
+
+  @override
+  String get callHistoryTabAll => 'All';
+
+  @override
+  String get callHistoryTabMissed => 'Missed';
+
+  @override
+  String get callHistoryEmpty => 'No calls yet';
+
+  @override
+  String get callHistoryMissedEmpty => 'No missed calls';
+
+  @override
+  String get callHistoryError => 'Failed to load call history';
+
+  @override
+  String get callHistoryRetry => 'Retry';
+
+  @override
+  String callHistoryDuration(String minutes, String seconds) {
+    return '$minutes:$seconds';
+  }
 }

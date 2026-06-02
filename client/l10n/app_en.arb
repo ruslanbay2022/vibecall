@@ -334,5 +334,49 @@
   "callAudioButton": "Audio call",
   "@callAudioButton": {
     "description": "Accessibility label for audio call button on contacts"
+  },
+  "callHistoryTitle": "Call history",
+  "@callHistoryTitle": {
+    "description": "Title of the call history screen"
+  },
+  "callHistoryLink": "Call history",
+  "@callHistoryLink": {
+    "description": "Link to call history from home"
+  },
+  "callHistoryTabAll": "All",
+  "@callHistoryTabAll": {
+    "description": "Tab label showing all call history entries"
+  },
+  "callHistoryTabMissed": "Missed",
+  "@callHistoryTabMissed": {
+    "description": "Tab label showing only missed and timed-out calls"
+  },
+  "callHistoryEmpty": "No calls yet",
+  "@callHistoryEmpty": {
+    "description": "Empty state for the call history list"
+  },
+  "callHistoryMissedEmpty": "No missed calls",
+  "@callHistoryMissedEmpty": {
+    "description": "Empty state for the missed calls filter"
+  },
+  "callHistoryError": "Failed to load call history",
+  "@callHistoryError": {
+    "description": "Error state for the call history list"
+  },
+  "callHistoryRetry": "Retry",
+  "@callHistoryRetry": {
+    "description": "Button to retry loading call history after an error"
+  },
+  "callHistoryDuration": "{minutes}:{seconds}",
+  "@callHistoryDuration": {
+    "description": "Duration of an accepted call in mm:ss format",
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -92,6 +92,11 @@ class _HomePlaceholderScreenState extends ConsumerState<HomePlaceholderScreen> {
               onPressed: () => context.push('/contacts'),
               child: Text(l10n.contactsTitle),
             ),
+            const SizedBox(height: 4),
+            TextButton(
+              onPressed: () => context.push('/call-history'),
+              child: Text(l10n.callHistoryLink),
+            ),
           ],
         ),
       ),

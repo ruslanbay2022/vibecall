@@ -74,5 +74,14 @@
   "callSwitchCamera": "Повернуть",
   "callScreenShareStub": "Экран",
   "callVideoButton": "Видеозвонок",
-  "callAudioButton": "Аудиозвонок"
+  "callAudioButton": "Аудиозвонок",
+  "callHistoryTitle": "История звонков",
+  "callHistoryLink": "История звонков",
+  "callHistoryTabAll": "Все",
+  "callHistoryTabMissed": "Пропущенные",
+  "callHistoryEmpty": "Звонков пока нет",
+  "callHistoryMissedEmpty": "Пропущенных нет",
+  "callHistoryError": "Не удалось загрузить историю",
+  "callHistoryRetry": "Повторить",
+  "callHistoryDuration": "{minutes}:{seconds}"
 }

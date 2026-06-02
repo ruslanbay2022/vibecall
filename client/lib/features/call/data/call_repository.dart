@@ -2,11 +2,15 @@ import 'dart:async';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:vibecall/features/call/data/call_history_dto.dart';
 import 'package:vibecall/features/call/data/call_invitation_dto.dart';
 import 'package:vibecall/features/call/data/call_token.dart';
+import 'package:vibecall/features/call/domain/call_history_entry.dart';
 import 'package:vibecall/features/call/domain/call_invitation.dart';
 
 part 'call_repository.g.dart';
+
+enum CallHistoryFilter { all, missed }
 
 class CallBusyException implements Exception {
   final String message;
@@ -34,6 +38,9 @@ abstract class CallRepository {
   Future<void> endCall(String invitationId, int durationSec);
   Stream<CallInvitation> incomingCallStream();
   Stream<CallInvitation> outgoingCallUpdates(String invitationId);
+  Future<List<CallHistoryEntry>> fetchCallHistory({
+    CallHistoryFilter filter = CallHistoryFilter.all,
+  });
 }
 
 class SupabaseCallRepository implements CallRepository {
@@ -118,6 +125,38 @@ class SupabaseCallRepository implements CallRepository {
         statusCode: e.status,
       );
     }
+  }
+
+  @override
+  Future<List<CallHistoryEntry>> fetchCallHistory({
+    CallHistoryFilter filter = CallHistoryFilter.all,
+  }) async {
+    final userId = currentUserId;
+    final columns = 'id, room_name, caller_id, receiver_id, outcome, '
+        'has_video, duration_sec, started_at, ended_at, '
+        'caller:profiles!call_history_caller_id_fkey('
+        'username, display_name, avatar_url), '
+        'receiver:profiles!call_history_receiver_id_fkey('
+        'username, display_name, avatar_url)';
+
+    var query = _client.from('call_history').select(columns);
+
+    if (filter == CallHistoryFilter.missed) {
+      query = query
+          .eq('receiver_id', userId)
+          .inFilter('outcome', ['missed', 'timeout']);
+    } else {
+      query = query.or('caller_id.eq.$userId,receiver_id.eq.$userId');
+    }
+
+    final response = await query.order('started_at', ascending: false);
+    final list = response as List;
+    return list
+        .map((e) =>
+            CallHistoryDto.fromJson(e as Map<String, dynamic>).toDomain(
+              currentUserId: userId,
+            ))
+        .toList();
   }
 
   @override
