@@ -73,6 +73,15 @@ flutter run -d chrome --dart-define-from-file=.env --web-port=8081
 | D2 | **Timeout** | A звонит B, B **не** отвечает ~45+ сек (pg_cron). | [ ] Invitation → missed/timeout; overlay у B закрывается |
 | D3 | **Аудио-звонок e2e** | A → B audio-only, accept, hangup. | [ ] Работает без video |
 
+### E. Step 3.9 — Call history
+
+| # | Сценарий | Шаги | OK |
+|---|----------|------|-----|
+| E1 | **История: accept + hangup** | Завершить принятый звонок (B4/C3). Открыть `/call-history`. | [x] user QA 2026-06-02 — запись в «Все» с duration mm:ss |
+| E2 | **История: terminal outcomes** | Провести сценарии B6 (cancel), B7 (reject), D2 (timeout). | [x] user QA 2026-06-02 — все три попадают в `call_history` (trigger 0015) |
+| E3 | **Фильтр «Пропущенные»** | На `/call-history` переключить на «Пропущенные». | [x] user QA 2026-06-02 — только входящие missed/timeout/cancelled; rejected скрыт |
+| E4 | **Pull-to-refresh** | Потянуть список вниз. | [ ] optional (не прогонялся явно) |
+
 ---
 
 ## После успешного прогона
@@ -80,6 +89,7 @@ flutter run -d chrome --dart-define-from-file=.env --web-port=8081
 1. **PLAN.md** — вручную или docs-PR: поставить `[x]` на deferred manual в Step 3.6, 3.7, 3.8 (с датой / «user QA YYYY-MM-DD»).
 2. **README / Phase 3** — при полном DoD можно отметить «Phase 3 manual e2e verified».
 3. Опционально: комментарий в закрытом PR #48 / issue с «QA passed».
+4. **Step 3.9** — см. секцию E (выше); docs-close: PR по `docs(plan): close Step 3.9 call history`.
 
 ---
 

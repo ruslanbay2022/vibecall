@@ -47,7 +47,7 @@ flutter build web --debug --dart-define-from-file=.env
 
 ## Статус
 
-В разработке. Текущая фаза: **Phase 1 — Auth + Profiles** (Phase 0 — Foundation закрыта).
+В разработке. Текущая фаза: **Phase 4 — Текстовый чат** (Phase 3 — 1-на-1 Calls закрыта).
 
 Закрытые шаги Phase 0:
 - 0.1 — bootstrap репозитория (`f148eb5`)
@@ -87,6 +87,9 @@ Phase 2 закрыта (`c0a11c5`).
 - 3.6 — CallController (`5b9b081`)
 - 3.7 — incoming call listener + overlay (`966f117`)
 - 3.8 — active call screen + outgoing call UI (`9122161`)
+- 3.9 — call history screen + terminal archive fix (`cd2f329`, fix-up `1f2745c`)
+
+Phase 3 закрыта (`1f2745c`).
 
 ## Лицензия
 
