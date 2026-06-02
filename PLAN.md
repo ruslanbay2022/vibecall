@@ -1896,10 +1896,10 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 6. Route `/call-history` в `ShellRoute`; link в Home.
 7. Migration `0015_call_history_on_terminal_state.sql` — trigger: terminal outcome (rejected/cancelled/busy/timeout/missed) → insert в `call_history` (помимо `end-call` для accepted).
 8. Realtime dismiss: `incomingCallDismissStream` (callee — UPDATE terminal + DELETE) + caller `outgoingCallUpdates` DELETE.
-9. Web ringtone: `AudioCache.instance.clear()` перед play, `web_audio_unlock` для unlock AudioContext на pointer down (audioplayers 6.x `_Namespace` bug).
+9. Web ringtone: `AudioCache.instance.clear()` перед play; `web_audio_unlock` при reject/accept (user gesture) для следующего звонка на Web (audioplayers 6.x `_Namespace` bug).
 
 **Acceptance**:
-- [x] Unit / CI: `flutter analyze`, `flutter test`, `flutter build web` — PR #53 + #54 CI green (73+ tests in call suite)
+- [x] Unit / CI: `flutter analyze`, `flutter test`, `flutter build web` — PR #53 + #54 CI green (51 call tests + full suite)
 - [x] Manual: история отображается после звонков — **user QA 2026-06-02**
 - [x] Manual: иконки и цвета по outcome — **user QA 2026-06-02**
 - [x] Manual: фильтр «Пропущенные» — missed/timeout/cancelled для receiver — **user QA 2026-06-02**
@@ -1918,7 +1918,9 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 - `client/lib/features/call/data/call_invitation_dto.dart` (`fromRealtime`)
 - `client/lib/features/call/presentation/providers/incoming_call_listener.dart` (dismiss stream)
 - `client/lib/features/call/presentation/providers/incoming_ringtone.dart` + `web_audio_unlock*.dart`
+- `client/lib/features/call/presentation/widgets/incoming_call_overlay.dart` (`unlockForNextRing` on reject/accept)
 - `client/lib/features/call/platform/call_tab_coordinator_web.dart` (`postDismiss` local reset)
+- `client/pubspec.yaml` (`web: ^1.1.0` for `web_audio_unlock_web.dart`)
 - `client/lib/app/router.dart` (`/call-history`)
 - `client/lib/features/home/presentation/home_placeholder_screen.dart` (link)
 - `supabase/migrations/0015_call_history_on_terminal_state.sql`
@@ -1929,12 +1931,12 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 - «Пропущенные»: `receiver_id = me` AND `outcome in (missed, timeout, cancelled)`; `rejected` только в «Все»
 - Realtime DELETE `oldRecord` может быть partial → `CallInvitationDto.fromRealtime`, try/catch в `emitInvitation`
 - Callee dismiss: `incomingCallDismissStream` (UPDATE terminal + DELETE); caller: `outgoingCallUpdates` + DELETE
-- Web ringtone: не `dispose()` плеер на каждый stop; `AudioCache.instance.clear` перед play; не вызывать prime на каждый pointer down (`_Namespace` bug audioplayers 6.x)
+- Web ringtone: не `dispose()` плеер на каждый stop; `AudioCache.instance.clear` перед play; unlock только на reject/accept (не глобальный pointer-down listener — `_Namespace` bug audioplayers 6.x)
 - `web: ^1.1.0` в pubspec — прямая зависимость для `web_audio_unlock_web.dart` (CI `depend_on_referenced_packages`)
 - Realtime на `call_history` **не нужен** — REST + pull-to-refresh
 - cloud: `0015` уже в SQL Editor; другие env — `supabase db push` после review
 
-**Phase 3 DoD**: два пользователя могут провести аудио/видео-звонок через локальный LiveKit. Все сценарии (accept/reject/busy/timeout/cancel) работают. CI зелёный. **Manual e2e verified 2026-06-02** (см. Step 3.6–3.9 Acceptance).
+**Phase 3 DoD**: два пользователя могут провести аудио/видео-звонок через локальный LiveKit. Основные сценарии (accept/reject/cancel/timeout + history) работают. CI зелёный. **Manual e2e verified 2026-06-02** (core flows Step 3.6–3.9 Acceptance; optional/deferred — Step 3.7–3.8 Deferred, MANUAL-QA A–D частично).
 
 ---
 

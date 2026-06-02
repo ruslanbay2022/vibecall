@@ -86,10 +86,10 @@ flutter run -d chrome --dart-define-from-file=.env --web-port=8081
 
 ## После успешного прогона
 
-1. **PLAN.md** — вручную или docs-PR: поставить `[x]` на deferred manual в Step 3.6, 3.7, 3.8 (с датой / «user QA YYYY-MM-DD»).
-2. **README / Phase 3** — при полном DoD можно отметить «Phase 3 manual e2e verified».
-3. Опционально: комментарий в закрытом PR #48 / issue с «QA passed».
-4. **Step 3.9** — см. секцию E (выше); docs-close: PR по `docs(plan): close Step 3.9 call history`.
+1. **PLAN.md Step 3.6–3.8** — manual acceptance закрыт в docs-close #52 (`867e907`); deferred пункты остаются `[ ]` / **Deferred** в PLAN.
+2. **PLAN.md Step 3.9 + README Phase 3** — закрыто в docs-close #55 (`7cf0d45`); Phase 3 DoD с пометкой core e2e 2026-06-02.
+3. Опционально: комментарий в закрытых PR #48–#55 с «QA passed».
+4. **Step 3.9** — секция E выше; **E4** pull-to-refresh — optional smoke.
 
 ---
 
