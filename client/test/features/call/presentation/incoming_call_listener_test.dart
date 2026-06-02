@@ -41,6 +41,7 @@ final _invitation = CallInvitation(
 void main() {
   group('IncomingCallListener', () {
     late StreamController<CallInvitation> incomingController;
+    late StreamController<String> incomingDismissController;
     late StreamController<AuthState> authController;
     late MockAuthRepository mockAuth;
     late MockCallRepository mockRepo;
@@ -58,6 +59,7 @@ void main() {
 
     setUp(() {
       incomingController = StreamController<CallInvitation>.broadcast();
+      incomingDismissController = StreamController<String>.broadcast();
       authController = StreamController<AuthState>.broadcast();
       mockAuth = MockAuthRepository();
       mockRepo = MockCallRepository();
@@ -68,6 +70,8 @@ void main() {
       when(() => mockAuth.currentUser).thenReturn(null);
       when(() => mockRepo.incomingCallStream())
           .thenAnswer((_) => incomingController.stream);
+      when(() => mockRepo.incomingCallDismissStream())
+          .thenAnswer((_) => incomingDismissController.stream);
       when(() => mockCoord.tryBecomeLeader(any()))
           .thenAnswer((_) async => true);
       when(() => mockCoord.onDismiss).thenAnswer(
@@ -77,6 +81,7 @@ void main() {
 
     tearDown(() {
       incomingController.close();
+      incomingDismissController.close();
       authController.close();
     });
 
@@ -142,6 +147,26 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 50));
 
       verifyNever(() => mockCoord.tryBecomeLeader(any()));
+    });
+
+    test('caller cancel dismisses incoming via Realtime dismiss stream', () async {
+      final container = createContainer();
+      addTearDown(container.dispose);
+
+      container.read(incomingCallListenerProvider);
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      authController.add(_signedIn);
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      incomingController.add(_invitation);
+      await Future.delayed(const Duration(milliseconds: 50));
+      expect(container.read(callControllerProvider), isA<CallStateIncoming>());
+
+      incomingDismissController.add('inv-1');
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      expect(container.read(callControllerProvider), isA<CallStateIdle>());
     });
   });
 }

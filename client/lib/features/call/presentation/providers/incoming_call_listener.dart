@@ -20,6 +20,7 @@ CallTabCoordinator callCoordinator(Ref ref) {
 class IncomingCallListener extends _$IncomingCallListener {
   StreamSubscription<AuthState>? _authSub;
   StreamSubscription<CallInvitation>? _callSub;
+  StreamSubscription<String>? _callDismissSub;
   StreamSubscription<String>? _dismissSub;
 
   @override
@@ -27,6 +28,7 @@ class IncomingCallListener extends _$IncomingCallListener {
     ref.onDispose(() {
       _authSub?.cancel();
       _callSub?.cancel();
+      _callDismissSub?.cancel();
       _dismissSub?.cancel();
     });
 
@@ -46,19 +48,28 @@ class IncomingCallListener extends _$IncomingCallListener {
 
   void _subscribeCalls() {
     _callSub?.cancel();
+    _callDismissSub?.cancel();
     _dismissSub?.cancel();
 
     final coordinator = ref.read(callCoordinatorProvider);
     _dismissSub = coordinator.onDismiss.listen((invitationId) {
-      final state = ref.read(callControllerProvider);
-      if (state is CallStateIncoming && state.invitation.id == invitationId) {
-        ref.read(callControllerProvider.notifier).clearIncoming();
-      }
+      _dismissIncomingIfMatching(invitationId);
     });
 
-    _callSub = ref.read(callRepositoryProvider).incomingCallStream().listen(
+    final repo = ref.read(callRepositoryProvider);
+    _callSub = repo.incomingCallStream().listen(
       (invitation) => _onIncomingCall(invitation, coordinator),
     );
+    _callDismissSub = repo.incomingCallDismissStream().listen(
+      _dismissIncomingIfMatching,
+    );
+  }
+
+  void _dismissIncomingIfMatching(String invitationId) {
+    final state = ref.read(callControllerProvider);
+    if (state is CallStateIncoming && state.invitation.id == invitationId) {
+      ref.read(callControllerProvider.notifier).clearIncoming();
+    }
   }
 
   Future<void> _onIncomingCall(
@@ -72,6 +83,8 @@ class IncomingCallListener extends _$IncomingCallListener {
   void _unsubscribeCalls() {
     _callSub?.cancel();
     _callSub = null;
+    _callDismissSub?.cancel();
+    _callDismissSub = null;
     _dismissSub?.cancel();
     _dismissSub = null;
   }

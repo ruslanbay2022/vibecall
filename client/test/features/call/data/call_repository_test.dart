@@ -141,6 +141,20 @@ void main() {
     });
   });
 
+  group('CallInvitationDto.fromRealtime', () {
+    test('tolerates partial DELETE oldRecord', () {
+      final dto = CallInvitationDto.fromRealtime({
+        'id': 'inv-1',
+        'state': 'rejected',
+      });
+
+      expect(dto.id, 'inv-1');
+      expect(dto.state, 'rejected');
+      expect(dto.roomName, '');
+      expect(dto.callerId, '');
+    });
+  });
+
   group('CallInvitation.fromDto', () {
     test('maps DTO to domain model', () {
       final now = DateTime.now();
@@ -389,7 +403,7 @@ void main() {
         expect(result.first.peer.displayName, isNull);
       });
 
-      test('missed filter passes receiver_id=me + outcome in (missed,timeout)',
+      test('missed filter passes receiver_id=me + outcome in (missed,timeout,cancelled)',
           () async {
         fakeQuery.selectResponse = [];
 

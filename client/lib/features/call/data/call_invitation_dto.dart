@@ -36,4 +36,32 @@ class CallInvitationDto {
           : null,
     );
   }
+
+  /// Realtime DELETE [oldRecord] may omit non-key columns even with REPLICA IDENTITY FULL.
+  factory CallInvitationDto.fromRealtime(Map<String, dynamic> json) {
+    final id = json['id'] as String?;
+    final state = json['state'] as String?;
+    if (id == null || state == null) {
+      throw const FormatException(
+        'invitation realtime payload missing id or state',
+      );
+    }
+    final createdAt = json['created_at'] as String?;
+    final expiresAt = json['expires_at'] as String?;
+    return CallInvitationDto(
+      id: id,
+      roomName: json['room_name'] as String? ?? '',
+      callerId: json['caller_id'] as String? ?? '',
+      receiverId: json['receiver_id'] as String? ?? '',
+      hasVideo: json['has_video'] as bool? ?? false,
+      state: state,
+      createdAt:
+          createdAt != null ? DateTime.parse(createdAt) : DateTime.now(),
+      expiresAt:
+          expiresAt != null ? DateTime.parse(expiresAt) : DateTime.now(),
+      endedAt: json['ended_at'] != null
+          ? DateTime.parse(json['ended_at'] as String)
+          : null,
+    );
+  }
 }

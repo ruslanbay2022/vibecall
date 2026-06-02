@@ -28,6 +28,7 @@ dependencies:
   logger: ^2.4.0
   image_picker: ^1.1.2
   audioplayers: ^6.7.0
+  web: ^1.1.0
 
 dev_dependencies:
   flutter_test:
