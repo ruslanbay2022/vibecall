@@ -547,6 +547,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Audio call'**
   String get callAudioButton;
+
+  /// Title of the call history screen
+  ///
+  /// In en, this message translates to:
+  /// **'Call history'**
+  String get callHistoryTitle;
+
+  /// Link to call history from home
+  ///
+  /// In en, this message translates to:
+  /// **'Call history'**
+  String get callHistoryLink;
+
+  /// Tab label showing all call history entries
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get callHistoryTabAll;
+
+  /// Tab label showing only missed and timed-out calls
+  ///
+  /// In en, this message translates to:
+  /// **'Missed'**
+  String get callHistoryTabMissed;
+
+  /// Empty state for the call history list
+  ///
+  /// In en, this message translates to:
+  /// **'No calls yet'**
+  String get callHistoryEmpty;
+
+  /// Empty state for the missed calls filter
+  ///
+  /// In en, this message translates to:
+  /// **'No missed calls'**
+  String get callHistoryMissedEmpty;
+
+  /// Error state for the call history list
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load call history'**
+  String get callHistoryError;
+
+  /// Button to retry loading call history after an error
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get callHistoryRetry;
+
+  /// Duration of an accepted call in mm:ss format
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}:{seconds}'**
+  String callHistoryDuration(String minutes, String seconds);
 }
 
 class _AppLocalizationsDelegate

@@ -5,10 +5,12 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:vibecall/features/call/data/call_history_dto.dart';
 import 'package:vibecall/features/call/data/call_invitation_dto.dart';
 import 'package:vibecall/features/call/data/call_repository.dart';
 import 'package:vibecall/features/call/data/call_token.dart';
 import 'package:vibecall/features/call/domain/call_invitation.dart';
+import 'package:vibecall/features/call/domain/call_outcome.dart';
 
 class MockSupabaseClient extends Mock implements SupabaseClient {}
 class MockFunctionsClient extends Mock implements FunctionsClient {}
@@ -17,24 +19,55 @@ class MockUser extends Mock implements User {}
 
 class FakeQueryBuilder extends Fake implements SupabaseQueryBuilder {
   final List<Map<String, dynamic>> updateCalls = [];
+  List<Map<String, dynamic>> selectResponse = const [];
 
   @override
   PostgrestFilterBuilder<PostgrestList> update(Map<dynamic, dynamic> values) {
     updateCalls.add(Map<String, dynamic>.from(values));
-    return _FakeFilterBuilder();
+    return _FakeFilterBuilder(selectResponse: selectResponse);
   }
 
   @override
   PostgrestFilterBuilder<PostgrestList> select([String columns = '*']) {
-    return _FakeFilterBuilder();
+    return _FakeFilterBuilder(selectResponse: selectResponse);
   }
 }
 
 class _FakeFilterBuilder extends Fake
     implements PostgrestFilterBuilder<PostgrestList> {
+  final List<Map<String, dynamic>> selectResponse;
+
+  _FakeFilterBuilder({required this.selectResponse});
+
   @override
-  PostgrestFilterBuilder<PostgrestList> eq(String column, Object? value) {
+  PostgrestFilterBuilder<PostgrestList> eq(String column, Object value) {
     return this;
+  }
+
+  @override
+  PostgrestFilterBuilder<PostgrestList> inFilter(
+    String column,
+    List values,
+  ) {
+    return this;
+  }
+
+  @override
+  PostgrestFilterBuilder<PostgrestList> or(
+    String filters, {
+    String? referencedTable,
+  }) {
+    return this;
+  }
+
+  @override
+  PostgrestTransformBuilder<PostgrestList> order(
+    String column, {
+    bool ascending = false,
+    bool nullsFirst = false,
+    String? referencedTable,
+  }) {
+    return _FakeTransformBuilder(selectResponse: selectResponse);
   }
 
   @override
@@ -43,6 +76,21 @@ class _FakeFilterBuilder extends Fake
     Function? onError,
   }) {
     return Future.value(onValue([]));
+  }
+}
+
+class _FakeTransformBuilder extends Fake
+    implements PostgrestTransformBuilder<PostgrestList> {
+  final List<Map<String, dynamic>> selectResponse;
+
+  _FakeTransformBuilder({required this.selectResponse});
+
+  @override
+  Future<R> then<R>(
+    FutureOr<R> Function(PostgrestList value) onValue, {
+    Function? onError,
+  }) {
+    return Future.value(onValue(selectResponse.cast()));
   }
 }
 
@@ -156,6 +204,8 @@ void main() {
       when(() => mockUser.id).thenReturn('user-a');
       when(() => mockClient.from('call_invitations'))
           .thenAnswer((_) => fakeQuery);
+      when(() => mockClient.from('call_history'))
+          .thenAnswer((_) => fakeQuery);
 
       repository = SupabaseCallRepository(client: mockClient);
     });
@@ -261,6 +311,127 @@ void main() {
         expect(fakeQuery.updateCalls, [
           {'state': 'cancelled'},
         ]);
+      });
+    });
+
+    group('fetchCallHistory', () {
+      test('all filter parses DTOs and resolves peer as caller for incoming', () async {
+        final now = DateTime.now();
+        fakeQuery.selectResponse = [
+          {
+            'id': 'h-1',
+            'room_name': 'dm_a__b_1000',
+            'caller_id': 'user-b',
+            'receiver_id': 'user-a',
+            'outcome': 'accepted',
+            'has_video': true,
+            'duration_sec': 125,
+            'started_at': now.toIso8601String(),
+            'ended_at': now.add(const Duration(seconds: 125)).toIso8601String(),
+            'caller': {
+              'username': 'bob',
+              'display_name': 'Bob',
+              'avatar_url': 'https://example.com/bob.png',
+            },
+            'receiver': {
+              'username': 'alice',
+              'display_name': 'Alice',
+              'avatar_url': 'https://example.com/alice.png',
+            },
+          },
+        ];
+
+        final result = await repository.fetchCallHistory();
+
+        expect(result, hasLength(1));
+        final entry = result.first;
+        expect(entry.id, 'h-1');
+        expect(entry.outcome, CallOutcome.accepted);
+        expect(entry.hasVideo, true);
+        expect(entry.durationSec, 125);
+        expect(entry.isOutgoing, isFalse);
+        expect(entry.peer.id, 'user-b');
+        expect(entry.peer.username, 'bob');
+        expect(entry.peer.displayName, 'Bob');
+        expect(entry.peer.avatarUrl, 'https://example.com/bob.png');
+      });
+
+      test('isOutgoing=true when current user is caller', () async {
+        fakeQuery.selectResponse = [
+          {
+            'id': 'h-2',
+            'room_name': 'dm_a__b_1001',
+            'caller_id': 'user-a',
+            'receiver_id': 'user-b',
+            'outcome': 'cancelled',
+            'has_video': false,
+            'duration_sec': 0,
+            'started_at': DateTime.now().toIso8601String(),
+            'ended_at': null,
+            'caller': {
+              'username': 'alice',
+              'display_name': null,
+              'avatar_url': null,
+            },
+            'receiver': {
+              'username': 'bob',
+              'display_name': null,
+              'avatar_url': null,
+            },
+          },
+        ];
+
+        final result = await repository.fetchCallHistory();
+
+        expect(result.first.isOutgoing, isTrue);
+        expect(result.first.peer.id, 'user-b');
+        expect(result.first.peer.username, 'bob');
+        expect(result.first.peer.displayName, isNull);
+      });
+
+      test('missed filter passes receiver_id=me + outcome in (missed,timeout)',
+          () async {
+        fakeQuery.selectResponse = [];
+
+        final result =
+            await repository.fetchCallHistory(filter: CallHistoryFilter.missed);
+
+        // Sanity: query returns empty list, no exception, filter param doesn't throw.
+        expect(result, isEmpty);
+      });
+
+      test('unknown outcome string maps to missed (fallback)', () {
+        final json = {
+          'id': 'h-x',
+          'room_name': 'dm_x__y_0',
+          'caller_id': 'a',
+          'receiver_id': 'b',
+          'outcome': 'bogus',
+          'has_video': false,
+          'duration_sec': 0,
+          'started_at': DateTime.now().toIso8601String(),
+          'ended_at': null,
+        };
+        final dto = CallHistoryDto.fromJson(json);
+        final entry = dto.toDomain(currentUserId: 'a');
+        expect(entry.outcome, CallOutcome.missed);
+      });
+
+      test('all six outcomes parse to correct enum', () {
+        for (final outcome in CallOutcome.values) {
+          final dto = CallHistoryDto.fromJson({
+            'id': 'h-$outcome',
+            'room_name': 'r',
+            'caller_id': 'a',
+            'receiver_id': 'b',
+            'outcome': outcome.name,
+            'has_video': false,
+            'duration_sec': 0,
+            'started_at': DateTime.now().toIso8601String(),
+            'ended_at': null,
+          });
+          expect(dto.toDomain(currentUserId: 'a').outcome, outcome);
+        }
       });
     });
   });

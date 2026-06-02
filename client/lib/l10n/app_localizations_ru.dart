@@ -249,4 +249,33 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get callAudioButton => 'Аудиозвонок';
+
+  @override
+  String get callHistoryTitle => 'История звонков';
+
+  @override
+  String get callHistoryLink => 'История звонков';
+
+  @override
+  String get callHistoryTabAll => 'Все';
+
+  @override
+  String get callHistoryTabMissed => 'Пропущенные';
+
+  @override
+  String get callHistoryEmpty => 'Звонков пока нет';
+
+  @override
+  String get callHistoryMissedEmpty => 'Пропущенных нет';
+
+  @override
+  String get callHistoryError => 'Не удалось загрузить историю';
+
+  @override
+  String get callHistoryRetry => 'Повторить';
+
+  @override
+  String callHistoryDuration(String minutes, String seconds) {
+    return '$minutes:$seconds';
+  }
 }
