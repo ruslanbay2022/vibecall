@@ -1974,18 +1974,40 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 ### Step 4.2 — Chat repository + Realtime
 
 **Actions**:
-1. `ChatRepository`:
-   - `Future<String> ensureConversation(otherUserId)` → RPC
-   - `Future<List<Message>> fetchMessages(conversationId, {beforeCursor, limit=50})`
-   - `Future<void> sendMessage(conversationId, body)`
-   - `Future<void> markRead(messageId)`
-   - `Stream<Message> messageStream(conversationId)`
-   - `Stream<List<Conversation>> conversationsStream()`
-2. Typing-индикатор: отдельный канал `supabase.channel('typing:$conversationId')` + `broadcast({event:'typing', payload:{userId}})`. Подписка с фильтром «не от себя».
+1. `supabase/migrations/0018_chat_realtime.sql` — `replica identity full` + publication `supabase_realtime` для `messages` и `conversations`
+2. Domain: `Message`, `Conversation`, `ChatPeer` в `client/lib/features/chat/domain/`
+3. DTO: `MessageDto` (+ `fromRealtime`), `ConversationDto` (peer join profiles)
+4. `ChatRepository` / `SupabaseChatRepository`: `ensureConversation` (RPC `p_other`), `fetchMessages` (chronological после `reversed`), `fetchConversations`, `sendMessage`, `markRead`, `messageStream`, `conversationsStream`
+5. `ChatTyping` / `SupabaseChatTyping` — broadcast `typing:$conversationId`, фильтр self
+6. Unit-тесты: `client/test/features/chat/data/chat_repository_test.dart` (9 тестов)
 
-**Acceptance**: unit-тесты на repository.
+**Acceptance**:
+- [x] `supabase db lint` без ошибок — PR #59 CI green
+- [x] Миграция `0018` в репозитории и применена на cloud — **user `db push --include-all` 2026-06-04** (`0018` `chat_realtime` в Dashboard)
+- [x] `dart analyze --fatal-infos` и `flutter test` green (PR #59: 9 chat tests, 84 total)
+- [x] `ChatRepository` API + typing broadcast; без UI/router/l10n на этом шаге
 
-**Out**: `features/chat/data/`.
+**Status**: done — `eef2a25` (#59)
+
+**Out**:
+- `supabase/migrations/0018_chat_realtime.sql`
+- `client/lib/features/chat/domain/message.dart`
+- `client/lib/features/chat/domain/conversation.dart`
+- `client/lib/features/chat/domain/chat_peer.dart`
+- `client/lib/features/chat/data/message_dto.dart`
+- `client/lib/features/chat/data/conversation_dto.dart`
+- `client/lib/features/chat/data/chat_repository.dart`
+- `client/lib/features/chat/data/chat_typing.dart`
+- `client/test/features/chat/data/chat_repository_test.dart`
+
+**Pitfalls** (Step 4.2):
+- Realtime publication только в **`0018`** — без cloud push stream'ы не работают
+- `conversationsStream` обновляется по INSERT/UPDATE **`conversations`** (в т.ч. `last_message_at` через trigger `touch_conversation`), не по прямой подписке на `messages`
+- `messageStream`: INSERT + UPDATE (`read_at`); malformed payload — try/catch (как call invitations)
+- `fetchMessages`: порядок **asc** для UI (`desc` + `reversed`); pagination `beforeCursor` → `.lt('created_at', ...)`
+- `chat_repository.g.dart` в gitignore — CI/local `dart run build_runner build`
+- `fetchConversations()` на abstract API — доп. к PLAN-списку, используется `conversationsStream`
+- Cloud: `0018` уже применён пользователем; повторный push не нужен
 
 ### Step 4.3 — Chat UI
 
@@ -1994,6 +2016,14 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 2. `ChatScreen(conversationId)` — список сообщений (reverse `ListView`), bubble-стили для своих/чужих, поле ввода, кнопки «прикрепить» (stub), «голосовое» (stub).
 3. Pagination: при скролле к верху → подгрузка предыдущих 50.
 4. Typing-индикатор отображается, когда есть события за последние 3 секунды.
+
+**Pitfalls** (интеграция с data-layer 4.2):
+- **`notifyTyping`**: канал создаётся в `peerTypingStream` — до первой подписки `notifyTyping` — no-op. В `ChatScreen`: в `initState`/provider сначала `peerTypingStream(conversationId)`, затем `notifyTyping` при вводе
+- **Дубликаты сообщений**: `sendMessage` + Realtime INSERT → в UI дедуплицировать по `message.id` (optimistic optional)
+- **`markRead`**: RLS `msg_update_read` только на **чужих** сообщениях; при открытии чата помечать входящие без `read_at`
+- **Pagination**: `fetchMessages(..., beforeCursor: oldest.createdAt)`; не дублировать при merge с `messageStream`
+- **`MessageDto.fromRealtime`**: в коде не используется (stream — `fromJson(newRecord)`); при рефакторинге выровнять с `CallInvitationDto.fromRealtime` или удалить мёртвый код
+- Typing UI: debounce 3 с (PLAN Actions); события только от peer (`userId != currentUserId`)
 
 **Acceptance**:
 - [ ] Отправленное сообщение появляется у обоих участников «мгновенно» (через Realtime)
