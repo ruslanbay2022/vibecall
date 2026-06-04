@@ -5,6 +5,7 @@ import 'package:vibecall/features/call/data/call_repository.dart';
 import 'package:vibecall/features/call/domain/call_history_entry.dart';
 import 'package:vibecall/features/call/domain/call_outcome.dart';
 import 'package:vibecall/features/call/presentation/providers/call_history_controller.dart';
+import 'package:vibecall/features/call/presentation/widgets/call_peer_launch_dialog.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
 class CallHistoryScreen extends ConsumerStatefulWidget {
@@ -121,14 +122,15 @@ class _CallHistoryScreenState extends ConsumerState<CallHistoryScreen> {
   }
 }
 
-class _CallHistoryTile extends StatelessWidget {
+class _CallHistoryTile extends ConsumerWidget {
   final CallHistoryEntry entry;
   const _CallHistoryTile({required this.entry});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final peerName = callPeerDisplayName(entry);
     final outcomeStyle = _outcomeStyle(context, entry.outcome);
     final directionIcon = entry.isOutgoing
         ? const Icon(Icons.call_made, size: 14)
@@ -171,7 +173,19 @@ class _CallHistoryTile extends StatelessWidget {
           ),
         ],
       ),
-      title: Text(entry.displayName.isEmpty ? entry.peer.id : entry.displayName),
+      title: InkWell(
+        onTap: () => showCallPeerLaunchDialog(
+          context: context,
+          ref: ref,
+          entry: entry,
+        ),
+        child: Text(
+          peerName,
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: theme.colorScheme.primary,
+          ),
+        ),
+      ),
       subtitle: Text(subtitleParts.join(' \u00b7 ')),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
