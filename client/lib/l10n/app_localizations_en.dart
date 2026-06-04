@@ -277,4 +277,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String callHistoryDuration(String minutes, String seconds) {
     return '$minutes:$seconds';
   }
+
+  @override
+  String callHistoryCallPrompt(String name) {
+    return 'Call $name';
+  }
+
+  @override
+  String get callHistoryCallCancel => 'Cancel';
 }

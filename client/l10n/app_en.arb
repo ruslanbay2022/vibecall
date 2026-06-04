@@ -378,5 +378,18 @@
         "type": "String"
       }
     }
+  },
+  "callHistoryCallPrompt": "Call {name}",
+  "@callHistoryCallPrompt": {
+    "description": "Confirmation before calling a peer from call history",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "callHistoryCallCancel": "Cancel",
+  "@callHistoryCallCancel": {
+    "description": "Dismiss call confirmation from call history"
   }
 }

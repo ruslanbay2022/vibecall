@@ -278,4 +278,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String callHistoryDuration(String minutes, String seconds) {
     return '$minutes:$seconds';
   }
+
+  @override
+  String callHistoryCallPrompt(String name) {
+    return 'Позвонить абоненту ($name)';
+  }
+
+  @override
+  String get callHistoryCallCancel => 'Отмена';
 }

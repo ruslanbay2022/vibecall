@@ -83,5 +83,7 @@
   "callHistoryMissedEmpty": "Пропущенных нет",
   "callHistoryError": "Не удалось загрузить историю",
   "callHistoryRetry": "Повторить",
-  "callHistoryDuration": "{minutes}:{seconds}"
+  "callHistoryDuration": "{minutes}:{seconds}",
+  "callHistoryCallPrompt": "Позвонить абоненту ({name})",
+  "callHistoryCallCancel": "Отмена"
 }

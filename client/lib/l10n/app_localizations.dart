@@ -601,6 +601,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{minutes}:{seconds}'**
   String callHistoryDuration(String minutes, String seconds);
+
+  /// Confirmation before calling a peer from call history
+  ///
+  /// In en, this message translates to:
+  /// **'Call {name}'**
+  String callHistoryCallPrompt(String name);
+
+  /// Dismiss call confirmation from call history
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get callHistoryCallCancel;
 }
 
 class _AppLocalizationsDelegate
