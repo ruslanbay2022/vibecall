@@ -1947,84 +1947,29 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 ### Step 4.1 — Migration: conversations + messages
 
 **Actions**:
-1. `[supabase/migrations/0011_conversations_messages.sql](supabase/migrations/0011_conversations_messages.sql)`:
-   ```sql
-   create table public.conversations (
-     id uuid primary key default gen_random_uuid(),
-     user_a uuid not null references public.profiles(id) on delete cascade,
-     user_b uuid not null references public.profiles(id) on delete cascade,
-     last_message_at timestamptz not null default now(),
-     created_at timestamptz not null default now(),
-     check (user_a < user_b)
-   );
-   create unique index conversations_pair_idx on public.conversations (user_a, user_b);
+1. `0016_conversations_messages.sql` — `conversations`, `messages`, RPC `ensure_conversation`, grant/revoke, trigger `touch_conversation` (**security definer**)
+2. `0017_chat_rls.sql` — RLS: `conv_select`, `msg_select`, `msg_insert`, `msg_update_read`; без INSERT policy на `conversations` (создание через RPC)
 
-   create or replace function public.ensure_conversation(p_other uuid)
-   returns uuid language plpgsql security definer set search_path = public as $$
-   declare a uuid; b uuid; cid uuid;
-   begin
-     if auth.uid() = p_other then raise exception 'self chat not allowed'; end if;
-     if auth.uid() < p_other then a := auth.uid(); b := p_other;
-     else a := p_other; b := auth.uid(); end if;
-     insert into public.conversations (user_a, user_b) values (a, b)
-       on conflict (user_a, user_b) do update set user_a = excluded.user_a
-       returning id into cid;
-     return cid;
-   end; $$;
+**Acceptance**:
+- [x] `supabase db lint` без ошибок — PR #57 CI green
+- [x] Миграции `0016` + `0017` в репозитории и применены на cloud — **user `db push` 2026-06-04**
+- [x] RLS: участник беседы видит/пишет сообщения; `ensure_conversation` вызывается authenticated (grant execute)
+- [x] `touch_conversation` обновляет `last_message_at` (security definer — обход отсутствия conv UPDATE policy)
 
-   create table public.messages (
-     id uuid primary key default gen_random_uuid(),
-     conversation_id uuid not null references public.conversations(id) on delete cascade,
-     sender_id uuid not null references public.profiles(id) on delete cascade,
-     body text not null check (char_length(body) between 1 and 4000),
-     read_at timestamptz,
-     created_at timestamptz not null default now()
-   );
-   create index messages_conv_created_idx on public.messages (conversation_id, created_at desc);
+**Status**: done — `12273f6` (+ fix in squash: `touch_conversation` security definer for RLS on insert)
 
-   create or replace function public.touch_conversation()
-   returns trigger language plpgsql as $$
-   begin
-     update public.conversations set last_message_at = new.created_at
-     where id = new.conversation_id;
-     return new;
-   end; $$;
-   create trigger messages_touch_conv
-     after insert on public.messages
-     for each row execute function public.touch_conversation();
-   ```
-2. `[supabase/migrations/0012_chat_rls.sql](supabase/migrations/0012_chat_rls.sql)`:
-   ```sql
-   alter table public.conversations enable row level security;
-   create policy conv_select on public.conversations for select
-     using (auth.uid() in (user_a, user_b));
+**Out**:
+- `supabase/migrations/0016_conversations_messages.sql`
+- `supabase/migrations/0017_chat_rls.sql`
 
-   alter table public.messages enable row level security;
-   create policy msg_select on public.messages for select using (
-     exists (
-       select 1 from public.conversations c
-       where c.id = messages.conversation_id and auth.uid() in (c.user_a, c.user_b)
-     )
-   );
-   create policy msg_insert on public.messages for insert with check (
-     auth.uid() = sender_id and exists (
-       select 1 from public.conversations c
-       where c.id = conversation_id and auth.uid() in (c.user_a, c.user_b)
-     )
-   );
-   create policy msg_update_read on public.messages for update
-     using (
-       exists (select 1 from public.conversations c
-         where c.id = messages.conversation_id
-           and auth.uid() in (c.user_a, c.user_b)
-           and auth.uid() <> messages.sender_id)
-     )
-     with check (true);
-   ```
-
-**Acceptance**: миграции применяются, RLS закрывают чужие беседы.
-
-**Out**: миграции `0011`, `0012`.
+**Pitfalls**:
+- Нумерация в старом тексте PLAN (`0011`/`0012`) ≠ фактические файлы **`0016`/`0017`** (в репо уже `0013`–`0015`)
+- `ensure_conversation`: canonical pair `user_a < user_b`; `grant execute to authenticated` обязателен
+- `conversations`: только SELECT для users; INSERT через RPC `security definer`
+- `touch_conversation` **должен** быть `security definer` — иначе INSERT в `messages` не обновит `last_message_at` (нет UPDATE policy на `conversations`)
+- `msg_update_read`: только не-sender; `with check (true)` — MVP, ужесточить в 4.2+ при необходимости
+- Realtime publication на `messages` — **не** в 4.1, Step **4.2**
+- Cloud: `db push` уже выполнен пользователем; повторный push не нужен
 
 ### Step 4.2 — Chat repository + Realtime
 

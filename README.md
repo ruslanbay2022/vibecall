@@ -91,6 +91,9 @@ Phase 2 закрыта (`c0a11c5`).
 
 Phase 3 закрыта (`1f2745c`).
 
+Закрытые шаги Phase 4:
+- 4.1 — conversations + messages migrations (`12273f6`)
+
 ## Лицензия
 
 MIT — см. [LICENSE](LICENSE).
