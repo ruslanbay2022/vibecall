@@ -391,5 +391,54 @@
   "callHistoryCallCancel": "Cancel",
   "@callHistoryCallCancel": {
     "description": "Dismiss call confirmation from call history"
+  },
+  "chatsTitle": "Chats",
+  "@chatsTitle": {
+    "description": "Title of the conversations list screen"
+  },
+  "chatsLink": "Chats",
+  "@chatsLink": {
+    "description": "Link to chats from home"
+  },
+  "chatNoConversations": "No conversations yet",
+  "@chatNoConversations": {
+    "description": "Empty state when there are no conversations"
+  },
+  "chatInputHint": "Type a message\u2026",
+  "@chatInputHint": {
+    "description": "Hint text in the chat message input field"
+  },
+  "chatSend": "Send",
+  "@chatSend": {
+    "description": "Button to send a chat message"
+  },
+  "chatTyping": "{name} is typing\u2026",
+  "@chatTyping": {
+    "description": "Indicator shown when peer is typing",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "chatAttachStub": "Attachments coming soon",
+  "@chatAttachStub": {
+    "description": "Snackbar text when tapping the attach button stub"
+  },
+  "chatVoiceStub": "Voice messages coming soon",
+  "@chatVoiceStub": {
+    "description": "Snackbar text when tapping the voice message button stub"
+  },
+  "chatLoadError": "Failed to load messages",
+  "@chatLoadError": {
+    "description": "Error state when messages fail to load"
+  },
+  "chatRetry": "Retry",
+  "@chatRetry": {
+    "description": "Button to retry loading messages after an error"
+  },
+  "chatStartConversation": "Start a conversation",
+  "@chatStartConversation": {
+    "description": "Chat icon tooltip / label on contacts screen"
   }
 }

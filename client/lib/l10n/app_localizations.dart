@@ -613,6 +613,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get callHistoryCallCancel;
+
+  /// Title of the conversations list screen
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get chatsTitle;
+
+  /// Link to chats from home
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get chatsLink;
+
+  /// Empty state when there are no conversations
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations yet'**
+  String get chatNoConversations;
+
+  /// Hint text in the chat message input field
+  ///
+  /// In en, this message translates to:
+  /// **'Type a message…'**
+  String get chatInputHint;
+
+  /// Button to send a chat message
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get chatSend;
+
+  /// Indicator shown when peer is typing
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is typing…'**
+  String chatTyping(String name);
+
+  /// Snackbar text when tapping the attach button stub
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments coming soon'**
+  String get chatAttachStub;
+
+  /// Snackbar text when tapping the voice message button stub
+  ///
+  /// In en, this message translates to:
+  /// **'Voice messages coming soon'**
+  String get chatVoiceStub;
+
+  /// Error state when messages fail to load
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load messages'**
+  String get chatLoadError;
+
+  /// Button to retry loading messages after an error
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get chatRetry;
+
+  /// Chat icon tooltip / label on contacts screen
+  ///
+  /// In en, this message translates to:
+  /// **'Start a conversation'**
+  String get chatStartConversation;
 }
 
 class _AppLocalizationsDelegate

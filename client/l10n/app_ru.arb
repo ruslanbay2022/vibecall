@@ -85,5 +85,16 @@
   "callHistoryRetry": "Повторить",
   "callHistoryDuration": "{minutes}:{seconds}",
   "callHistoryCallPrompt": "Позвонить абоненту ({name})",
-  "callHistoryCallCancel": "Отмена"
+  "callHistoryCallCancel": "Отмена",
+  "chatsTitle": "Чаты",
+  "chatsLink": "Чаты",
+  "chatNoConversations": "Пока нет чатов",
+  "chatInputHint": "Введите сообщение\u2026",
+  "chatSend": "Отправить",
+  "chatTyping": "{name} печатает\u2026",
+  "chatAttachStub": "Вложения скоро будут доступны",
+  "chatVoiceStub": "Голосовые сообщения скоро будут доступны",
+  "chatLoadError": "Не удалось загрузить сообщения",
+  "chatRetry": "Повторить",
+  "chatStartConversation": "Начать переписку"
 }

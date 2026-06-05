@@ -285,4 +285,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get callHistoryCallCancel => 'Cancel';
+
+  @override
+  String get chatsTitle => 'Chats';
+
+  @override
+  String get chatsLink => 'Chats';
+
+  @override
+  String get chatNoConversations => 'No conversations yet';
+
+  @override
+  String get chatInputHint => 'Type a message…';
+
+  @override
+  String get chatSend => 'Send';
+
+  @override
+  String chatTyping(String name) {
+    return '$name is typing…';
+  }
+
+  @override
+  String get chatAttachStub => 'Attachments coming soon';
+
+  @override
+  String get chatVoiceStub => 'Voice messages coming soon';
+
+  @override
+  String get chatLoadError => 'Failed to load messages';
+
+  @override
+  String get chatRetry => 'Retry';
+
+  @override
+  String get chatStartConversation => 'Start a conversation';
 }

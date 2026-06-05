@@ -9,6 +9,8 @@ import 'package:vibecall/features/auth/presentation/screens/sign_up_screen.dart'
 import 'package:vibecall/features/call/presentation/screens/active_call_screen.dart';
 import 'package:vibecall/features/call/presentation/screens/call_history_screen.dart';
 import 'package:vibecall/features/call/presentation/widgets/call_app_shell.dart';
+import 'package:vibecall/features/chat/presentation/screens/chat_screen.dart';
+import 'package:vibecall/features/chat/presentation/screens/conversations_screen.dart';
 import 'package:vibecall/features/contacts/presentation/screens/contacts_screen.dart';
 import 'package:vibecall/features/home/presentation/home_placeholder_screen.dart';
 import 'package:vibecall/features/search/presentation/screens/search_screen.dart';
@@ -106,6 +108,22 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: '/call-history',
           builder: (context, state) => const CallHistoryScreen(),
+        ),
+        GoRoute(
+          path: '/chats',
+          builder: (context, state) => const ConversationsScreen(),
+        ),
+        GoRoute(
+          path: '/chat/:conversationId',
+          builder: (context, state) {
+            final conversationId = state.pathParameters['conversationId']!;
+            final extra = state.extra as Map<String, dynamic>?;
+            return ChatScreen(
+              conversationId: conversationId,
+              peerName: extra?['peerName'] as String?,
+              peerAvatarUrl: extra?['peerAvatarUrl'] as String?,
+            );
+          },
         ),
         GoRoute(
           path: '/call',
