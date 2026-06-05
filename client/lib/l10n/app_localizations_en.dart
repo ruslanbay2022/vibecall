@@ -296,10 +296,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatNoConversations => 'No conversations yet';
 
   @override
+  String get chatEmpty => 'No messages yet. Say hello!';
+
+  @override
   String get chatInputHint => 'Type a message…';
 
   @override
   String get chatSend => 'Send';
+
+  @override
+  String get chatSendError => 'Failed to send message';
 
   @override
   String chatTyping(String name) {

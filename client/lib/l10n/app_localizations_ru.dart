@@ -297,10 +297,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatNoConversations => 'Пока нет чатов';
 
   @override
+  String get chatEmpty => 'Сообщений пока нет. Напишите первым!';
+
+  @override
   String get chatInputHint => 'Введите сообщение…';
 
   @override
   String get chatSend => 'Отправить';
+
+  @override
+  String get chatSendError => 'Не удалось отправить сообщение';
 
   @override
   String chatTyping(String name) {

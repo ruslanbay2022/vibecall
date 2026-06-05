@@ -83,7 +83,7 @@ class SupabaseChatRepository implements ChatRepository {
           'id, user_a, user_b, last_message_at, created_at, '
           'peer_a:profiles!conversations_user_a_fkey(username, display_name, avatar_url), '
           'peer_b:profiles!conversations_user_b_fkey(username, display_name, avatar_url), '
-          'messages(body, created_at)',
+          'messages(body, created_at).order(created_at.desc).limit(1)',
         )
         .or('user_a.eq.$userId,user_b.eq.$userId')
         .order('last_message_at', ascending: false);

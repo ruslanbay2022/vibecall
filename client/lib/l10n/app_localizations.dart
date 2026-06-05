@@ -632,6 +632,12 @@ abstract class AppLocalizations {
   /// **'No conversations yet'**
   String get chatNoConversations;
 
+  /// Empty state when a conversation has no messages
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet. Say hello!'**
+  String get chatEmpty;
+
   /// Hint text in the chat message input field
   ///
   /// In en, this message translates to:
@@ -643,6 +649,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send'**
   String get chatSend;
+
+  /// Snackbar when sending a chat message fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send message'**
+  String get chatSendError;
 
   /// Indicator shown when peer is typing
   ///

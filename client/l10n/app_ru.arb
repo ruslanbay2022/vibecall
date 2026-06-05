@@ -89,6 +89,8 @@
   "chatsTitle": "Чаты",
   "chatsLink": "Чаты",
   "chatNoConversations": "Пока нет чатов",
+  "chatEmpty": "Сообщений пока нет. Напишите первым!",
+  "chatSendError": "Не удалось отправить сообщение",
   "chatInputHint": "Введите сообщение\u2026",
   "chatSend": "Отправить",
   "chatTyping": "{name} печатает\u2026",

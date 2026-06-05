@@ -23,6 +23,7 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _inputController = TextEditingController();
   final _scrollController = ScrollController();
+  bool _loadOlderInFlight = false;
 
   @override
   void initState() {
@@ -38,13 +39,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 100) {
-      ref.read(chatControllerProvider(widget.conversationId).notifier).loadOlder();
-    }
+    if (!_scrollController.hasClients || _loadOlderInFlight) return;
+    final pos = _scrollController.position;
+    if (pos.pixels < pos.maxScrollExtent - 100) return;
+    _loadOlderInFlight = true;
+    ref
+        .read(chatControllerProvider(widget.conversationId).notifier)
+        .loadOlder()
+        .whenComplete(() {
+      if (mounted) _loadOlderInFlight = false;
+    });
   }
 
   Future<void> _send() async {
+    final l10n = AppLocalizations.of(context);
     final body = _inputController.text.trim();
     if (body.isEmpty) return;
     _inputController.clear();
@@ -52,7 +60,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       await ref
           .read(chatControllerProvider(widget.conversationId).notifier)
           .sendMessage(body);
-    } catch (_) {}
+    } catch (_) {
+      if (!mounted) return;
+      _inputController.text = body;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.chatSendError)),
+      );
+    }
   }
 
   @override
@@ -96,7 +110,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget _buildMessages(
       BuildContext context, List<Message> messages, AppLocalizations l10n) {
     if (messages.isEmpty) {
-      return Center(child: Text(l10n.chatNoConversations));
+      return Center(child: Text(l10n.chatEmpty));
     }
     return ListView.builder(
       controller: _scrollController,

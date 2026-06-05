@@ -404,6 +404,10 @@
   "@chatNoConversations": {
     "description": "Empty state when there are no conversations"
   },
+  "chatEmpty": "No messages yet. Say hello!",
+  "@chatEmpty": {
+    "description": "Empty state when a conversation has no messages"
+  },
   "chatInputHint": "Type a message\u2026",
   "@chatInputHint": {
     "description": "Hint text in the chat message input field"
@@ -411,6 +415,10 @@
   "chatSend": "Send",
   "@chatSend": {
     "description": "Button to send a chat message"
+  },
+  "chatSendError": "Failed to send message",
+  "@chatSendError": {
+    "description": "Snackbar when sending a chat message fails"
   },
   "chatTyping": "{name} is typing\u2026",
   "@chatTyping": {
