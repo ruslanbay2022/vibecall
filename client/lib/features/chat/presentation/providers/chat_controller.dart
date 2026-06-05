@@ -3,9 +3,7 @@ import 'dart:async';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vibecall/features/chat/data/chat_repository.dart';
 import 'package:vibecall/features/chat/domain/message.dart';
-import 'package:vibecall/features/chat/presentation/providers/active_chat_conversation.dart';
 import 'package:vibecall/features/chat/presentation/providers/chat_typing_provider.dart';
-import 'package:vibecall/features/chat/presentation/providers/unread_counts_controller.dart';
 
 part 'chat_controller.g.dart';
 
@@ -26,28 +24,11 @@ class ChatController extends _$ChatController {
 
     _cleanup();
 
-    Future.microtask(() {
-      if (!ref.mounted) return;
-      ref.read(activeChatConversationProvider.notifier).set(conversationId);
-      ref
-          .read(unreadCountsControllerProvider.notifier)
-          .clearForConversation(conversationId);
-    });
-
     ref.onDispose(() {
       _cleanup();
       try {
         typing.disposeTyping(conversationId);
       } catch (_) {}
-      final activeNotifier = ref.read(activeChatConversationProvider.notifier);
-      final unreadNotifier = ref.read(unreadCountsControllerProvider.notifier);
-      final id = conversationId;
-      Future.microtask(() {
-        if (activeNotifier.state == id) {
-          activeNotifier.set(null);
-        }
-        unreadNotifier.refresh();
-      });
     });
 
     final messages = await repo.fetchMessages(conversationId, limit: _pageSize);
