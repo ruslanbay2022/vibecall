@@ -20,11 +20,17 @@ class ChatMessageSound extends _$ChatMessageSound {
   final _session = _MessageSoundSession();
   final LinkedHashSet<String> _recentMessageIds = LinkedHashSet<String>();
   StreamSubscription<Message>? _subscription;
+  String? _activeConversationId;
   var _listening = false;
 
   @override
   void build() {
     ref.watch(chatRepositoryProvider);
+
+    ref.listen(activeChatConversationProvider, (_, next) {
+      _activeConversationId = next;
+    });
+    _activeConversationId = ref.read(activeChatConversationProvider);
 
     if (!_listening) {
       _listening = true;
@@ -46,22 +52,27 @@ class ChatMessageSound extends _$ChatMessageSound {
   }
 
   void _onIncomingMessage(Message message) {
-    final repo = ref.read(chatRepositoryProvider);
-    final activeConvId = ref.read(activeChatConversationProvider);
-    final shouldPlay = shouldPlayMessageSound(
-      senderId: message.senderId,
-      currentUserId: repo.currentUserId,
-      conversationId: message.conversationId,
-      activeConversationId: activeConvId,
-      messageId: message.id,
-      recentMessageIds: _recentMessageIds,
-      readAt: message.readAt,
-    );
+    try {
+      if (!ref.mounted) return;
 
-    if (!shouldPlay) return;
+      final repo = ref.read(chatRepositoryProvider);
+      final shouldPlay = shouldPlayMessageSound(
+        senderId: message.senderId,
+        currentUserId: repo.currentUserId,
+        conversationId: message.conversationId,
+        activeConversationId: _activeConversationId,
+        messageId: message.id,
+        recentMessageIds: _recentMessageIds,
+        readAt: message.readAt,
+      );
 
-    _addToRecent(message.id);
-    unawaited(_session.play());
+      if (!shouldPlay) return;
+
+      _addToRecent(message.id);
+      unawaited(_session.play());
+    } catch (e, stackTrace) {
+      debugPrint('chat message sound handler failed: $e\n$stackTrace');
+    }
   }
 
   void _addToRecent(String messageId) {
@@ -75,52 +86,43 @@ class ChatMessageSound extends _$ChatMessageSound {
 }
 
 class _MessageSoundSession {
-  AudioPlayer? _player;
-  bool _playing = false;
-
   Future<void> play() async {
-    if (_playing) {
-      try {
-        await _player?.stop();
-      } catch (_) {}
-    }
-    _playing = true;
     try {
       if (kIsWeb) {
         await AudioCache.instance.clear(_messageSoundAsset);
       }
-      final player = await _ensurePlayer();
-      await player.stop();
+
+      final player = AudioPlayer();
       await player.setReleaseMode(ReleaseMode.stop);
       await player.setVolume(0.7);
       await player.play(AssetSource(_messageSoundAsset));
+
+      if (kIsWeb) {
+        unawaited(_disposeAfterDelay(player));
+      } else {
+        unawaited(_disposeAfterComplete(player));
+      }
     } catch (e, stackTrace) {
       debugPrint('chat message sound failed: $e\n$stackTrace');
-      if (kIsWeb) {
-        await _resetPlayer();
-      }
-    } finally {
-      _playing = false;
     }
   }
 
-  Future<AudioPlayer> _ensurePlayer() async {
-    final existing = _player;
-    if (existing != null) return existing;
-
-    final player = AudioPlayer();
-    _player = player;
-    return player;
-  }
-
-  Future<void> _resetPlayer() async {
+  Future<void> _disposeAfterDelay(AudioPlayer player) async {
+    await Future<void>.delayed(const Duration(milliseconds: 400));
     try {
-      await _player?.dispose();
+      await player.dispose();
     } catch (_) {}
-    _player = null;
   }
 
-  Future<void> dispose() async {
-    await _resetPlayer();
+  Future<void> _disposeAfterComplete(AudioPlayer player) async {
+    try {
+      await player.onPlayerComplete.first
+          .timeout(const Duration(seconds: 2));
+    } catch (_) {}
+    try {
+      await player.dispose();
+    } catch (_) {}
   }
+
+  Future<void> dispose() async {}
 }

@@ -45,11 +45,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   @override
+  void deactivate() {
+    ref.read(activeChatConversationProvider.notifier).set(null);
+    unawaited(ref.read(unreadCountsControllerProvider.notifier).refresh());
+    super.deactivate();
+  }
+
+  @override
   void dispose() {
     _inputController.dispose();
     _scrollController.dispose();
-    ref.read(activeChatConversationProvider.notifier).set(null);
-    ref.read(unreadCountsControllerProvider.notifier).refresh();
     super.dispose();
   }
 
