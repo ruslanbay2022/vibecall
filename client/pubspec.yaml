@@ -49,3 +49,4 @@ flutter:
   generate: true
   assets:
     - assets/sounds/incoming_ring.wav
+    - assets/sounds/message_notification.wav

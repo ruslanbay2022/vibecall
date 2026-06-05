@@ -691,6 +691,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Start a conversation'**
   String get chatStartConversation;
+
+  /// Accessibility label for unread message count badge
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unread messages'**
+  String chatUnreadBadge(int count);
 }
 
 class _AppLocalizationsDelegate

@@ -6,6 +6,7 @@ class Conversation {
   final DateTime createdAt;
   final ChatPeer peer;
   final String? lastMessageBody;
+  final int unreadCount;
 
   const Conversation({
     required this.id,
@@ -13,5 +14,17 @@ class Conversation {
     required this.createdAt,
     required this.peer,
     this.lastMessageBody,
+    this.unreadCount = 0,
   });
+
+  Conversation copyWith({int? unreadCount}) {
+    return Conversation(
+      id: id,
+      lastMessageAt: lastMessageAt,
+      createdAt: createdAt,
+      peer: peer,
+      lastMessageBody: lastMessageBody,
+      unreadCount: unreadCount ?? this.unreadCount,
+    );
+  }
 }

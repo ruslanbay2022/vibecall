@@ -98,5 +98,6 @@
   "chatVoiceStub": "Голосовые сообщения скоро будут доступны",
   "chatLoadError": "Не удалось загрузить сообщения",
   "chatRetry": "Повторить",
-  "chatStartConversation": "Начать переписку"
+  "chatStartConversation": "Начать переписку",
+  "chatUnreadBadge": "{count} непрочитанных"
 }
