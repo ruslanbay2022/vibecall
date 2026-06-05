@@ -52,7 +52,10 @@ class ConversationDto {
     );
   }
 
-  Conversation toDomain({required String currentUserId}) {
+  Conversation toDomain({
+    required String currentUserId,
+    Map<String, int> unreadCountsByConversation = const {},
+  }) {
     final isUserA = userA == currentUserId;
     final peerId = isUserA ? userB : userA;
     final peerProfile = isUserA ? peerBProfile : peerAProfile;
@@ -70,6 +73,7 @@ class ConversationDto {
       createdAt: createdAt,
       peer: peer,
       lastMessageBody: lastMessageBody,
+      unreadCount: unreadCountsByConversation[id] ?? 0,
     );
   }
 }

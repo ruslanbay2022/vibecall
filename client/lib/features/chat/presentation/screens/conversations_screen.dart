@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vibecall/features/chat/domain/conversation.dart';
+import 'package:vibecall/features/chat/presentation/providers/active_chat_conversation.dart';
+import 'package:vibecall/features/chat/presentation/providers/chat_message_sound.dart';
 import 'package:vibecall/features/chat/presentation/providers/conversations_controller.dart';
 import 'package:vibecall/features/chat/presentation/providers/unread_counts_controller.dart';
 import 'package:vibecall/features/presence/presentation/providers/presence_controller.dart';
@@ -25,6 +27,7 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen> {
     final onlineUserIds = ref.watch(presenceControllerProvider);
     final asyncUnreadCounts = ref.watch(unreadCountsControllerProvider);
     final unreadCounts = asyncUnreadCounts.value ?? {};
+    final activeConversationId = ref.watch(activeChatConversationProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.chatsTitle)),
@@ -43,11 +46,19 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen> {
               separatorBuilder: (_, _) => const Divider(height: 0),
               itemBuilder: (context, index) {
                 final conv = conversations[index];
-                final unreadCount = unreadCounts[conv.id] ?? 0;
+                final rawCount = unreadCounts[conv.id] ?? conv.unreadCount;
+                final displayCount =
+                    activeConversationId == conv.id ? 0 : rawCount;
                 return _ConversationTile(
                   conversation: conv,
                   isOnline: onlineUserIds.contains(conv.peer.id),
-                  unreadCount: unreadCount,
+                  unreadCount: displayCount,
+                  l10n: l10n,
+                  onOpen: () {
+                    ref
+                        .read(chatMessageSoundProvider.notifier)
+                        .unlockForNextSound();
+                  },
                 );
               },
             ),
@@ -64,11 +75,15 @@ class _ConversationTile extends StatelessWidget {
   final Conversation conversation;
   final bool isOnline;
   final int unreadCount;
+  final AppLocalizations l10n;
+  final VoidCallback onOpen;
 
   const _ConversationTile({
     required this.conversation,
     required this.isOnline,
     required this.unreadCount,
+    required this.l10n,
+    required this.onOpen,
   });
 
   @override
@@ -119,15 +134,18 @@ class _ConversationTile extends StatelessWidget {
           ),
           if (unreadCount > 0) ...[
             const SizedBox(width: 8),
-            CircleAvatar(
-              radius: 10,
-              backgroundColor: theme.colorScheme.primary,
-              child: Text(
-                unreadCount > 9 ? '9+' : '$unreadCount',
-                style: TextStyle(
-                  color: theme.colorScheme.onPrimary,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+            Semantics(
+              label: l10n.chatUnreadBadge(unreadCount),
+              child: CircleAvatar(
+                radius: 10,
+                backgroundColor: theme.colorScheme.primary,
+                child: Text(
+                  unreadCount > 9 ? '9+' : '$unreadCount',
+                  style: TextStyle(
+                    color: theme.colorScheme.onPrimary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -135,6 +153,7 @@ class _ConversationTile extends StatelessWidget {
         ],
       ),
       onTap: () {
+        onOpen();
         context.push(
           '/chat/${conversation.id}',
           extra: {'peerName': name, 'peerAvatarUrl': peer.avatarUrl},

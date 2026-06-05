@@ -22,34 +22,38 @@ class ChatMessageSound extends _$ChatMessageSound {
 
   @override
   void build() {
-    final repo = ref.watch(chatRepositoryProvider);
-    final activeConvId = ref.watch(activeChatConversationProvider);
+    ref.watch(chatRepositoryProvider);
 
-    _subscription?.cancel();
-    _subscription = repo.globalIncomingMessageStream().listen(
-      (message) async {
-        final currentUserId = repo.currentUserId;
-        final shouldPlay = shouldPlayMessageSound(
-          senderId: message.senderId,
-          currentUserId: currentUserId,
-          conversationId: message.conversationId,
-          activeConversationId: activeConvId,
-          messageId: message.id,
-          recentMessageIds: _recentMessageIds,
-          readAt: message.readAt,
-        );
+    if (_subscription == null) {
+      final repo = ref.read(chatRepositoryProvider);
+      _subscription = repo.globalIncomingMessageStream().listen(
+        (message) async {
+          final activeConvId = ref.read(activeChatConversationProvider);
+          final currentUserId = repo.currentUserId;
+          final shouldPlay = shouldPlayMessageSound(
+            senderId: message.senderId,
+            currentUserId: currentUserId,
+            conversationId: message.conversationId,
+            activeConversationId: activeConvId,
+            messageId: message.id,
+            recentMessageIds: _recentMessageIds,
+            readAt: message.readAt,
+          );
 
-        if (shouldPlay) {
-          _addToRecent(message.id);
-          await _playSound();
-        }
-      },
-      onError: (_) {},
-    );
+          if (shouldPlay) {
+            _addToRecent(message.id);
+            await _playSound();
+          }
+        },
+        onError: (_) {},
+      );
+    }
 
     ref.onDispose(() {
       _subscription?.cancel();
+      _subscription = null;
       _player?.dispose();
+      _player = null;
     });
   }
 

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vibecall/features/chat/data/chat_repository.dart';
+import 'package:vibecall/features/chat/presentation/providers/active_chat_conversation.dart';
 
 part 'unread_counts_controller.g.dart';
 
@@ -19,6 +20,8 @@ class UnreadCountsController extends _$UnreadCountsController {
       (message) {
         if (message.isFromMe) return;
         if (message.readAt != null) return;
+        final activeId = ref.read(activeChatConversationProvider);
+        if (activeId == message.conversationId) return;
         final current = state.value ?? {};
         final updated = Map<String, int>.from(current);
         updated[message.conversationId] =

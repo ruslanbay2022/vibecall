@@ -92,9 +92,14 @@ class SupabaseChatRepository implements ChatRepository {
         .or('user_a.eq.$userId,user_b.eq.$userId')
         .order('last_message_at', ascending: false);
 
+    final unreadCounts = await fetchUnreadCountsByConversation();
+
     return (response as List)
         .map((e) => ConversationDto.fromJson(e as Map<String, dynamic>)
-            .toDomain(currentUserId: userId))
+            .toDomain(
+              currentUserId: userId,
+              unreadCountsByConversation: unreadCounts,
+            ))
         .toList();
   }
 
@@ -191,8 +196,10 @@ class SupabaseChatRepository implements ChatRepository {
 
   @override
   Stream<Message> globalIncomingMessageStream() {
-    _globalIncomingController?.close();
-    _globalIncomingChannel?.unsubscribe();
+    final existing = _globalIncomingController;
+    if (existing != null && !existing.isClosed) {
+      return existing.stream;
+    }
 
     final controller = StreamController<Message>.broadcast(
       onCancel: () {
