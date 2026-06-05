@@ -5,15 +5,12 @@ void main() {
   group('shouldPlayMessageSound', () {
     const currentUserId = 'user-a';
     const otherUserId = 'user-b';
-    const conversationId = 'conv-1';
     const messageId = 'msg-1';
 
     test('returns false when sender is current user', () {
       final result = shouldPlayMessageSound(
         senderId: currentUserId,
         currentUserId: currentUserId,
-        conversationId: conversationId,
-        activeConversationId: null,
         messageId: messageId,
         recentMessageIds: {},
         readAt: null,
@@ -25,8 +22,6 @@ void main() {
       final result = shouldPlayMessageSound(
         senderId: otherUserId,
         currentUserId: currentUserId,
-        conversationId: conversationId,
-        activeConversationId: null,
         messageId: messageId,
         recentMessageIds: {},
         readAt: DateTime(2024, 1, 1),
@@ -34,26 +29,21 @@ void main() {
       expect(result, isFalse);
     });
 
-    test('returns false when active conversation matches message conversation',
-        () {
+    test('returns true when user is viewing the same conversation', () {
       final result = shouldPlayMessageSound(
         senderId: otherUserId,
         currentUserId: currentUserId,
-        conversationId: conversationId,
-        activeConversationId: conversationId,
         messageId: messageId,
         recentMessageIds: {},
         readAt: null,
       );
-      expect(result, isFalse);
+      expect(result, isTrue);
     });
 
     test('returns false when message id is in recent ids (duplicate)', () {
       final result = shouldPlayMessageSound(
         senderId: otherUserId,
         currentUserId: currentUserId,
-        conversationId: conversationId,
-        activeConversationId: null,
         messageId: messageId,
         recentMessageIds: {messageId},
         readAt: null,
@@ -66,8 +56,6 @@ void main() {
       final result = shouldPlayMessageSound(
         senderId: otherUserId,
         currentUserId: currentUserId,
-        conversationId: conversationId,
-        activeConversationId: 'other-conv',
         messageId: messageId,
         recentMessageIds: {},
         readAt: null,
@@ -79,8 +67,6 @@ void main() {
       final result = shouldPlayMessageSound(
         senderId: otherUserId,
         currentUserId: currentUserId,
-        conversationId: conversationId,
-        activeConversationId: null,
         messageId: messageId,
         recentMessageIds: {},
         readAt: null,

@@ -7,7 +7,6 @@ import 'package:vibecall/features/call/platform/web_audio_unlock.dart';
 import 'package:vibecall/features/chat/data/chat_repository.dart';
 import 'package:vibecall/features/chat/domain/message.dart';
 import 'package:vibecall/features/chat/platform/chat_message_sound_player.dart';
-import 'package:vibecall/features/chat/presentation/active_chat_from_route.dart';
 import 'package:vibecall/features/chat/presentation/providers/chat_notification_logic.dart';
 
 part 'chat_message_sound.g.dart';
@@ -32,26 +31,15 @@ class ChatMessageSound extends _$ChatMessageSound {
       if (!ref.mounted) return;
 
       final repo = ref.read(chatRepositoryProvider);
-      final activeConvId = activeChatConversationIdFromRoute();
       final shouldPlay = shouldPlayMessageSound(
         senderId: message.senderId,
         currentUserId: repo.currentUserId,
-        conversationId: message.conversationId,
-        activeConversationId: activeConvId,
         messageId: message.id,
         recentMessageIds: _recentMessageIds,
         readAt: message.readAt,
       );
 
-      if (!shouldPlay) {
-        if (kDebugMode) {
-          debugPrint(
-            'chat sound skipped id=${message.id} '
-            'active=$activeConvId conv=${message.conversationId}',
-          );
-        }
-        return;
-      }
+      if (!shouldPlay) return;
 
       unawaited(_playAndRemember(message.id));
     } catch (e, stackTrace) {
