@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vibecall/app/env.dart';
 import 'package:vibecall/features/auth/data/auth_repository.dart';
+import 'package:vibecall/features/chat/presentation/providers/total_unread_chat_count.dart';
+import 'package:vibecall/features/chat/presentation/widgets/chat_unread_badge.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
 class HomePlaceholderScreen extends ConsumerStatefulWidget {
@@ -45,6 +47,7 @@ class _HomePlaceholderScreenState extends ConsumerState<HomePlaceholderScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final unreadTotal = ref.watch(totalUnreadChatCountProvider);
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.appTitle),
@@ -98,9 +101,12 @@ class _HomePlaceholderScreenState extends ConsumerState<HomePlaceholderScreen> {
               child: Text(l10n.callHistoryLink),
             ),
             const SizedBox(height: 4),
-            TextButton(
-              onPressed: () => context.push('/chats'),
-              child: Text(l10n.chatsLink),
+            ChatUnreadBadge(
+              count: unreadTotal,
+              child: TextButton(
+                onPressed: () => context.push('/chats'),
+                child: Text(l10n.chatsLink),
+              ),
             ),
           ],
         ),

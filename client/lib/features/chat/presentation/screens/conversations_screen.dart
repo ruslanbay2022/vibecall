@@ -7,6 +7,7 @@ import 'package:vibecall/features/chat/presentation/providers/active_chat_conver
 import 'package:vibecall/features/chat/presentation/providers/chat_message_sound.dart';
 import 'package:vibecall/features/chat/presentation/providers/conversations_controller.dart';
 import 'package:vibecall/features/chat/presentation/providers/unread_counts_controller.dart';
+import 'package:vibecall/features/chat/presentation/widgets/chat_unread_badge.dart';
 import 'package:vibecall/features/presence/presentation/providers/presence_controller.dart';
 import 'package:vibecall/features/presence/presentation/widgets/online_indicator.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
@@ -134,21 +135,7 @@ class _ConversationTile extends StatelessWidget {
           ),
           if (unreadCount > 0) ...[
             const SizedBox(width: 8),
-            Semantics(
-              label: l10n.chatUnreadBadge(unreadCount),
-              child: CircleAvatar(
-                radius: 10,
-                backgroundColor: theme.colorScheme.primary,
-                child: Text(
-                  unreadCount > 9 ? '9+' : '$unreadCount',
-                  style: TextStyle(
-                    color: theme.colorScheme.onPrimary,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
+            ChatUnreadCountLabel(count: unreadCount),
           ],
         ],
       ),

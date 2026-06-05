@@ -6,6 +6,7 @@ import 'package:vibecall/features/call/presentation/providers/call_state.dart';
 import 'package:vibecall/features/call/presentation/providers/incoming_call_listener.dart';
 import 'package:vibecall/features/call/presentation/providers/incoming_ringtone.dart';
 import 'package:vibecall/features/call/presentation/widgets/incoming_call_overlay.dart';
+import 'package:vibecall/features/chat/presentation/providers/unread_counts_controller.dart';
 import 'package:vibecall/features/chat/presentation/widgets/active_chat_route_sync.dart';
 
 class CallAppShell extends ConsumerWidget {
@@ -17,6 +18,7 @@ class CallAppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(incomingCallListenerProvider);
     ref.watch(incomingRingtoneProvider);
+    ref.watch(unreadCountsControllerProvider);
 
     ref.listen(callControllerProvider, (_, next) {
       final router = GoRouter.of(context);

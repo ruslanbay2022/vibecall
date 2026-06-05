@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:vibecall/features/call/presentation/providers/call_controller.dart';
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
 import 'package:vibecall/features/chat/data/chat_repository.dart';
+import 'package:vibecall/features/chat/presentation/providers/total_unread_chat_count.dart';
+import 'package:vibecall/features/chat/presentation/widgets/chat_unread_badge.dart';
 import 'package:vibecall/features/contacts/data/contacts_repository.dart';
 import 'package:vibecall/features/contacts/presentation/providers/contacts_controller.dart';
 import 'package:vibecall/features/presence/presentation/providers/presence_controller.dart';
@@ -41,10 +43,21 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen>
     final repo = ref.watch(contactsRepositoryProvider);
     final currentUserId = repo.currentUserId;
     final onlineUserIds = ref.watch(presenceControllerProvider);
+    final unreadTotal = ref.watch(totalUnreadChatCountProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.contactsTitle),
+        actions: [
+          ChatUnreadBadge(
+            count: unreadTotal,
+            child: IconButton(
+              icon: const Icon(Icons.chat_bubble_outline),
+              tooltip: l10n.chatsTitle,
+              onPressed: () => context.push('/chats'),
+            ),
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: [
