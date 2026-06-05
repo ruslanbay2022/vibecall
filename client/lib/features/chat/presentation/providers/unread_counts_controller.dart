@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vibecall/features/chat/data/chat_repository.dart';
 import 'package:vibecall/features/chat/domain/message.dart';
-import 'package:vibecall/features/chat/presentation/providers/active_chat_conversation.dart';
+import 'package:vibecall/features/chat/presentation/active_chat_from_route.dart';
 
 part 'unread_counts_controller.g.dart';
 
@@ -20,7 +20,7 @@ class UnreadCountsController extends _$UnreadCountsController {
       if (message.isFromMe) return;
       if (message.readAt != null) return;
 
-      final activeId = ref.read(activeChatConversationProvider);
+      final activeId = activeChatConversationIdFromRoute();
       if (activeId == message.conversationId) return;
 
       final current = state.value ?? {};

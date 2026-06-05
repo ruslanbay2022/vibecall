@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vibecall/features/chat/data/conversation_dto.dart';
@@ -203,18 +204,22 @@ class SupabaseChatRepository implements ChatRepository {
     final controller = StreamController<Message>.broadcast();
     _globalIncomingController = controller;
 
+    final userId = currentUserId;
     _client
-        .channel('chat:global-incoming')
+        .channel('chat:global-incoming:$userId')
         .onPostgresChanges(
           event: PostgresChangeEvent.insert,
           schema: 'public',
           table: 'messages',
           callback: (payload) {
             try {
+              if (controller.isClosed) return;
               final record = payload.newRecord;
               final dto = MessageDto.fromJson(record);
-              controller.add(dto.toDomain(currentUserId: currentUserId));
-            } catch (_) {}
+              controller.add(dto.toDomain(currentUserId: userId));
+            } catch (e, stackTrace) {
+              debugPrint('global incoming message error: $e\n$stackTrace');
+            }
           },
         )
         .subscribe();

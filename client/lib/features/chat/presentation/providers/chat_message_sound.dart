@@ -7,7 +7,7 @@ import 'package:vibecall/features/call/platform/web_audio_unlock.dart';
 import 'package:vibecall/features/chat/data/chat_repository.dart';
 import 'package:vibecall/features/chat/domain/message.dart';
 import 'package:vibecall/features/chat/platform/chat_message_sound_player.dart';
-import 'package:vibecall/features/chat/presentation/providers/active_chat_conversation.dart';
+import 'package:vibecall/features/chat/presentation/active_chat_from_route.dart';
 import 'package:vibecall/features/chat/presentation/providers/chat_notification_logic.dart';
 
 part 'chat_message_sound.g.dart';
@@ -32,7 +32,7 @@ class ChatMessageSound extends _$ChatMessageSound {
       if (!ref.mounted) return;
 
       final repo = ref.read(chatRepositoryProvider);
-      final activeConvId = ref.read(activeChatConversationProvider);
+      final activeConvId = activeChatConversationIdFromRoute();
       final shouldPlay = shouldPlayMessageSound(
         senderId: message.senderId,
         currentUserId: repo.currentUserId,
@@ -43,18 +43,26 @@ class ChatMessageSound extends _$ChatMessageSound {
         readAt: message.readAt,
       );
 
-      if (!shouldPlay) return;
+      if (!shouldPlay) {
+        if (kDebugMode) {
+          debugPrint(
+            'chat sound skipped id=${message.id} '
+            'active=$activeConvId conv=${message.conversationId}',
+          );
+        }
+        return;
+      }
 
-      _addToRecent(message.id);
-      unawaited(_playWithLog());
+      unawaited(_playAndRemember(message.id));
     } catch (e, stackTrace) {
       debugPrint('chat message sound handler failed: $e\n$stackTrace');
     }
   }
 
-  Future<void> _playWithLog() async {
+  Future<void> _playAndRemember(String messageId) async {
     try {
       await playChatMessageSound();
+      _addToRecent(messageId);
     } catch (e, stackTrace) {
       debugPrint('chat message sound failed: $e\n$stackTrace');
     }

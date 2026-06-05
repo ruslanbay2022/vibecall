@@ -16,22 +16,20 @@ class ChatIncomingRelay extends _$ChatIncomingRelay {
 
   @override
   void build() {
-    ref.watch(chatRepositoryProvider);
+    final repo = ref.watch(chatRepositoryProvider);
 
-    if (_subscription == null) {
-      final repo = ref.read(chatRepositoryProvider);
-      _subscription = repo.globalIncomingMessageStream().listen(
-        (message) {
-          ref.read(chatMessageSoundProvider.notifier).onIncomingMessage(message);
-          ref
-              .read(unreadCountsControllerProvider.notifier)
-              .onIncomingMessage(message);
-        },
-        onError: (error, stackTrace) {
-          debugPrint('chat incoming relay error: $error\n$stackTrace');
-        },
-      );
-    }
+    _subscription?.cancel();
+    _subscription = repo.globalIncomingMessageStream().listen(
+      (message) {
+        ref.read(chatMessageSoundProvider.notifier).onIncomingMessage(message);
+        ref
+            .read(unreadCountsControllerProvider.notifier)
+            .onIncomingMessage(message);
+      },
+      onError: (error, stackTrace) {
+        debugPrint('chat incoming relay error: $error\n$stackTrace');
+      },
+    );
 
     ref.onDispose(() {
       _subscription?.cancel();

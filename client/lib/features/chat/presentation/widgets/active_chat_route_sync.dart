@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:vibecall/features/chat/presentation/providers/active_chat_conversation.dart';
 import 'package:vibecall/features/chat/presentation/providers/unread_counts_controller.dart';
 
-/// Keeps [activeChatConversationProvider] in sync with the current route.
+/// Mirrors route into [activeChatConversationProvider] for UI (badge zeroing).
 class ActiveChatRouteSync extends ConsumerStatefulWidget {
   const ActiveChatRouteSync({super.key});
 
@@ -23,13 +23,16 @@ class _ActiveChatRouteSyncState extends ConsumerState<ActiveChatRouteSync> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final router = GoRouter.of(context);
-    _routeListener ??= () => _syncActiveChatFromRoute(router);
+    _routeListener ??= () => _syncActiveChatFromRoute(router, immediate: true);
     router.routerDelegate.removeListener(_routeListener!);
     router.routerDelegate.addListener(_routeListener!);
-    _syncActiveChatFromRoute(router);
+    _syncActiveChatFromRoute(router, immediate: false);
   }
 
-  void _syncActiveChatFromRoute(GoRouter router) {
+  void _syncActiveChatFromRoute(
+    GoRouter router, {
+    required bool immediate,
+  }) {
     final location = router.state.matchedLocation;
     final chatId = location.startsWith('/chat/')
         ? router.state.pathParameters['conversationId']
@@ -39,7 +42,7 @@ class _ActiveChatRouteSyncState extends ConsumerState<ActiveChatRouteSync> {
     final previousChatId = _syncedActiveChatId;
     _syncedActiveChatId = chatId;
 
-    Future.microtask(() {
+    void apply() {
       if (!mounted) return;
       ref.read(activeChatConversationProvider.notifier).set(chatId);
       if (chatId != null) {
@@ -49,7 +52,13 @@ class _ActiveChatRouteSyncState extends ConsumerState<ActiveChatRouteSync> {
       } else if (previousChatId != null) {
         unawaited(ref.read(unreadCountsControllerProvider.notifier).refresh());
       }
-    });
+    }
+
+    if (immediate) {
+      apply();
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) => apply());
+    }
   }
 
   @override
