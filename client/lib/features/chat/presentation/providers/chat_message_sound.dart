@@ -93,25 +93,14 @@ class _MessageSoundSession {
       }
 
       final player = AudioPlayer();
+      await player.stop();
       await player.setReleaseMode(ReleaseMode.stop);
       await player.setVolume(0.7);
       await player.play(AssetSource(_messageSoundAsset));
-
-      if (kIsWeb) {
-        unawaited(_disposeAfterDelay(player));
-      } else {
-        unawaited(_disposeAfterComplete(player));
-      }
+      unawaited(_disposeAfterComplete(player));
     } catch (e, stackTrace) {
       debugPrint('chat message sound failed: $e\n$stackTrace');
     }
-  }
-
-  Future<void> _disposeAfterDelay(AudioPlayer player) async {
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    try {
-      await player.dispose();
-    } catch (_) {}
   }
 
   Future<void> _disposeAfterComplete(AudioPlayer player) async {

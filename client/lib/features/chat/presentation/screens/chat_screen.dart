@@ -3,10 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vibecall/features/chat/domain/message.dart';
-import 'package:vibecall/features/chat/presentation/providers/active_chat_conversation.dart';
 import 'package:vibecall/features/chat/presentation/providers/chat_controller.dart';
 import 'package:vibecall/features/chat/presentation/providers/chat_message_sound.dart';
-import 'package:vibecall/features/chat/presentation/providers/unread_counts_controller.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -34,21 +32,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref
-          .read(activeChatConversationProvider.notifier)
-          .set(widget.conversationId);
-      ref
-          .read(unreadCountsControllerProvider.notifier)
-          .clearForConversation(widget.conversationId);
-    });
-  }
-
-  @override
-  void deactivate() {
-    ref.read(activeChatConversationProvider.notifier).set(null);
-    unawaited(ref.read(unreadCountsControllerProvider.notifier).refresh());
-    super.deactivate();
   }
 
   @override
