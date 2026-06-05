@@ -6,9 +6,10 @@ services:
     ports:
       - "7880:7880"
       - "7881:7881"
-      - "50000-50200:50000-50200/udp"
+      # Full 50000-50200/udp often fails on Windows (Hyper-V excluded ports).
+      - "50000-50015:50000-50015/udp"
     volumes:
-      - ./livekit-dev.yaml:/etc/livekit.yaml:ro
+      - ./livekit-dev.windows.yaml:/etc/livekit.yaml:ro
   cloudflared:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
