@@ -5,11 +5,13 @@ class Conversation {
   final DateTime lastMessageAt;
   final DateTime createdAt;
   final ChatPeer peer;
+  final String? lastMessageBody;
 
   const Conversation({
     required this.id,
     required this.lastMessageAt,
     required this.createdAt,
     required this.peer,
+    this.lastMessageBody,
   });
 }

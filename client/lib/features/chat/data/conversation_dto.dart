@@ -9,6 +9,7 @@ class ConversationDto {
   final DateTime createdAt;
   final Map<String, dynamic>? peerAProfile;
   final Map<String, dynamic>? peerBProfile;
+  final String? lastMessageBody;
 
   ConversationDto({
     required this.id,
@@ -18,9 +19,27 @@ class ConversationDto {
     required this.createdAt,
     this.peerAProfile,
     this.peerBProfile,
+    this.lastMessageBody,
   });
 
   factory ConversationDto.fromJson(Map<String, dynamic> json) {
+    String? lastBody;
+    final messages = json['messages'] as List?;
+    if (messages != null && messages.isNotEmpty) {
+      Map<String, dynamic>? latest;
+      DateTime? latestAt;
+      for (final m in messages) {
+        final msg = m as Map<String, dynamic>;
+        final at = msg['created_at'] as String?;
+        if (at == null) continue;
+        final dt = DateTime.parse(at);
+        if (latestAt == null || dt.isAfter(latestAt)) {
+          latestAt = dt;
+          latest = msg;
+        }
+      }
+      lastBody = latest?['body'] as String?;
+    }
     return ConversationDto(
       id: json['id'] as String,
       userA: json['user_a'] as String,
@@ -29,6 +48,7 @@ class ConversationDto {
       createdAt: DateTime.parse(json['created_at'] as String),
       peerAProfile: json['peer_a'] as Map<String, dynamic>?,
       peerBProfile: json['peer_b'] as Map<String, dynamic>?,
+      lastMessageBody: lastBody,
     );
   }
 
@@ -49,6 +69,7 @@ class ConversationDto {
       lastMessageAt: lastMessageAt,
       createdAt: createdAt,
       peer: peer,
+      lastMessageBody: lastMessageBody,
     );
   }
 }

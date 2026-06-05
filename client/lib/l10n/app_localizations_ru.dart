@@ -286,4 +286,45 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get callHistoryCallCancel => 'Отмена';
+
+  @override
+  String get chatsTitle => 'Чаты';
+
+  @override
+  String get chatsLink => 'Чаты';
+
+  @override
+  String get chatNoConversations => 'Пока нет чатов';
+
+  @override
+  String get chatEmpty => 'Сообщений пока нет. Напишите первым!';
+
+  @override
+  String get chatInputHint => 'Введите сообщение…';
+
+  @override
+  String get chatSend => 'Отправить';
+
+  @override
+  String get chatSendError => 'Не удалось отправить сообщение';
+
+  @override
+  String chatTyping(String name) {
+    return '$name печатает…';
+  }
+
+  @override
+  String get chatAttachStub => 'Вложения скоро будут доступны';
+
+  @override
+  String get chatVoiceStub => 'Голосовые сообщения скоро будут доступны';
+
+  @override
+  String get chatLoadError => 'Не удалось загрузить сообщения';
+
+  @override
+  String get chatRetry => 'Повторить';
+
+  @override
+  String get chatStartConversation => 'Начать переписку';
 }
