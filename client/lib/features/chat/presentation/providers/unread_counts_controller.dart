@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vibecall/features/chat/data/chat_repository.dart';
@@ -10,44 +8,20 @@ part 'unread_counts_controller.g.dart';
 
 @Riverpod(keepAlive: true)
 class UnreadCountsController extends _$UnreadCountsController {
-  StreamSubscription<Message>? _subscription;
-  String? _activeConversationId;
-  var _listening = false;
-
   @override
   Future<Map<String, int>> build() async {
-    final repo = ref.watch(chatRepositoryProvider);
-
-    ref.listen(activeChatConversationProvider, (_, next) {
-      _activeConversationId = next;
-    });
-    _activeConversationId = ref.read(activeChatConversationProvider);
-
-    if (!_listening) {
-      _listening = true;
-      _subscription = repo.globalIncomingMessageStream().listen(
-        _onIncomingMessage,
-        onError: (error, stackTrace) {
-          debugPrint('unread counts stream error: $error\n$stackTrace');
-        },
-      );
-    }
-
-    ref.onDispose(() {
-      _listening = false;
-      _subscription?.cancel();
-      _subscription = null;
-    });
-
-    return repo.fetchUnreadCountsByConversation();
+    ref.watch(chatRepositoryProvider);
+    return ref.read(chatRepositoryProvider).fetchUnreadCountsByConversation();
   }
 
-  void _onIncomingMessage(Message message) {
+  void onIncomingMessage(Message message) {
     try {
       if (!ref.mounted) return;
       if (message.isFromMe) return;
       if (message.readAt != null) return;
-      if (_activeConversationId == message.conversationId) return;
+
+      final activeId = ref.read(activeChatConversationProvider);
+      if (activeId == message.conversationId) return;
 
       final current = state.value ?? {};
       final updated = Map<String, int>.from(current);

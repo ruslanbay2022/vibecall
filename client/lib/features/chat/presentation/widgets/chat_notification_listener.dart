@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vibecall/features/chat/presentation/providers/chat_incoming_relay.dart';
 import 'package:vibecall/features/chat/presentation/providers/chat_message_sound.dart';
 
 class ChatNotificationListener extends ConsumerStatefulWidget {
@@ -19,6 +20,7 @@ class _ChatNotificationListenerState extends ConsumerState<ChatNotificationListe
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(chatIncomingRelayProvider);
     ref.watch(chatMessageSoundProvider);
 
     return Listener(

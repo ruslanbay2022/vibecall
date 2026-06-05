@@ -34,7 +34,6 @@ class SupabaseChatRepository implements ChatRepository {
   StreamController<List<Conversation>>? _conversationsController;
   final List<RealtimeChannel> _conversationsChannels = [];
   StreamController<Message>? _globalIncomingController;
-  RealtimeChannel? _globalIncomingChannel;
 
   SupabaseChatRepository({SupabaseClient? client})
       : _client = client ?? Supabase.instance.client;
@@ -201,19 +200,11 @@ class SupabaseChatRepository implements ChatRepository {
       return existing.stream;
     }
 
-    final controller = StreamController<Message>.broadcast(
-      onCancel: () {
-        _globalIncomingChannel?.unsubscribe();
-        _globalIncomingChannel = null;
-        _globalIncomingController = null;
-      },
-    );
+    final controller = StreamController<Message>.broadcast();
     _globalIncomingController = controller;
 
-    final channel = _client.channel('chat:global-incoming');
-    _globalIncomingChannel = channel;
-
-    channel
+    _client
+        .channel('chat:global-incoming')
         .onPostgresChanges(
           event: PostgresChangeEvent.insert,
           schema: 'public',
