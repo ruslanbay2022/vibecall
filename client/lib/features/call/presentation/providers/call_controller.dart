@@ -7,6 +7,8 @@ import 'package:vibecall/features/call/data/call_repository.dart';
 import 'package:vibecall/features/call/data/call_token.dart';
 import 'package:vibecall/features/call/domain/call_invitation.dart';
 import 'package:vibecall/features/call/domain/call_outcome.dart';
+import 'package:flutter/material.dart' show BuildContext;
+import 'package:vibecall/features/call/presentation/call_screen_share.dart';
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
 import 'package:vibecall/features/call/presentation/widgets/call_media_utils.dart';
 import 'package:vibecall/features/chat/presentation/providers/in_call_open_chat.dart';
@@ -222,7 +224,8 @@ class CallController extends _$CallController {
   }
 
   /// Returns false when enabling screen share failed (picker denied, service error).
-  Future<bool> toggleScreenShare() async {
+  /// Pass [context] on desktop for [ScreenSelectDialog] (all monitors/windows).
+  Future<bool> toggleScreenShare({BuildContext? context}) async {
     if (_screenShareBusy) return false;
     final participant = _room?.localParticipant;
     if (participant == null) return false;
@@ -232,10 +235,16 @@ class CallController extends _$CallController {
       if (isParticipantScreenSharing(participant)) {
         await _unpublishLocalScreenShare(participant);
       } else {
-        // Clear stale publications so setScreenShareEnabled(true) creates a new
-        // capture instead of unmuting a disposed track (Web repeat-share bug).
         await _unpublishLocalScreenShare(participant);
-        final pub = await participant.setScreenShareEnabled(true);
+        if (context != null && !context.mounted) {
+          _refreshActiveState();
+          return false;
+        }
+        final pub = await CallScreenShare.start(
+          participant,
+          context: context,
+          onEnded: _onScreenShareEndedByBrowser,
+        );
         if (pub == null || pub.track == null) {
           _refreshActiveState();
           return false;
@@ -249,6 +258,15 @@ class CallController extends _$CallController {
     } finally {
       _screenShareBusy = false;
     }
+  }
+
+  Future<void> _onScreenShareEndedByBrowser() async {
+    final participant = _room?.localParticipant;
+    if (participant == null) return;
+    try {
+      await _unpublishLocalScreenShare(participant);
+    } catch (_) {}
+    _refreshActiveState();
   }
 
   void resetToIdle() {
