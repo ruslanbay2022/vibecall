@@ -21,7 +21,11 @@ Future<void> _loadBytes() async {
 }
 
 Future<void> playChatMessageSound() {
-  _playChain = _playChain.then((_) => _playOnce());
+  _playChain = _playChain
+      .catchError((Object e, StackTrace st) {
+        debugPrint('chat message sound chain error: $e\n$st');
+      })
+      .then((_) => _playOnce());
   return _playChain;
 }
 
@@ -47,10 +51,8 @@ Future<void> _playOnce() async {
 
     audio.load();
     await audio.play().toDart;
-    await Future<void>.delayed(const Duration(milliseconds: 350));
   } catch (e, stackTrace) {
     debugPrint('chat message sound web play failed: $e\n$stackTrace');
-    rethrow;
   } finally {
     audio?.pause();
     if (audio != null) {

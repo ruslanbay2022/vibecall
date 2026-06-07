@@ -45,7 +45,14 @@ class CallHud extends ConsumerWidget {
         ? 0
         : unreadCounts[conversationId] ?? 0;
 
-    return Container(
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: (_) {
+        unawaited(
+          ref.read(chatMessageSoundProvider.notifier).unlockForNextSound(),
+        );
+      },
+      child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -117,6 +124,7 @@ class CallHud extends ConsumerWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

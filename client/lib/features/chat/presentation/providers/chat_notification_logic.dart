@@ -6,13 +6,10 @@ bool shouldPlayMessageSound({
   required String messageId,
   required Set<String> recentMessageIds,
   required DateTime? readAt,
-  String? inCallConversationId,
-  required String messageConversationId,
 }) {
   if (senderId == currentUserId) return false;
   if (readAt != null) return false;
   if (recentMessageIds.contains(messageId)) return false;
-  if (inCallConversationId == messageConversationId) return false;
   return true;
 }
 
