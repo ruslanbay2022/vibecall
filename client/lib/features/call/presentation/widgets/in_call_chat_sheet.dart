@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vibecall/features/chat/domain/message.dart';
 import 'package:vibecall/features/chat/presentation/providers/chat_controller.dart';
+import 'package:vibecall/features/chat/presentation/widgets/message_bubble.dart';
 import 'package:vibecall/features/chat/presentation/providers/chat_message_sound.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
@@ -143,7 +144,7 @@ class _InCallChatSheetState extends ConsumerState<InCallChatSheet> {
       itemCount: messages.length,
       itemBuilder: (context, index) {
         final message = messages[messages.length - 1 - index];
-        return _MessageBubble(message: message);
+        return MessageBubble(message: message);
       },
     );
   }
@@ -223,39 +224,3 @@ class _InCallChatSheetState extends ConsumerState<InCallChatSheet> {
   }
 }
 
-class _MessageBubble extends StatelessWidget {
-  final Message message;
-
-  const _MessageBubble({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isMe = message.isFromMe;
-    final bgColor = isMe
-        ? theme.colorScheme.primary
-        : theme.colorScheme.surfaceContainerHighest;
-    final fgColor = isMe
-        ? theme.colorScheme.onPrimary
-        : theme.colorScheme.onSurface;
-
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.7,
-        ),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Text(
-          message.body,
-          style: TextStyle(color: fgColor),
-        ),
-      ),
-    );
-  }
-}

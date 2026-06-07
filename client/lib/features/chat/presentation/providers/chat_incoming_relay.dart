@@ -47,6 +47,9 @@ class ChatIncomingRelay extends _$ChatIncomingRelay {
     final repo = ref.read(chatRepositoryProvider);
     _subscription = repo.globalIncomingMessageStream().listen(
       (message) {
+        if (!message.isFromMe && message.deliveredAt == null) {
+          unawaited(repo.markDelivered(message.id));
+        }
         ref.read(chatMessageSoundProvider.notifier).onIncomingMessage(message);
         ref
             .read(unreadCountsControllerProvider.notifier)

@@ -305,6 +305,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatSend => 'Send';
 
   @override
+  String get chatMessageStatusSending => 'Sending';
+
+  @override
+  String get chatMessageStatusSent => 'Sent';
+
+  @override
+  String get chatMessageStatusDelivered => 'Delivered';
+
+  @override
+  String get chatMessageStatusRead => 'Read';
+
+  @override
   String get chatSendError => 'Failed to send message';
 
   @override

@@ -650,6 +650,30 @@ abstract class AppLocalizations {
   /// **'Send'**
   String get chatSend;
 
+  /// Accessibility label for outgoing message being sent
+  ///
+  /// In en, this message translates to:
+  /// **'Sending'**
+  String get chatMessageStatusSending;
+
+  /// Accessibility label for outgoing message sent to server
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get chatMessageStatusSent;
+
+  /// Accessibility label for outgoing message delivered to recipient
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get chatMessageStatusDelivered;
+
+  /// Accessibility label for outgoing message read by recipient
+  ///
+  /// In en, this message translates to:
+  /// **'Read'**
+  String get chatMessageStatusRead;
+
   /// Snackbar when sending a chat message fails
   ///
   /// In en, this message translates to:

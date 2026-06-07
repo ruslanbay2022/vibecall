@@ -36,17 +36,7 @@ class ChatController extends _$ChatController {
 
     _msgSub = repo.messageStream(conversationId).listen(
       (message) {
-        final current = state.value ?? [];
-        final idx = current.indexWhere((m) => m.id == message.id);
-        if (idx >= 0) {
-          final updated = List<Message>.of(current)..[idx] = message;
-          state = AsyncValue.data(updated);
-        } else {
-          state = AsyncValue.data([...current, message]);
-        }
-        if (!message.isFromMe && message.readAt == null) {
-          unawaited(repo.markRead(message.id));
-        }
+        _applyIncomingMessage(repo, message);
       },
       onError: (_) {},
     );
@@ -78,9 +68,57 @@ class ChatController extends _$ChatController {
     }
   }
 
+  void _applyIncomingMessage(ChatRepository repo, Message message) {
+    var current = state.value ?? [];
+    if (message.isFromMe) {
+      current = current
+          .where(
+            (m) => !(m.isPending && m.body == message.body),
+          )
+          .toList();
+    }
+    final idx = current.indexWhere((m) => m.id == message.id);
+    if (idx >= 0) {
+      current = List<Message>.of(current)..[idx] = message;
+    } else {
+      current = [...current, message];
+    }
+    state = AsyncValue.data(current);
+
+    if (!message.isFromMe) {
+      if (message.deliveredAt == null) {
+        unawaited(repo.markDelivered(message.id));
+      }
+      if (message.readAt == null) {
+        unawaited(repo.markRead(message.id));
+      }
+    }
+  }
+
   Future<void> sendMessage(String body) async {
     final repo = ref.read(chatRepositoryProvider);
-    await repo.sendMessage(conversationId, body);
+    final pending = Message(
+      id: 'pending-${DateTime.now().microsecondsSinceEpoch}',
+      conversationId: conversationId,
+      senderId: repo.currentUserId,
+      body: body,
+      readAt: null,
+      createdAt: DateTime.now(),
+      isFromMe: true,
+      isPending: true,
+    );
+    final current = [...(state.value ?? []), pending];
+    state = AsyncValue.data(current);
+    try {
+      await repo.sendMessage(conversationId, body);
+    } catch (_) {
+      if (ref.mounted) {
+        state = AsyncValue.data(
+          current.where((m) => m.id != pending.id).toList(),
+        );
+      }
+      rethrow;
+    }
   }
 
   Future<void> loadOlder() async {
