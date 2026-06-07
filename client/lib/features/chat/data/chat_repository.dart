@@ -35,6 +35,16 @@ class SupabaseChatRepository implements ChatRepository {
   StreamController<List<Conversation>>? _conversationsController;
   final List<RealtimeChannel> _conversationsChannels = [];
   StreamController<Message>? _globalIncomingController;
+  RealtimeChannel? _globalIncomingChannel;
+  String? _globalIncomingUserId;
+
+  void _disposeGlobalIncomingStream() {
+    _globalIncomingChannel?.unsubscribe();
+    _globalIncomingChannel = null;
+    _globalIncomingController?.close();
+    _globalIncomingController = null;
+    _globalIncomingUserId = null;
+  }
 
   SupabaseChatRepository({SupabaseClient? client})
       : _client = client ?? Supabase.instance.client;
@@ -196,17 +206,27 @@ class SupabaseChatRepository implements ChatRepository {
 
   @override
   Stream<Message> globalIncomingMessageStream() {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      return const Stream<Message>.empty();
+    }
+
     final existing = _globalIncomingController;
-    if (existing != null && !existing.isClosed) {
+    if (existing != null &&
+        !existing.isClosed &&
+        _globalIncomingUserId == userId) {
       return existing.stream;
     }
 
+    _disposeGlobalIncomingStream();
+
     final controller = StreamController<Message>.broadcast();
     _globalIncomingController = controller;
+    _globalIncomingUserId = userId;
 
-    final userId = currentUserId;
-    _client
-        .channel('chat:global-incoming:$userId')
+    final channel = _client.channel('chat:global-incoming:$userId');
+    _globalIncomingChannel = channel;
+    channel
         .onPostgresChanges(
           event: PostgresChangeEvent.insert,
           schema: 'public',
