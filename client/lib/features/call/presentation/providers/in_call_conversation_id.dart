@@ -5,17 +5,32 @@ import 'package:vibecall/features/chat/data/chat_repository.dart';
 
 part 'in_call_conversation_id.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class InCallConversationId extends _$InCallConversationId {
+  String? _cachedPeerUserId;
+  String? _cachedConversationId;
+
   @override
   Future<String?> build() async {
     final callState = ref.watch(callControllerProvider);
-    if (callState is! CallStateActive) return null;
+    final peerUserId =
+        callState is CallStateActive ? callState.peerUserId : null;
 
-    final peerUserId = callState.peerUserId;
-    if (peerUserId.isEmpty) return null;
+    if (peerUserId == null || peerUserId.isEmpty) {
+      _cachedPeerUserId = null;
+      _cachedConversationId = null;
+      return null;
+    }
 
-    final repo = ref.read(chatRepositoryProvider);
-    return repo.ensureConversation(peerUserId);
+    if (_cachedPeerUserId == peerUserId && _cachedConversationId != null) {
+      return _cachedConversationId;
+    }
+
+    final conversationId = await ref
+        .read(chatRepositoryProvider)
+        .ensureConversation(peerUserId);
+    _cachedPeerUserId = peerUserId;
+    _cachedConversationId = conversationId;
+    return conversationId;
   }
 }

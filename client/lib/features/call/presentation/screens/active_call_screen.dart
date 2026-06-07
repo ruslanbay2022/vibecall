@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:livekit_client/livekit_client.dart';
@@ -8,6 +10,8 @@ import 'package:vibecall/features/call/presentation/providers/in_call_conversati
 import 'package:vibecall/features/call/presentation/widgets/call_hud.dart';
 import 'package:vibecall/features/call/presentation/widgets/call_media_utils.dart';
 import 'package:vibecall/features/call/presentation/widgets/in_call_chat_sheet.dart';
+import 'package:vibecall/features/chat/presentation/providers/in_call_open_chat.dart';
+import 'package:vibecall/features/chat/presentation/providers/unread_counts_controller.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
 class ActiveCallScreen extends ConsumerWidget {
@@ -143,9 +147,20 @@ class _ActiveViewState extends ConsumerState<_ActiveView> {
     _mediaListeners.clear();
   }
 
-  void _toggleChat() {
-    setState(() {
-      _chatOpen = !_chatOpen;
+  void _toggleChat(String conversationId) {
+    final opening = !_chatOpen;
+    setState(() => _chatOpen = opening);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (opening) {
+        ref.read(inCallOpenChatProvider.notifier).set(conversationId);
+        ref
+            .read(unreadCountsControllerProvider.notifier)
+            .clearForConversation(conversationId);
+      } else {
+        ref.read(inCallOpenChatProvider.notifier).set(null);
+        unawaited(ref.read(unreadCountsControllerProvider.notifier).refresh());
+      }
     });
   }
 
@@ -200,6 +215,10 @@ class _ActiveViewState extends ConsumerState<_ActiveView> {
               ),
             ),
           ),
+        if (_chatOpen && conversationId != null)
+          Positioned.fill(
+            child: InCallChatSheet(conversationId: conversationId),
+          ),
         Positioned(
           left: 0,
           right: 0,
@@ -207,13 +226,11 @@ class _ActiveViewState extends ConsumerState<_ActiveView> {
           child: CallHud(
             state: active,
             chatOpen: _chatOpen,
-            onToggleChat: conversationId != null ? _toggleChat : null,
+            onToggleChat: conversationId != null
+                ? () => _toggleChat(conversationId)
+                : null,
           ),
         ),
-        if (_chatOpen && conversationId != null)
-          Positioned.fill(
-            child: InCallChatSheet(conversationId: conversationId),
-          ),
       ],
     );
   }

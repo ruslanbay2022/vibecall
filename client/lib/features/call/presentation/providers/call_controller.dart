@@ -8,6 +8,7 @@ import 'package:vibecall/features/call/data/call_token.dart';
 import 'package:vibecall/features/call/domain/call_invitation.dart';
 import 'package:vibecall/features/call/domain/call_outcome.dart';
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
+import 'package:vibecall/features/chat/presentation/providers/in_call_open_chat.dart';
 
 part 'call_controller.g.dart';
 
@@ -353,6 +354,9 @@ class CallController extends _$CallController {
     _currentInvitationId = null;
     _connectedAt = null;
     _peerUserId = null;
+    if (ref.mounted) {
+      ref.read(inCallOpenChatProvider.notifier).set(null);
+    }
   }
 
   void _dispose() {

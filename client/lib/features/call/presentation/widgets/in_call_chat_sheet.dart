@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vibecall/features/chat/domain/message.dart';
 import 'package:vibecall/features/chat/presentation/providers/chat_controller.dart';
-import 'package:vibecall/features/chat/presentation/providers/in_call_open_chat.dart';
-import 'package:vibecall/features/chat/presentation/providers/unread_counts_controller.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
 class InCallChatSheet extends ConsumerStatefulWidget {
@@ -24,18 +22,13 @@ class _InCallChatSheetState extends ConsumerState<InCallChatSheet> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    ref.read(inCallOpenChatProvider.notifier).set(widget.conversationId);
-    ref
-        .read(unreadCountsControllerProvider.notifier)
-        .clearForConversation(widget.conversationId);
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
     _inputController.dispose();
     _scrollController.dispose();
-    ref.read(inCallOpenChatProvider.notifier).set(null);
-    ref.read(unreadCountsControllerProvider.notifier).refresh();
     super.dispose();
   }
 
