@@ -5,6 +5,13 @@ import 'package:vibecall/features/call/presentation/providers/call_state.dart';
 import 'package:vibecall/features/call/presentation/widgets/call_media_utils.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
+/// Vertical space to reserve above [CallHud] so in-call chat input stays tappable.
+double callHudReservedHeight(BuildContext context) {
+  final safeBottom = MediaQuery.paddingOf(context).bottom;
+  // Icon (~48) + label (~12) + vertical padding (32) + margin.
+  return safeBottom + 88;
+}
+
 class CallHud extends ConsumerWidget {
   final CallStateActive state;
   final bool chatOpen;

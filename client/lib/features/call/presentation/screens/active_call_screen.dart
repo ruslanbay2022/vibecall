@@ -215,10 +215,6 @@ class _ActiveViewState extends ConsumerState<_ActiveView> {
               ),
             ),
           ),
-        if (_chatOpen && conversationId != null)
-          Positioned.fill(
-            child: InCallChatSheet(conversationId: conversationId),
-          ),
         Positioned(
           left: 0,
           right: 0,
@@ -231,6 +227,14 @@ class _ActiveViewState extends ConsumerState<_ActiveView> {
                 : null,
           ),
         ),
+        if (_chatOpen && conversationId != null)
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: callHudReservedHeight(context),
+            child: InCallChatSheet(conversationId: conversationId),
+          ),
       ],
     );
   }
