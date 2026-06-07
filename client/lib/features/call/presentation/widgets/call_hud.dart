@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vibecall/features/call/presentation/providers/call_controller.dart';
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
 import 'package:vibecall/features/call/presentation/widgets/call_media_utils.dart';
+import 'package:vibecall/features/chat/presentation/providers/unread_counts_controller.dart';
+import 'package:vibecall/features/chat/presentation/widgets/chat_unread_badge.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
 /// Vertical space to reserve above [CallHud] so in-call chat input stays tappable.
@@ -15,12 +17,14 @@ double callHudReservedHeight(BuildContext context) {
 class CallHud extends ConsumerWidget {
   final CallStateActive state;
   final bool chatOpen;
+  final String? conversationId;
   final VoidCallback? onToggleChat;
 
   const CallHud({
     super.key,
     required this.state,
     this.chatOpen = false,
+    this.conversationId,
     this.onToggleChat,
   });
 
@@ -33,6 +37,10 @@ class CallHud extends ConsumerWidget {
     final local = active.room.localParticipant;
     final isMuted = !(local?.isMicrophoneEnabled() ?? false);
     final isCameraOn = isParticipantCameraOn(local);
+    final unreadCounts = ref.watch(unreadCountsControllerProvider).value ?? {};
+    final chatUnreadCount = chatOpen || conversationId == null
+        ? 0
+        : unreadCounts[conversationId] ?? 0;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -78,6 +86,7 @@ class CallHud extends ConsumerWidget {
               label: l10n.callOpenChat,
               onPressed: onToggleChat ?? () {},
               enabled: onToggleChat != null,
+              badgeCount: chatUnreadCount,
             ),
             _IconLabel(
               icon: Icons.call_end,
@@ -109,6 +118,7 @@ class _IconLabel extends StatelessWidget {
   final Color? color;
   final double iconSize;
   final bool enabled;
+  final int badgeCount;
   final VoidCallback onPressed;
 
   const _IconLabel({
@@ -117,19 +127,25 @@ class _IconLabel extends StatelessWidget {
     this.color,
     this.iconSize = 28,
     this.enabled = true,
+    this.badgeCount = 0,
     required this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
+    Widget iconButton = IconButton(
+      icon: Icon(icon, size: iconSize),
+      color: color ?? Colors.white,
+      onPressed: enabled ? onPressed : null,
+    );
+    if (badgeCount > 0) {
+      iconButton = ChatUnreadBadge(count: badgeCount, child: iconButton);
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton(
-          icon: Icon(icon, size: iconSize),
-          color: color ?? Colors.white,
-          onPressed: enabled ? onPressed : null,
-        ),
+        iconButton,
         Text(label, style: const TextStyle(color: Colors.white, fontSize: 10)),
       ],
     );

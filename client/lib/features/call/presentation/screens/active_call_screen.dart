@@ -222,6 +222,7 @@ class _ActiveViewState extends ConsumerState<_ActiveView> {
           child: CallHud(
             state: active,
             chatOpen: _chatOpen,
+            conversationId: conversationId,
             onToggleChat: conversationId != null
                 ? () => _toggleChat(conversationId)
                 : null,
