@@ -2078,15 +2078,30 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 - `client/lib/features/chat/platform/chat_message_sound_player_web.dart`
 - `client/test/features/chat/chat_notification_logic_test.dart`
 
-### Step 4.3.2 — Contact-level unread badges (planned)
+### Step 4.3.2 — Contact-level unread badges
 
 **Actions**:
-1. Badge на иконке «Начать переписку» у каждого контакта в `ContactsScreen`.
-2. Маппинг `otherUserId` → `conversationId` → count из `unreadCountsController`.
+1. `mapUnreadCountsByPeerUserId` — pure function + unit-тесты в `chat_notification_logic_test.dart`.
+2. `unreadCountsByPeerUserIdProvider` — объединяет `unreadCountsController` + `conversationsController` + `activeChatConversation`.
+3. `ChatUnreadBadge` на иконке «Начать переписку» в `_ContactList` (`showCall: true`).
 
 **Acceptance**:
-- [ ] Badge у контакта с непрочитанными; 0 если нет беседы или всё прочитано
-- [ ] Обновление в realtime при входящем сообщении
+- [x] Badge у контакта с непрочитанными; 0 если нет беседы или всё прочитано — PR #65 manual QA
+- [x] Обновление в realtime при входящем сообщении (via `ChatIncomingRelay` + provider watch) — PR #65
+- [x] `dart analyze --fatal-infos` и `flutter test` green — PR #65 CI
+
+**Status**: done — `3f12d25` (#65)
+
+**Out**:
+- `client/lib/features/chat/presentation/providers/chat_notification_logic.dart` (`mapUnreadCountsByPeerUserId`)
+- `client/lib/features/chat/presentation/providers/unread_counts_by_peer_user_id.dart`
+- `client/lib/features/contacts/presentation/screens/contacts_screen.dart`
+- `client/test/features/chat/chat_notification_logic_test.dart`
+
+**Pitfalls**:
+- Маппинг peer id требует беседу в `conversationsController` — краткая гонка: unread по `conversationId` может прийти раньше refresh списка бесед
+- `conversationsController` поднимается при открытии Contacts (нужен для маппинга)
+- Badge только на вкладке принятых контактов (`showCall`); incoming/outgoing без иконки чата
 
 ### Step 4.4 — In-call chat (planned)
 
@@ -2098,7 +2113,7 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 - [ ] Читать и писать во время аудио/видеозвонка
 - [ ] `markRead` / sound rules согласованы с открытым in-call чатом
 
-**Phase 4 DoD (core)**: 1-1 чат с историей, read receipts, typing и уведомлениями (звук + badge) работают в реальном времени — **закрыт** (`f383f71` + `1890e04`). Опциональный polish: Step **4.3.2**, **4.4**.
+**Phase 4 DoD (core)**: 1-1 чат с историей, read receipts, typing и уведомлениями (звук + badge) работают в реальном времени — **закрыт** (`f383f71` + `1890e04` + `3f12d25`). Polish: **4.3.2** done; optional **4.4** остаётся.
 
 ---
 
