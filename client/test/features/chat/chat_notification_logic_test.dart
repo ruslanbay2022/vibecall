@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vibecall/features/chat/domain/chat_peer.dart';
+import 'package:vibecall/features/chat/domain/conversation.dart';
 import 'package:vibecall/features/chat/presentation/providers/chat_notification_logic.dart';
 
 void main() {
@@ -72,6 +74,54 @@ void main() {
         readAt: null,
       );
       expect(result, isTrue);
+    });
+  });
+
+  group('mapUnreadCountsByPeerUserId', () {
+    Conversation conv(String id, String peerId, {int unread = 0}) {
+      return Conversation(
+        id: id,
+        lastMessageAt: DateTime(2024, 1, 1),
+        createdAt: DateTime(2024, 1, 1),
+        peer: ChatPeer(id: peerId),
+        unreadCount: unread,
+      );
+    }
+
+    test('returns empty map when no unread conversations', () {
+      final result = mapUnreadCountsByPeerUserId(
+        unreadByConversationId: {},
+        conversations: [conv('conv-1', 'peer-1')],
+        activeConversationId: null,
+      );
+      expect(result, isEmpty);
+    });
+
+    test('maps unread count to peer user id', () {
+      final result = mapUnreadCountsByPeerUserId(
+        unreadByConversationId: {'conv-1': 3},
+        conversations: [conv('conv-1', 'peer-1')],
+        activeConversationId: null,
+      );
+      expect(result, {'peer-1': 3});
+    });
+
+    test('zeros count for active conversation', () {
+      final result = mapUnreadCountsByPeerUserId(
+        unreadByConversationId: {'conv-1': 2},
+        conversations: [conv('conv-1', 'peer-1')],
+        activeConversationId: 'conv-1',
+      );
+      expect(result, isEmpty);
+    });
+
+    test('ignores contact without matching conversation', () {
+      final result = mapUnreadCountsByPeerUserId(
+        unreadByConversationId: {'conv-2': 1},
+        conversations: [conv('conv-1', 'peer-1')],
+        activeConversationId: null,
+      );
+      expect(result, isEmpty);
     });
   });
 

@@ -1,3 +1,5 @@
+import 'package:vibecall/features/chat/domain/conversation.dart';
+
 bool shouldPlayMessageSound({
   required String senderId,
   required String currentUserId,
@@ -9,6 +11,23 @@ bool shouldPlayMessageSound({
   if (readAt != null) return false;
   if (recentMessageIds.contains(messageId)) return false;
   return true;
+}
+
+Map<String, int> mapUnreadCountsByPeerUserId({
+  required Map<String, int> unreadByConversationId,
+  required List<Conversation> conversations,
+  required String? activeConversationId,
+}) {
+  final result = <String, int>{};
+  for (final conversation in conversations) {
+    final raw = unreadByConversationId[conversation.id] ?? 0;
+    if (raw <= 0) continue;
+    final count = activeConversationId == conversation.id ? 0 : raw;
+    if (count > 0) {
+      result[conversation.peer.id] = count;
+    }
+  }
+  return result;
 }
 
 Map<String, int> aggregateUnreadCounts(

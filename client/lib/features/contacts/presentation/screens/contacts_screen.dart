@@ -6,6 +6,7 @@ import 'package:vibecall/features/call/presentation/providers/call_controller.da
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
 import 'package:vibecall/features/chat/data/chat_repository.dart';
 import 'package:vibecall/features/chat/presentation/providers/total_unread_chat_count.dart';
+import 'package:vibecall/features/chat/presentation/providers/unread_counts_by_peer_user_id.dart';
 import 'package:vibecall/features/chat/presentation/widgets/chat_unread_badge.dart';
 import 'package:vibecall/features/contacts/data/contacts_repository.dart';
 import 'package:vibecall/features/contacts/presentation/providers/contacts_controller.dart';
@@ -151,6 +152,8 @@ class _ContactList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final unreadByPeer = ref.watch(unreadCountsByPeerUserIdProvider);
+
     if (contacts.isEmpty) {
       return Center(
         child: Text(AppLocalizations.of(context).noContacts),
@@ -190,23 +193,28 @@ class _ContactList extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (showCall) ...[
-                IconButton(
-                  icon: const Icon(Icons.chat_bubble_outline),
-                  tooltip: AppLocalizations.of(context).chatStartConversation,
-                  onPressed: () async {
-                    final chatRepo = ref.read(chatRepositoryProvider);
-                    final conversationId =
-                        await chatRepo.ensureConversation(otherUserId);
-                    if (context.mounted) {
-                      context.push(
-                        '/chat/$conversationId',
-                        extra: {
-                          'peerName': contact.displayName ?? contact.username,
-                          'peerAvatarUrl': contact.avatarUrl,
-                        },
-                      );
-                    }
-                  },
+                ChatUnreadBadge(
+                  count: unreadByPeer[otherUserId] ?? 0,
+                  child: IconButton(
+                    icon: const Icon(Icons.chat_bubble_outline),
+                    tooltip:
+                        AppLocalizations.of(context).chatStartConversation,
+                    onPressed: () async {
+                      final chatRepo = ref.read(chatRepositoryProvider);
+                      final conversationId =
+                          await chatRepo.ensureConversation(otherUserId);
+                      if (context.mounted) {
+                        context.push(
+                          '/chat/$conversationId',
+                          extra: {
+                            'peerName':
+                                contact.displayName ?? contact.username,
+                            'peerAvatarUrl': contact.avatarUrl,
+                          },
+                        );
+                      }
+                    },
+                  ),
                 ),
                 Consumer(
                   builder: (context, ref, _) {
