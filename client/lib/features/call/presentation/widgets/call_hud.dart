@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vibecall/features/call/presentation/providers/call_controller.dart';
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
 import 'package:vibecall/features/call/presentation/widgets/call_media_utils.dart';
+import 'package:vibecall/features/chat/presentation/providers/chat_message_sound.dart';
 import 'package:vibecall/features/chat/presentation/providers/unread_counts_controller.dart';
 import 'package:vibecall/features/chat/presentation/widgets/chat_unread_badge.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
@@ -84,7 +87,14 @@ class CallHud extends ConsumerWidget {
             _IconLabel(
               icon: chatOpen ? Icons.chat : Icons.chat_bubble_outline,
               label: l10n.callOpenChat,
-              onPressed: onToggleChat ?? () {},
+              onPressed: () {
+                unawaited(
+                  ref
+                      .read(chatMessageSoundProvider.notifier)
+                      .unlockForNextSound(),
+                );
+                (onToggleChat ?? () {})();
+              },
               enabled: onToggleChat != null,
               badgeCount: chatUnreadCount,
             ),

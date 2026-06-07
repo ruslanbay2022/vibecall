@@ -121,6 +121,9 @@ class _ActiveViewState extends ConsumerState<_ActiveView> {
 
   @override
   void dispose() {
+    if (_chatOpen) {
+      ref.read(inCallOpenChatProvider.notifier).set(null);
+    }
     _unsubscribeRoomMedia();
     super.dispose();
   }
@@ -150,18 +153,18 @@ class _ActiveViewState extends ConsumerState<_ActiveView> {
   void _toggleChat(String conversationId) {
     final opening = !_chatOpen;
     setState(() => _chatOpen = opening);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      if (opening) {
+    if (opening) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_chatOpen) return;
         ref.read(inCallOpenChatProvider.notifier).set(conversationId);
         ref
             .read(unreadCountsControllerProvider.notifier)
             .clearForConversation(conversationId);
-      } else {
-        ref.read(inCallOpenChatProvider.notifier).set(null);
-        unawaited(ref.read(unreadCountsControllerProvider.notifier).refresh());
-      }
-    });
+      });
+    } else {
+      ref.read(inCallOpenChatProvider.notifier).set(null);
+      unawaited(ref.read(unreadCountsControllerProvider.notifier).refresh());
+    }
   }
 
   @override
