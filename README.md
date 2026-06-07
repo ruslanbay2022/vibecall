@@ -94,6 +94,10 @@ Phase 3 закрыта (`1f2745c`).
 Закрытые шаги Phase 4:
 - 4.1 — conversations + messages migrations (`12273f6`)
 - 4.2 — chat repository + realtime (`eef2a25`, migration `0018`)
+- 4.3 — chat UI: conversations + chat screens (`f383f71`)
+- 4.3.1 — message sound + unread badges (`1890e04`)
+
+Phase 4 (core) закрыта. Следующие шаги (polish): **4.3.2** — badge у контакта; **4.4** — чат во время звонка.
 
 ## Лицензия
 
