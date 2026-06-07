@@ -306,6 +306,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chatSend => 'Отправить';
 
   @override
+  String get chatMessageStatusSending => 'Отправляется';
+
+  @override
+  String get chatMessageStatusSent => 'Отправлено';
+
+  @override
+  String get chatMessageStatusDelivered => 'Доставлено';
+
+  @override
+  String get chatMessageStatusRead => 'Прочитано';
+
+  @override
   String get chatSendError => 'Не удалось отправить сообщение';
 
   @override
@@ -332,4 +344,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String chatUnreadBadge(int count) {
     return '$count непрочитанных';
   }
+
+  @override
+  String get callOpenChat => 'Сообщения';
 }

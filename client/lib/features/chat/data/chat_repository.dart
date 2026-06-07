@@ -22,6 +22,7 @@ abstract class ChatRepository {
   Future<List<Conversation>> fetchConversations();
   Future<Map<String, int>> fetchUnreadCountsByConversation();
   Future<void> sendMessage(String conversationId, String body);
+  Future<void> markDelivered(String messageId);
   Future<void> markRead(String messageId);
   Stream<Message> messageStream(String conversationId);
   Stream<Message> globalIncomingMessageStream();
@@ -138,6 +139,13 @@ class SupabaseChatRepository implements ChatRepository {
       'sender_id': currentUserId,
       'body': body,
     });
+  }
+
+  @override
+  Future<void> markDelivered(String messageId) async {
+    await _client.from('messages').update({
+      'delivered_at': DateTime.now().toUtc().toIso8601String(),
+    }).eq('id', messageId);
   }
 
   @override

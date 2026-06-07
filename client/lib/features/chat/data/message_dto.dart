@@ -5,6 +5,7 @@ class MessageDto {
   final String conversationId;
   final String senderId;
   final String body;
+  final DateTime? deliveredAt;
   final DateTime? readAt;
   final DateTime createdAt;
 
@@ -13,6 +14,7 @@ class MessageDto {
     required this.conversationId,
     required this.senderId,
     required this.body,
+    required this.deliveredAt,
     required this.readAt,
     required this.createdAt,
   });
@@ -23,6 +25,9 @@ class MessageDto {
       conversationId: json['conversation_id'] as String,
       senderId: json['sender_id'] as String,
       body: json['body'] as String,
+      deliveredAt: json['delivered_at'] != null
+          ? DateTime.parse(json['delivered_at'] as String)
+          : null,
       readAt: json['read_at'] != null
           ? DateTime.parse(json['read_at'] as String)
           : null,
@@ -44,6 +49,7 @@ class MessageDto {
       conversationId: conversationId,
       senderId: senderId,
       body: body,
+      deliveredAt: deliveredAt,
       readAt: readAt,
       createdAt: createdAt,
       isFromMe: senderId == currentUserId,

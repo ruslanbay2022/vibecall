@@ -1,11 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:vibecall/features/call/domain/call_outcome.dart';
 import 'package:vibecall/features/call/presentation/providers/call_controller.dart';
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
+import 'package:vibecall/features/call/presentation/providers/in_call_conversation_id.dart';
 import 'package:vibecall/features/call/presentation/widgets/call_hud.dart';
 import 'package:vibecall/features/call/presentation/widgets/call_media_utils.dart';
+import 'package:vibecall/features/call/presentation/widgets/in_call_chat_sheet.dart';
+import 'package:vibecall/features/chat/presentation/providers/in_call_open_chat.dart';
+import 'package:vibecall/features/chat/presentation/providers/unread_counts_controller.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
 class ActiveCallScreen extends ConsumerWidget {
@@ -93,57 +99,31 @@ class _ActiveView extends ConsumerStatefulWidget {
 }
 
 class _ActiveViewState extends ConsumerState<_ActiveView> {
-  final List<CancelListenFunc> _mediaListeners = [];
+  bool _chatOpen = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _subscribeRoomMedia(widget.state.room);
-  }
-
-  @override
-  void didUpdateWidget(covariant _ActiveView oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!identical(oldWidget.state.room, widget.state.room)) {
-      _unsubscribeRoomMedia();
-      _subscribeRoomMedia(widget.state.room);
-    } else if (oldWidget.state.mediaTick != widget.state.mediaTick) {
-      setState(() {});
+  void _toggleChat(String conversationId) {
+    final opening = !_chatOpen;
+    setState(() => _chatOpen = opening);
+    if (opening) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_chatOpen) return;
+        ref.read(inCallOpenChatProvider.notifier).set(conversationId);
+        ref
+            .read(unreadCountsControllerProvider.notifier)
+            .clearForConversation(conversationId);
+      });
+    } else {
+      ref.read(inCallOpenChatProvider.notifier).set(null);
+      unawaited(ref.read(unreadCountsControllerProvider.notifier).refresh());
     }
-  }
-
-  @override
-  void dispose() {
-    _unsubscribeRoomMedia();
-    super.dispose();
-  }
-
-  void _subscribeRoomMedia(Room room) {
-    void refresh(_) {
-      if (mounted) setState(() {});
-    }
-
-    _mediaListeners.addAll([
-      room.events.on<LocalTrackPublishedEvent>(refresh),
-      room.events.on<LocalTrackUnpublishedEvent>(refresh),
-      room.events.on<TrackPublishedEvent>(refresh),
-      room.events.on<TrackUnpublishedEvent>(refresh),
-      room.events.on<TrackMutedEvent>(refresh),
-      room.events.on<TrackUnmutedEvent>(refresh),
-    ]);
-  }
-
-  void _unsubscribeRoomMedia() {
-    for (final cancel in _mediaListeners) {
-      cancel();
-    }
-    _mediaListeners.clear();
   }
 
   @override
   Widget build(BuildContext context) {
     final callState = ref.watch(callControllerProvider);
     final active = callState is CallStateActive ? callState : widget.state;
+    final asyncConvId = ref.watch(inCallConversationIdProvider);
+    final conversationId = asyncConvId.value;
 
     final remoteTrack = active.hasVideo
         ? participantCameraTrack(active.peer)
@@ -193,8 +173,23 @@ class _ActiveViewState extends ConsumerState<_ActiveView> {
           left: 0,
           right: 0,
           bottom: 0,
-          child: CallHud(state: active),
+          child: CallHud(
+            state: active,
+            chatOpen: _chatOpen,
+            conversationId: conversationId,
+            onToggleChat: conversationId != null
+                ? () => _toggleChat(conversationId)
+                : null,
+          ),
         ),
+        if (_chatOpen && conversationId != null)
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: callHudReservedHeight(context),
+            child: InCallChatSheet(conversationId: conversationId),
+          ),
       ],
     );
   }

@@ -7,6 +7,8 @@ import 'package:vibecall/features/auth/data/auth_repository.dart';
 import 'package:vibecall/features/chat/data/chat_repository.dart';
 import 'package:vibecall/features/chat/domain/message.dart';
 import 'package:vibecall/features/chat/presentation/active_chat_from_route.dart';
+import 'package:vibecall/features/chat/presentation/in_call_open_chat_at_notify.dart';
+import 'package:vibecall/features/chat/presentation/providers/in_call_open_chat.dart';
 
 part 'unread_counts_controller.g.dart';
 
@@ -47,6 +49,11 @@ class UnreadCountsController extends _$UnreadCountsController {
 
       final activeId = activeChatConversationIdFromRoute();
       if (activeId == message.conversationId) return;
+
+      final inCallId = inCallOpenChatConversationIdAtNotifyTime(
+        ref.read(inCallOpenChatProvider),
+      );
+      if (inCallId == message.conversationId) return;
 
       final current = state.value ?? {};
       final updated = Map<String, int>.from(current);

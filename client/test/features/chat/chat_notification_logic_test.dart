@@ -8,7 +8,6 @@ void main() {
     const currentUserId = 'user-a';
     const otherUserId = 'user-b';
     const messageId = 'msg-1';
-
     test('returns false when sender is current user', () {
       final result = shouldPlayMessageSound(
         senderId: currentUserId,

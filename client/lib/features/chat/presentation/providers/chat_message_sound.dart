@@ -41,16 +41,16 @@ class ChatMessageSound extends _$ChatMessageSound {
 
       if (!shouldPlay) return;
 
-      unawaited(_playAndRemember(message.id));
+      _addToRecent(message.id);
+      unawaited(_playAndRemember());
     } catch (e, stackTrace) {
       debugPrint('chat message sound handler failed: $e\n$stackTrace');
     }
   }
 
-  Future<void> _playAndRemember(String messageId) async {
+  Future<void> _playAndRemember() async {
     try {
       await playChatMessageSound();
-      _addToRecent(messageId);
     } catch (e, stackTrace) {
       debugPrint('chat message sound failed: $e\n$stackTrace');
     }

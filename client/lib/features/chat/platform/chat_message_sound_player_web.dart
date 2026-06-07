@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:js_interop';
 
 import 'package:flutter/foundation.dart';
@@ -6,11 +7,13 @@ import 'package:vibecall/features/call/platform/web_audio_unlock.dart';
 import 'package:web/web.dart' as web;
 
 const _assetPath = 'assets/sounds/message_notification.wav';
+const _clipDuration = Duration(milliseconds: 450);
 
 Uint8List? _wavBytes;
 Future<void>? _loadFuture;
 web.HTMLAudioElement? _audioElement;
 String? _objectUrl;
+Future<void> _playChain = Future<void>.value();
 
 Future<void> ensureChatMessageSoundLoaded() {
   return _loadFuture ??= _loadBytes();
@@ -21,7 +24,16 @@ Future<void> _loadBytes() async {
   _wavBytes = data.buffer.asUint8List();
 }
 
-Future<void> playChatMessageSound() async {
+Future<void> playChatMessageSound() {
+  _playChain = _playChain
+      .catchError((Object e, StackTrace st) {
+        debugPrint('chat message sound chain error: $e\n$st');
+      })
+      .then((_) => _playOnce());
+  return _playChain;
+}
+
+Future<void> _playOnce() async {
   await ensureChatMessageSoundLoaded();
   final bytes = _wavBytes;
   if (bytes == null) return;
@@ -35,7 +47,6 @@ Future<void> playChatMessageSound() async {
     );
     final nextUrl = web.URL.createObjectURL(blob);
     final audio = _audioElement ??= web.HTMLAudioElement();
-
     final previousUrl = _objectUrl;
     _objectUrl = nextUrl;
 
@@ -46,13 +57,13 @@ Future<void> playChatMessageSound() async {
     audio.load();
 
     await audio.play().toDart;
+    await Future<void>.delayed(_clipDuration);
 
     if (previousUrl != null) {
       web.URL.revokeObjectURL(previousUrl);
     }
   } catch (e, stackTrace) {
     debugPrint('chat message sound web play failed: $e\n$stackTrace');
-    rethrow;
   }
 }
 

@@ -142,6 +142,7 @@ void main() {
         'conversation_id': 'conv-1',
         'sender_id': 'user-a',
         'body': 'Hello',
+        'delivered_at': null,
         'read_at': null,
         'created_at': now.toIso8601String(),
       };
@@ -162,6 +163,7 @@ void main() {
         'conversation_id': 'conv-1',
         'sender_id': 'user-b',
         'body': 'Hi',
+        'delivered_at': null,
         'read_at': now.toIso8601String(),
         'created_at': now.toIso8601String(),
       };

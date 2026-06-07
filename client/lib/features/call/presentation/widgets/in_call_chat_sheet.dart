@@ -8,23 +8,16 @@ import 'package:vibecall/features/chat/presentation/widgets/message_bubble.dart'
 import 'package:vibecall/features/chat/presentation/providers/chat_message_sound.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
-class ChatScreen extends ConsumerStatefulWidget {
+class InCallChatSheet extends ConsumerStatefulWidget {
   final String conversationId;
-  final String? peerName;
-  final String? peerAvatarUrl;
 
-  const ChatScreen({
-    super.key,
-    required this.conversationId,
-    this.peerName,
-    this.peerAvatarUrl,
-  });
+  const InCallChatSheet({super.key, required this.conversationId});
 
   @override
-  ConsumerState<ChatScreen> createState() => _ChatScreenState();
+  ConsumerState<InCallChatSheet> createState() => _InCallChatSheetState();
 }
 
-class _ChatScreenState extends ConsumerState<ChatScreen> {
+class _InCallChatSheetState extends ConsumerState<InCallChatSheet> {
   final _inputController = TextEditingController();
   final _scrollController = ScrollController();
   bool _loadOlderInFlight = false;
@@ -37,6 +30,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
     _inputController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -56,7 +50,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _send() async {
-    final l10n = AppLocalizations.of(context);
     final body = _inputController.text.trim();
     if (body.isEmpty) return;
     _inputController.clear();
@@ -64,48 +57,76 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       await ref
           .read(chatControllerProvider(widget.conversationId).notifier)
           .sendMessage(body);
-    } catch (_) {
-      if (!mounted) return;
-      _inputController.text = body;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.chatSendError)),
-      );
-    }
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final asyncMessages = ref.watch(chatControllerProvider(widget.conversationId));
-    final isTyping = ref.watch(chatTypingIndicatorProvider(widget.conversationId));
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.peerName ?? widget.conversationId),
-      ),
-      body: Column(
-        children: [
-          if (isTyping)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  l10n.chatTyping(widget.peerName ?? ''),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontStyle: FontStyle.italic,
-                      ),
+    return DraggableScrollableSheet(
+      initialChildSize: 0.5,
+      minChildSize: 0.25,
+      maxChildSize: 0.85,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 8,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              _buildHandle(context),
+              _buildHeader(context, l10n),
+              const Divider(height: 1),
+              Expanded(
+                child: asyncMessages.when(
+                  data: (messages) => _buildMessages(context, messages, l10n),
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, st) => _buildError(context, e, l10n),
                 ),
               ),
-            ),
-          Expanded(
-            child: asyncMessages.when(
-              data: (messages) => _buildMessages(context, messages, l10n),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, st) => _buildError(context, e, l10n),
-            ),
+              _buildInputBar(context, l10n),
+            ],
           ),
-          _buildInputBar(context, l10n),
+        );
+      },
+    );
+  }
+
+  Widget _buildHandle(BuildContext context) {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.only(top: 8, bottom: 4),
+        width: 40,
+        height: 4,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.outlineVariant,
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          const Icon(Icons.chat_bubble_outline, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            l10n.callOpenChat,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
         ],
       ),
     );
@@ -150,26 +171,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildInputBar(BuildContext context, AppLocalizations l10n) {
-    return SafeArea(
-      top: false,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          border: Border(
-            top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
         ),
+      ),
+      child: SafeArea(
+        top: false,
         child: Row(
           children: [
-            IconButton(
-              icon: const Icon(Icons.attach_file),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.chatAttachStub)),
-                );
-              },
-            ),
             Expanded(
               child: TextField(
                 controller: _inputController,
@@ -193,19 +206,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   isDense: true,
                 ),
-                maxLines: 4,
+                maxLines: 3,
                 minLines: 1,
                 textCapitalization: TextCapitalization.sentences,
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.mic),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.chatVoiceStub)),
-                );
-              },
-            ),
+            const SizedBox(width: 4),
             IconButton.filled(
               icon: const Icon(Icons.send),
               onPressed: _send,

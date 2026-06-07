@@ -416,6 +416,22 @@
   "@chatSend": {
     "description": "Button to send a chat message"
   },
+  "chatMessageStatusSending": "Sending",
+  "@chatMessageStatusSending": {
+    "description": "Accessibility label for outgoing message being sent"
+  },
+  "chatMessageStatusSent": "Sent",
+  "@chatMessageStatusSent": {
+    "description": "Accessibility label for outgoing message sent to server"
+  },
+  "chatMessageStatusDelivered": "Delivered",
+  "@chatMessageStatusDelivered": {
+    "description": "Accessibility label for outgoing message delivered to recipient"
+  },
+  "chatMessageStatusRead": "Read",
+  "@chatMessageStatusRead": {
+    "description": "Accessibility label for outgoing message read by recipient"
+  },
   "chatSendError": "Failed to send message",
   "@chatSendError": {
     "description": "Snackbar when sending a chat message fails"
@@ -457,5 +473,9 @@
         "type": "int"
       }
     }
+  },
+  "callOpenChat": "Messages",
+  "@callOpenChat": {
+    "description": "Button label to open in-call chat sheet"
   }
 }

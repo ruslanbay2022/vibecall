@@ -1,14 +1,35 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vibecall/features/call/presentation/providers/call_controller.dart';
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
 import 'package:vibecall/features/call/presentation/widgets/call_media_utils.dart';
+import 'package:vibecall/features/chat/presentation/providers/chat_message_sound.dart';
+import 'package:vibecall/features/chat/presentation/providers/unread_counts_controller.dart';
+import 'package:vibecall/features/chat/presentation/widgets/chat_unread_badge.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
+
+/// Vertical space to reserve above [CallHud] so in-call chat input stays tappable.
+double callHudReservedHeight(BuildContext context) {
+  final safeBottom = MediaQuery.paddingOf(context).bottom;
+  // Icon (~48) + label (~12) + vertical padding (32) + margin.
+  return safeBottom + 88;
+}
 
 class CallHud extends ConsumerWidget {
   final CallStateActive state;
+  final bool chatOpen;
+  final String? conversationId;
+  final VoidCallback? onToggleChat;
 
-  const CallHud({super.key, required this.state});
+  const CallHud({
+    super.key,
+    required this.state,
+    this.chatOpen = false,
+    this.conversationId,
+    this.onToggleChat,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -19,8 +40,19 @@ class CallHud extends ConsumerWidget {
     final local = active.room.localParticipant;
     final isMuted = !(local?.isMicrophoneEnabled() ?? false);
     final isCameraOn = isParticipantCameraOn(local);
+    final unreadCounts = ref.watch(unreadCountsControllerProvider).value ?? {};
+    final chatUnreadCount = chatOpen || conversationId == null
+        ? 0
+        : unreadCounts[conversationId] ?? 0;
 
-    return Container(
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: (_) {
+        unawaited(
+          ref.read(chatMessageSoundProvider.notifier).unlockForNextSound(),
+        );
+      },
+      child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -60,6 +92,20 @@ class CallHud extends ConsumerWidget {
                 onPressed: () => notifier.switchCamera(),
               ),
             _IconLabel(
+              icon: chatOpen ? Icons.chat : Icons.chat_bubble_outline,
+              label: l10n.callOpenChat,
+              onPressed: () {
+                unawaited(
+                  ref
+                      .read(chatMessageSoundProvider.notifier)
+                      .unlockForNextSound(),
+                );
+                (onToggleChat ?? () {})();
+              },
+              enabled: onToggleChat != null,
+              badgeCount: chatUnreadCount,
+            ),
+            _IconLabel(
               icon: Icons.call_end,
               label: l10n.callEndButton,
               color: Colors.red,
@@ -79,6 +125,7 @@ class CallHud extends ConsumerWidget {
           ],
         ),
       ),
+      ),
     );
   }
 }
@@ -89,6 +136,7 @@ class _IconLabel extends StatelessWidget {
   final Color? color;
   final double iconSize;
   final bool enabled;
+  final int badgeCount;
   final VoidCallback onPressed;
 
   const _IconLabel({
@@ -97,19 +145,25 @@ class _IconLabel extends StatelessWidget {
     this.color,
     this.iconSize = 28,
     this.enabled = true,
+    this.badgeCount = 0,
     required this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
+    Widget iconButton = IconButton(
+      icon: Icon(icon, size: iconSize),
+      color: color ?? Colors.white,
+      onPressed: enabled ? onPressed : null,
+    );
+    if (badgeCount > 0) {
+      iconButton = ChatUnreadBadge(count: badgeCount, child: iconButton);
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton(
-          icon: Icon(icon, size: iconSize),
-          color: color ?? Colors.white,
-          onPressed: enabled ? onPressed : null,
-        ),
+        iconButton,
         Text(label, style: const TextStyle(color: Colors.white, fontSize: 10)),
       ],
     );
