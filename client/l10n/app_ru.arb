@@ -99,5 +99,6 @@
   "chatLoadError": "Не удалось загрузить сообщения",
   "chatRetry": "Повторить",
   "chatStartConversation": "Начать переписку",
-  "chatUnreadBadge": "{count} непрочитанных"
+  "chatUnreadBadge": "{count} непрочитанных",
+  "callOpenChat": "Сообщения"
 }

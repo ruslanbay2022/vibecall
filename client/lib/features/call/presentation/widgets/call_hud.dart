@@ -7,8 +7,15 @@ import 'package:vibecall/l10n/app_localizations.dart';
 
 class CallHud extends ConsumerWidget {
   final CallStateActive state;
+  final bool chatOpen;
+  final VoidCallback? onToggleChat;
 
-  const CallHud({super.key, required this.state});
+  const CallHud({
+    super.key,
+    required this.state,
+    this.chatOpen = false,
+    this.onToggleChat,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -59,6 +66,12 @@ class CallHud extends ConsumerWidget {
                 enabled: isCameraOn,
                 onPressed: () => notifier.switchCamera(),
               ),
+            _IconLabel(
+              icon: chatOpen ? Icons.chat : Icons.chat_bubble_outline,
+              label: l10n.callOpenChat,
+              onPressed: onToggleChat ?? () {},
+              enabled: onToggleChat != null,
+            ),
             _IconLabel(
               icon: Icons.call_end,
               label: l10n.callEndButton,

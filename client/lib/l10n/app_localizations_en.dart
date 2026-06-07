@@ -331,4 +331,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String chatUnreadBadge(int count) {
     return '$count unread messages';
   }
+
+  @override
+  String get callOpenChat => 'Messages';
 }

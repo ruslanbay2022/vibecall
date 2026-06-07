@@ -457,5 +457,9 @@
         "type": "int"
       }
     }
+  },
+  "callOpenChat": "Messages",
+  "@callOpenChat": {
+    "description": "Button label to open in-call chat sheet"
   }
 }

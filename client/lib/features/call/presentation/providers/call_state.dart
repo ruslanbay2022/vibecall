@@ -30,12 +30,14 @@ class CallStateConnecting extends CallState {
 class CallStateActive extends CallState {
   final Room room;
   final RemoteParticipant peer;
+  final String peerUserId;
   final bool hasVideo;
   final int mediaTick;
 
   const CallStateActive({
     required this.room,
     required this.peer,
+    required this.peerUserId,
     this.hasVideo = true,
     this.mediaTick = 0,
   });

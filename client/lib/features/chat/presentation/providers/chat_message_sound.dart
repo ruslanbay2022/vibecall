@@ -8,6 +8,7 @@ import 'package:vibecall/features/chat/data/chat_repository.dart';
 import 'package:vibecall/features/chat/domain/message.dart';
 import 'package:vibecall/features/chat/platform/chat_message_sound_player.dart';
 import 'package:vibecall/features/chat/presentation/providers/chat_notification_logic.dart';
+import 'package:vibecall/features/chat/presentation/providers/in_call_open_chat.dart';
 
 part 'chat_message_sound.g.dart';
 
@@ -31,12 +32,16 @@ class ChatMessageSound extends _$ChatMessageSound {
       if (!ref.mounted) return;
 
       final repo = ref.read(chatRepositoryProvider);
+      final inCallId = ref.read(inCallOpenChatProvider);
+
       final shouldPlay = shouldPlayMessageSound(
         senderId: message.senderId,
         currentUserId: repo.currentUserId,
         messageId: message.id,
         recentMessageIds: _recentMessageIds,
         readAt: message.readAt,
+        inCallConversationId: inCallId,
+        messageConversationId: message.conversationId,
       );
 
       if (!shouldPlay) return;

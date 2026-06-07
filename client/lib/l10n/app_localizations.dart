@@ -697,6 +697,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} unread messages'**
   String chatUnreadBadge(int count);
+
+  /// Button label to open in-call chat sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get callOpenChat;
 }
 
 class _AppLocalizationsDelegate

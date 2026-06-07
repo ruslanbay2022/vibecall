@@ -332,4 +332,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String chatUnreadBadge(int count) {
     return '$count непрочитанных';
   }
+
+  @override
+  String get callOpenChat => 'Сообщения';
 }

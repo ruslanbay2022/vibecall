@@ -8,6 +8,7 @@ void main() {
     const currentUserId = 'user-a';
     const otherUserId = 'user-b';
     const messageId = 'msg-1';
+    const messageConversationId = 'conv-1';
 
     test('returns false when sender is current user', () {
       final result = shouldPlayMessageSound(
@@ -16,6 +17,7 @@ void main() {
         messageId: messageId,
         recentMessageIds: {},
         readAt: null,
+        messageConversationId: messageConversationId,
       );
       expect(result, isFalse);
     });
@@ -27,6 +29,7 @@ void main() {
         messageId: messageId,
         recentMessageIds: {},
         readAt: DateTime(2024, 1, 1),
+        messageConversationId: messageConversationId,
       );
       expect(result, isFalse);
     });
@@ -38,6 +41,7 @@ void main() {
         messageId: messageId,
         recentMessageIds: {},
         readAt: null,
+        messageConversationId: messageConversationId,
       );
       expect(result, isTrue);
     });
@@ -49,6 +53,7 @@ void main() {
         messageId: messageId,
         recentMessageIds: {messageId},
         readAt: null,
+        messageConversationId: messageConversationId,
       );
       expect(result, isFalse);
     });
@@ -61,6 +66,7 @@ void main() {
         messageId: messageId,
         recentMessageIds: {},
         readAt: null,
+        messageConversationId: messageConversationId,
       );
       expect(result, isTrue);
     });
@@ -72,6 +78,34 @@ void main() {
         messageId: messageId,
         recentMessageIds: {},
         readAt: null,
+        messageConversationId: messageConversationId,
+      );
+      expect(result, isTrue);
+    });
+
+    test('returns false when in-call chat matches message conversation', () {
+      final result = shouldPlayMessageSound(
+        senderId: otherUserId,
+        currentUserId: currentUserId,
+        messageId: messageId,
+        recentMessageIds: {},
+        readAt: null,
+        inCallConversationId: messageConversationId,
+        messageConversationId: messageConversationId,
+      );
+      expect(result, isFalse);
+    });
+
+    test('returns true when in-call chat is different from message conversation',
+        () {
+      final result = shouldPlayMessageSound(
+        senderId: otherUserId,
+        currentUserId: currentUserId,
+        messageId: messageId,
+        recentMessageIds: {},
+        readAt: null,
+        inCallConversationId: 'other-conv',
+        messageConversationId: messageConversationId,
       );
       expect(result, isTrue);
     });

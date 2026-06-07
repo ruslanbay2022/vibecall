@@ -4,8 +4,10 @@ import 'package:livekit_client/livekit_client.dart';
 import 'package:vibecall/features/call/domain/call_outcome.dart';
 import 'package:vibecall/features/call/presentation/providers/call_controller.dart';
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
+import 'package:vibecall/features/call/presentation/providers/in_call_conversation_id.dart';
 import 'package:vibecall/features/call/presentation/widgets/call_hud.dart';
 import 'package:vibecall/features/call/presentation/widgets/call_media_utils.dart';
+import 'package:vibecall/features/call/presentation/widgets/in_call_chat_sheet.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
 class ActiveCallScreen extends ConsumerWidget {
@@ -94,6 +96,7 @@ class _ActiveView extends ConsumerStatefulWidget {
 
 class _ActiveViewState extends ConsumerState<_ActiveView> {
   final List<CancelListenFunc> _mediaListeners = [];
+  bool _chatOpen = false;
 
   @override
   void initState() {
@@ -140,10 +143,18 @@ class _ActiveViewState extends ConsumerState<_ActiveView> {
     _mediaListeners.clear();
   }
 
+  void _toggleChat() {
+    setState(() {
+      _chatOpen = !_chatOpen;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final callState = ref.watch(callControllerProvider);
     final active = callState is CallStateActive ? callState : widget.state;
+    final asyncConvId = ref.watch(inCallConversationIdProvider);
+    final conversationId = asyncConvId.value;
 
     final remoteTrack = active.hasVideo
         ? participantCameraTrack(active.peer)
@@ -193,8 +204,16 @@ class _ActiveViewState extends ConsumerState<_ActiveView> {
           left: 0,
           right: 0,
           bottom: 0,
-          child: CallHud(state: active),
+          child: CallHud(
+            state: active,
+            chatOpen: _chatOpen,
+            onToggleChat: conversationId != null ? _toggleChat : null,
+          ),
         ),
+        if (_chatOpen && conversationId != null)
+          Positioned.fill(
+            child: InCallChatSheet(conversationId: conversationId),
+          ),
       ],
     );
   }

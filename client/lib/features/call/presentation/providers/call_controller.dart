@@ -16,6 +16,7 @@ class CallController extends _$CallController {
   Room? _room;
   DateTime? _connectedAt;
   String? _currentInvitationId;
+  String? _peerUserId;
   bool _hasVideo = true;
   StreamSubscription<CallInvitation>? _outgoingSub;
   CancelListenFunc? _onParticipantConnected;
@@ -75,6 +76,7 @@ class CallController extends _$CallController {
   }) async {
     if (!_canStartNewCall) return;
     _hasVideo = video;
+    _peerUserId = receiverId;
     state = const CallStateConnecting();
 
     try {
@@ -102,6 +104,7 @@ class CallController extends _$CallController {
   Future<void> accept(CallInvitation inv) async {
     if (state is! CallStateIncoming) return;
     _hasVideo = inv.hasVideo;
+    _peerUserId = inv.callerId;
     state = const CallStateConnecting();
 
     try {
@@ -307,6 +310,7 @@ class CallController extends _$CallController {
     state = CallStateActive(
       room: current.room,
       peer: current.peer,
+      peerUserId: current.peerUserId,
       hasVideo: current.hasVideo,
       mediaTick: current.mediaTick + 1,
     );
@@ -321,10 +325,14 @@ class CallController extends _$CallController {
     final remote = peer ?? room.remoteParticipants.values.firstOrNull;
     if (remote == null) return;
 
+    final peerUserId = _peerUserId;
+    if (peerUserId == null) return;
+
     _connectedAt = DateTime.now();
     state = CallStateActive(
       room: room,
       peer: remote,
+      peerUserId: peerUserId,
       hasVideo: _hasVideo,
     );
   }
@@ -344,6 +352,7 @@ class CallController extends _$CallController {
     _room = null;
     _currentInvitationId = null;
     _connectedAt = null;
+    _peerUserId = null;
   }
 
   void _dispose() {
