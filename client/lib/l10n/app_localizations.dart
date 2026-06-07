@@ -530,7 +530,25 @@ abstract class AppLocalizations {
   /// **'Flip'**
   String get callSwitchCamera;
 
-  /// Button stub for screen share (Phase 5)
+  /// Button to start screen share
+  ///
+  /// In en, this message translates to:
+  /// **'Share screen'**
+  String get callScreenShare;
+
+  /// Button to stop screen share
+  ///
+  /// In en, this message translates to:
+  /// **'Stop sharing'**
+  String get callStopScreenShare;
+
+  /// Snackbar when screen share cannot be enabled
+  ///
+  /// In en, this message translates to:
+  /// **'Screen share unavailable — it may be in use by another app or denied by system'**
+  String get callScreenShareEnableFailed;
+
+  /// Deprecated: use callScreenShare instead
   ///
   /// In en, this message translates to:
   /// **'Share'**

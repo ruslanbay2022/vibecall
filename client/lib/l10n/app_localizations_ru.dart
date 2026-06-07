@@ -242,6 +242,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get callSwitchCamera => 'Повернуть';
 
   @override
+  String get callScreenShare => 'Демонстрация';
+
+  @override
+  String get callStopScreenShare => 'Остановить';
+
+  @override
+  String get callScreenShareEnableFailed =>
+      'Демонстрация недоступна — возможно, её использует другое приложение или запрещено системой';
+
+  @override
   String get callScreenShareStub => 'Экран';
 
   @override

@@ -152,11 +152,21 @@ class CallController extends _$CallController {
           await repo.endCall(_currentInvitationId!, durationSec);
         } catch (_) {}
       }
+      await _stopLocalScreenShareIfNeeded();
       _cleanup();
       state = CallStateEnded(outcome: CallOutcome.accepted, durationSec: durationSec);
     } finally {
       _hangupInProgress = false;
     }
+  }
+
+  Future<void> _stopLocalScreenShareIfNeeded() async {
+    try {
+      final participant = _room?.localParticipant;
+      if (participant != null && participant.isScreenShareEnabled()) {
+        await participant.setScreenShareEnabled(false);
+      }
+    } catch (_) {}
   }
 
   Future<void> toggleMute() async {
@@ -194,6 +204,23 @@ class CallController extends _$CallController {
     final track = _room?.localParticipant?.videoTrackPublications.firstOrNull?.track;
     if (track == null) return;
     await track.switchCamera('');
+  }
+
+  /// Returns false when enabling screen share failed (picker denied, service error).
+  Future<bool> toggleScreenShare() async {
+    final participant = _room?.localParticipant;
+    if (participant == null) return false;
+
+    final sharing = participant.isScreenShareEnabled();
+
+    try {
+      await participant.setScreenShareEnabled(!sharing);
+      _refreshActiveState();
+      return true;
+    } catch (_) {
+      _refreshActiveState();
+      return false;
+    }
   }
 
   void resetToIdle() {

@@ -40,6 +40,7 @@ class CallHud extends ConsumerWidget {
     final local = active.room.localParticipant;
     final isMuted = !(local?.isMicrophoneEnabled() ?? false);
     final isCameraOn = isParticipantCameraOn(local);
+    final isScreenSharing = isParticipantScreenSharing(local);
     final unreadCounts = ref.watch(unreadCountsControllerProvider).value ?? {};
     final chatUnreadCount = chatOpen || conversationId == null
         ? 0
@@ -113,13 +114,19 @@ class CallHud extends ConsumerWidget {
               onPressed: () => notifier.hangup(),
             ),
             _IconLabel(
-              icon: Icons.screen_share,
-              label: l10n.callScreenShareStub,
-              enabled: false,
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.callScreenShareStub)),
-                );
+              icon: isScreenSharing
+                  ? Icons.stop_screen_share
+                  : Icons.screen_share,
+              label: isScreenSharing
+                  ? l10n.callStopScreenShare
+                  : l10n.callScreenShare,
+              onPressed: () async {
+                final ok = await notifier.toggleScreenShare();
+                if (!ok && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(l10n.callScreenShareEnableFailed)),
+                  );
+                }
               },
             ),
           ],

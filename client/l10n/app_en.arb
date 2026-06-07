@@ -323,9 +323,21 @@
   "@callSwitchCamera": {
     "description": "Button to switch between front and back camera"
   },
+  "callScreenShare": "Share screen",
+  "@callScreenShare": {
+    "description": "Button to start screen share"
+  },
+  "callStopScreenShare": "Stop sharing",
+  "@callStopScreenShare": {
+    "description": "Button to stop screen share"
+  },
+  "callScreenShareEnableFailed": "Screen share unavailable — it may be in use by another app or denied by system",
+  "@callScreenShareEnableFailed": {
+    "description": "Snackbar when screen share cannot be enabled"
+  },
   "callScreenShareStub": "Share",
   "@callScreenShareStub": {
-    "description": "Button stub for screen share (Phase 5)"
+    "description": "Deprecated: use callScreenShare instead"
   },
   "callVideoButton": "Video call",
   "@callVideoButton": {
