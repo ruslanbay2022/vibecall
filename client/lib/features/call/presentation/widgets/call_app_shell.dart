@@ -6,6 +6,8 @@ import 'package:vibecall/features/call/presentation/providers/call_state.dart';
 import 'package:vibecall/features/call/presentation/providers/incoming_call_listener.dart';
 import 'package:vibecall/features/call/presentation/providers/incoming_ringtone.dart';
 import 'package:vibecall/features/call/presentation/widgets/incoming_call_overlay.dart';
+import 'package:vibecall/features/chat/presentation/providers/unread_counts_controller.dart';
+import 'package:vibecall/features/chat/presentation/widgets/active_chat_route_sync.dart';
 
 class CallAppShell extends ConsumerWidget {
   final Widget child;
@@ -16,13 +18,13 @@ class CallAppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(incomingCallListenerProvider);
     ref.watch(incomingRingtoneProvider);
+    ref.watch(unreadCountsControllerProvider);
 
     ref.listen(callControllerProvider, (_, next) {
       final router = GoRouter.of(context);
       final isOnCall = router.state.matchedLocation == '/call';
 
       if (next is CallStateIncoming) {
-        // Dismiss ended/error screen so incoming overlay shows on home.
         if (isOnCall) router.pop();
       } else if (next is CallStateConnecting ||
           next is CallStateOutgoing ||
@@ -37,6 +39,7 @@ class CallAppShell extends ConsumerWidget {
 
     return Stack(
       children: [
+        const ActiveChatRouteSync(),
         child,
         const IncomingCallOverlay(),
       ],

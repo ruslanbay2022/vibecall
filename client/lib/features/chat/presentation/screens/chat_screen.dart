@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vibecall/features/chat/domain/message.dart';
 import 'package:vibecall/features/chat/presentation/providers/chat_controller.dart';
+import 'package:vibecall/features/chat/presentation/providers/chat_message_sound.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -169,6 +172,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             Expanded(
               child: TextField(
                 controller: _inputController,
+                onTap: () {
+                  unawaited(
+                    ref
+                        .read(chatMessageSoundProvider.notifier)
+                        .unlockForNextSound(),
+                  );
+                },
                 onChanged: (_) {
                   ref
                       .read(

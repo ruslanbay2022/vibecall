@@ -327,4 +327,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chatStartConversation => 'Начать переписку';
+
+  @override
+  String chatUnreadBadge(int count) {
+    return '$count непрочитанных';
+  }
 }

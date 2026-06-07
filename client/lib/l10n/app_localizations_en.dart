@@ -326,4 +326,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatStartConversation => 'Start a conversation';
+
+  @override
+  String chatUnreadBadge(int count) {
+    return '$count unread messages';
+  }
 }

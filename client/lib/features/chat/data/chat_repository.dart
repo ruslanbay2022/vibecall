@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vibecall/features/chat/data/conversation_dto.dart';
@@ -19,9 +20,11 @@ abstract class ChatRepository {
     int limit = 50,
   });
   Future<List<Conversation>> fetchConversations();
+  Future<Map<String, int>> fetchUnreadCountsByConversation();
   Future<void> sendMessage(String conversationId, String body);
   Future<void> markRead(String messageId);
   Stream<Message> messageStream(String conversationId);
+  Stream<Message> globalIncomingMessageStream();
   Stream<List<Conversation>> conversationsStream();
 }
 
@@ -31,6 +34,17 @@ class SupabaseChatRepository implements ChatRepository {
   final Map<String, RealtimeChannel> _messageChannels = {};
   StreamController<List<Conversation>>? _conversationsController;
   final List<RealtimeChannel> _conversationsChannels = [];
+  StreamController<Message>? _globalIncomingController;
+  RealtimeChannel? _globalIncomingChannel;
+  String? _globalIncomingUserId;
+
+  void _disposeGlobalIncomingStream() {
+    _globalIncomingChannel?.unsubscribe();
+    _globalIncomingChannel = null;
+    _globalIncomingController?.close();
+    _globalIncomingController = null;
+    _globalIncomingUserId = null;
+  }
 
   SupabaseChatRepository({SupabaseClient? client})
       : _client = client ?? Supabase.instance.client;
@@ -88,10 +102,33 @@ class SupabaseChatRepository implements ChatRepository {
         .or('user_a.eq.$userId,user_b.eq.$userId')
         .order('last_message_at', ascending: false);
 
+    final unreadCounts = await fetchUnreadCountsByConversation();
+
     return (response as List)
         .map((e) => ConversationDto.fromJson(e as Map<String, dynamic>)
-            .toDomain(currentUserId: userId))
+            .toDomain(
+              currentUserId: userId,
+              unreadCountsByConversation: unreadCounts,
+            ))
         .toList();
+  }
+
+  @override
+  Future<Map<String, int>> fetchUnreadCountsByConversation() async {
+    final userId = currentUserId;
+    final response = await _client
+        .from('messages')
+        .select('conversation_id')
+        .isFilter('read_at', null)
+        .neq('sender_id', userId);
+
+    final counts = <String, int>{};
+    for (final row in response as List) {
+      final map = row as Map<String, dynamic>;
+      final convId = map['conversation_id'] as String;
+      counts[convId] = (counts[convId] ?? 0) + 1;
+    }
+    return counts;
   }
 
   @override
@@ -160,6 +197,49 @@ class SupabaseChatRepository implements ChatRepository {
               final dto = MessageDto.fromJson(record);
               controller.add(dto.toDomain(currentUserId: currentUserId));
             } catch (_) {}
+          },
+        )
+        .subscribe();
+
+    return controller.stream;
+  }
+
+  @override
+  Stream<Message> globalIncomingMessageStream() {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      return const Stream<Message>.empty();
+    }
+
+    final existing = _globalIncomingController;
+    if (existing != null &&
+        !existing.isClosed &&
+        _globalIncomingUserId == userId) {
+      return existing.stream;
+    }
+
+    _disposeGlobalIncomingStream();
+
+    final controller = StreamController<Message>.broadcast();
+    _globalIncomingController = controller;
+    _globalIncomingUserId = userId;
+
+    final channel = _client.channel('chat:global-incoming:$userId');
+    _globalIncomingChannel = channel;
+    channel
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'messages',
+          callback: (payload) {
+            try {
+              if (controller.isClosed) return;
+              final record = payload.newRecord;
+              final dto = MessageDto.fromJson(record);
+              controller.add(dto.toDomain(currentUserId: userId));
+            } catch (e, stackTrace) {
+              debugPrint('global incoming message error: $e\n$stackTrace');
+            }
           },
         )
         .subscribe();

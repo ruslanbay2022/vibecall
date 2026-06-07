@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vibecall/features/chat/domain/conversation.dart';
+import 'package:vibecall/features/chat/presentation/providers/active_chat_conversation.dart';
+import 'package:vibecall/features/chat/presentation/providers/chat_message_sound.dart';
 import 'package:vibecall/features/chat/presentation/providers/conversations_controller.dart';
+import 'package:vibecall/features/chat/presentation/providers/unread_counts_controller.dart';
+import 'package:vibecall/features/chat/presentation/widgets/chat_unread_badge.dart';
 import 'package:vibecall/features/presence/presentation/providers/presence_controller.dart';
 import 'package:vibecall/features/presence/presentation/widgets/online_indicator.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
@@ -22,6 +26,9 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen> {
     final l10n = AppLocalizations.of(context);
     final asyncConversations = ref.watch(conversationsControllerProvider);
     final onlineUserIds = ref.watch(presenceControllerProvider);
+    final asyncUnreadCounts = ref.watch(unreadCountsControllerProvider);
+    final unreadCounts = asyncUnreadCounts.value ?? {};
+    final activeConversationId = ref.watch(activeChatConversationProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.chatsTitle)),
@@ -31,16 +38,28 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen> {
             return Center(child: Text(l10n.chatNoConversations));
           }
           return RefreshIndicator(
-            onRefresh: () =>
-                ref.read(conversationsControllerProvider.notifier).refresh(),
+            onRefresh: () async {
+              await ref.read(conversationsControllerProvider.notifier).refresh();
+              await ref.read(unreadCountsControllerProvider.notifier).refresh();
+            },
             child: ListView.separated(
               itemCount: conversations.length,
               separatorBuilder: (_, _) => const Divider(height: 0),
               itemBuilder: (context, index) {
                 final conv = conversations[index];
+                final rawCount = unreadCounts[conv.id] ?? conv.unreadCount;
+                final displayCount =
+                    activeConversationId == conv.id ? 0 : rawCount;
                 return _ConversationTile(
                   conversation: conv,
                   isOnline: onlineUserIds.contains(conv.peer.id),
+                  unreadCount: displayCount,
+                  l10n: l10n,
+                  onOpen: () {
+                    ref
+                        .read(chatMessageSoundProvider.notifier)
+                        .unlockForNextSound();
+                  },
                 );
               },
             ),
@@ -56,10 +75,16 @@ class _ConversationsScreenState extends ConsumerState<ConversationsScreen> {
 class _ConversationTile extends StatelessWidget {
   final Conversation conversation;
   final bool isOnline;
+  final int unreadCount;
+  final AppLocalizations l10n;
+  final VoidCallback onOpen;
 
   const _ConversationTile({
     required this.conversation,
     required this.isOnline,
+    required this.unreadCount,
+    required this.l10n,
+    required this.onOpen,
   });
 
   @override
@@ -67,6 +92,7 @@ class _ConversationTile extends StatelessWidget {
     final peer = conversation.peer;
     final name = peer.displayName ?? peer.username ?? peer.id;
     final timeText = _formatTime(context, conversation.lastMessageAt);
+    final theme = Theme.of(context);
 
     return ListTile(
       leading: Stack(
@@ -84,19 +110,37 @@ class _ConversationTile extends StatelessWidget {
           ),
         ],
       ),
-      title: Text(name),
+      title: Text(
+        name,
+        style: unreadCount > 0
+            ? theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)
+            : null,
+      ),
       subtitle: conversation.lastMessageBody != null
           ? Text(
               conversation.lastMessageBody!,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+              style: unreadCount > 0
+                  ? const TextStyle(fontWeight: FontWeight.w600)
+                  : null,
             )
           : null,
-      trailing: Text(
-        timeText,
-        style: Theme.of(context).textTheme.bodySmall,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            timeText,
+            style: theme.textTheme.bodySmall,
+          ),
+          if (unreadCount > 0) ...[
+            const SizedBox(width: 8),
+            ChatUnreadCountLabel(count: unreadCount),
+          ],
+        ],
       ),
       onTap: () {
+        onOpen();
         context.push(
           '/chat/${conversation.id}',
           extra: {'peerName': name, 'peerAvatarUrl': peer.avatarUrl},

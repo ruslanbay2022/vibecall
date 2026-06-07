@@ -448,5 +448,14 @@
   "chatStartConversation": "Start a conversation",
   "@chatStartConversation": {
     "description": "Chat icon tooltip / label on contacts screen"
+  },
+  "chatUnreadBadge": "{count} unread messages",
+  "@chatUnreadBadge": {
+    "description": "Accessibility label for unread message count badge",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }
