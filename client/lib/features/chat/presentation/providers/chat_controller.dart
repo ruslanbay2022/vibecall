@@ -69,7 +69,7 @@ class ChatController extends _$ChatController {
   }
 
   void _applyIncomingMessage(ChatRepository repo, Message message) {
-    var current = state.value ?? [];
+    var current = state.value ?? <Message>[];
     if (message.isFromMe) {
       current = current
           .where(
@@ -107,14 +107,14 @@ class ChatController extends _$ChatController {
       isFromMe: true,
       isPending: true,
     );
-    final current = [...(state.value ?? []), pending];
+    final current = <Message>[...(state.value ?? []), pending];
     state = AsyncValue.data(current);
     try {
       await repo.sendMessage(conversationId, body);
     } catch (_) {
       if (ref.mounted) {
         state = AsyncValue.data(
-          current.where((m) => m.id != pending.id).toList(),
+          current.where((m) => m.id != pending.id).toList(growable: false),
         );
       }
       rethrow;
