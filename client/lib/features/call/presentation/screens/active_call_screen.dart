@@ -99,56 +99,7 @@ class _ActiveView extends ConsumerStatefulWidget {
 }
 
 class _ActiveViewState extends ConsumerState<_ActiveView> {
-  final List<CancelListenFunc> _mediaListeners = [];
   bool _chatOpen = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _subscribeRoomMedia(widget.state.room);
-  }
-
-  @override
-  void didUpdateWidget(covariant _ActiveView oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!identical(oldWidget.state.room, widget.state.room)) {
-      _unsubscribeRoomMedia();
-      _subscribeRoomMedia(widget.state.room);
-    } else if (oldWidget.state.mediaTick != widget.state.mediaTick) {
-      setState(() {});
-    }
-  }
-
-  @override
-  void dispose() {
-    if (_chatOpen) {
-      ref.read(inCallOpenChatProvider.notifier).set(null);
-    }
-    _unsubscribeRoomMedia();
-    super.dispose();
-  }
-
-  void _subscribeRoomMedia(Room room) {
-    void refresh(_) {
-      if (mounted) setState(() {});
-    }
-
-    _mediaListeners.addAll([
-      room.events.on<LocalTrackPublishedEvent>(refresh),
-      room.events.on<LocalTrackUnpublishedEvent>(refresh),
-      room.events.on<TrackPublishedEvent>(refresh),
-      room.events.on<TrackUnpublishedEvent>(refresh),
-      room.events.on<TrackMutedEvent>(refresh),
-      room.events.on<TrackUnmutedEvent>(refresh),
-    ]);
-  }
-
-  void _unsubscribeRoomMedia() {
-    for (final cancel in _mediaListeners) {
-      cancel();
-    }
-    _mediaListeners.clear();
-  }
 
   void _toggleChat(String conversationId) {
     final opening = !_chatOpen;
