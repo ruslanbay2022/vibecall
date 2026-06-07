@@ -152,11 +152,21 @@ class CallController extends _$CallController {
           await repo.endCall(_currentInvitationId!, durationSec);
         } catch (_) {}
       }
+      await _stopLocalScreenShareIfNeeded();
       _cleanup();
       state = CallStateEnded(outcome: CallOutcome.accepted, durationSec: durationSec);
     } finally {
       _hangupInProgress = false;
     }
+  }
+
+  Future<void> _stopLocalScreenShareIfNeeded() async {
+    try {
+      final participant = _room?.localParticipant;
+      if (participant != null && participant.isScreenShareEnabled()) {
+        await participant.setScreenShareEnabled(false);
+      }
+    } catch (_) {}
   }
 
   Future<void> toggleMute() async {
@@ -366,13 +376,6 @@ class CallController extends _$CallController {
     _onParticipantDisconnected = null;
     _onRoomDisconnected = null;
     _onRoomMediaChanged = null;
-    // Best-effort stop screen share before disconnect.
-    try {
-      final participant = _room?.localParticipant;
-      if (participant != null && participant.isScreenShareEnabled()) {
-        participant.setScreenShareEnabled(false);
-      }
-    } catch (_) {}
     _room?.disconnect();
     _room = null;
     _currentInvitationId = null;

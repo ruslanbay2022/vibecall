@@ -21,7 +21,9 @@ class MockParticipant implements Participant {
 }
 
 class MockTrackPublication implements TrackPublication {
+  @override
   final bool muted;
+  @override
   final Track? track;
 
   MockTrackPublication({this.muted = false, this.track});
