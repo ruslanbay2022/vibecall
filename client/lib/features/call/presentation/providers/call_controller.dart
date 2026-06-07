@@ -8,6 +8,7 @@ import 'package:vibecall/features/call/data/call_token.dart';
 import 'package:vibecall/features/call/domain/call_invitation.dart';
 import 'package:vibecall/features/call/domain/call_outcome.dart';
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
+import 'package:vibecall/features/call/presentation/widgets/call_media_utils.dart';
 import 'package:vibecall/features/chat/presentation/providers/in_call_open_chat.dart';
 
 part 'call_controller.g.dart';
@@ -25,6 +26,7 @@ class CallController extends _$CallController {
   CancelListenFunc? _onRoomDisconnected;
   CancelListenFunc? _onRoomMediaChanged;
   bool _hangupInProgress = false;
+  bool _screenShareBusy = false;
 
   /// Override in tests to mock LiveKit connection.
   Future<void> Function(CallToken token, {required bool video})?
@@ -163,10 +165,23 @@ class CallController extends _$CallController {
   Future<void> _stopLocalScreenShareIfNeeded() async {
     try {
       final participant = _room?.localParticipant;
-      if (participant != null && participant.isScreenShareEnabled()) {
-        await participant.setScreenShareEnabled(false);
+      if (participant != null) {
+        await _unpublishLocalScreenShare(participant);
       }
     } catch (_) {}
+  }
+
+  Future<void> _unpublishLocalScreenShare(LocalParticipant participant) async {
+    final screenPub =
+        participant.getTrackPublicationBySource(TrackSource.screenShareVideo);
+    if (screenPub != null) {
+      await participant.removePublishedTrack(screenPub.sid);
+    }
+    final audioPub =
+        participant.getTrackPublicationBySource(TrackSource.screenShareAudio);
+    if (audioPub != null) {
+      await participant.removePublishedTrack(audioPub.sid);
+    }
   }
 
   Future<void> toggleMute() async {
@@ -208,18 +223,31 @@ class CallController extends _$CallController {
 
   /// Returns false when enabling screen share failed (picker denied, service error).
   Future<bool> toggleScreenShare() async {
+    if (_screenShareBusy) return false;
     final participant = _room?.localParticipant;
     if (participant == null) return false;
 
-    final sharing = participant.isScreenShareEnabled();
-
+    _screenShareBusy = true;
     try {
-      await participant.setScreenShareEnabled(!sharing);
+      if (isParticipantScreenSharing(participant)) {
+        await _unpublishLocalScreenShare(participant);
+      } else {
+        // Clear stale publications so setScreenShareEnabled(true) creates a new
+        // capture instead of unmuting a disposed track (Web repeat-share bug).
+        await _unpublishLocalScreenShare(participant);
+        final pub = await participant.setScreenShareEnabled(true);
+        if (pub == null || pub.track == null) {
+          _refreshActiveState();
+          return false;
+        }
+      }
       _refreshActiveState();
       return true;
     } catch (_) {
       _refreshActiveState();
       return false;
+    } finally {
+      _screenShareBusy = false;
     }
   }
 
