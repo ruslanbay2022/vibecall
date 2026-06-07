@@ -2103,17 +2103,69 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 - `conversationsController` поднимается при открытии Contacts (нужен для маппинга)
 - Badge только на вкладке принятых контактов (`showCall`); incoming/outgoing без иконки чата
 
-### Step 4.4 — In-call chat (planned)
+### Step 4.4 — In-call chat
 
 **Actions**:
-1. Панель/шторка чата на `ActiveCallScreen` при `CallStateActive`.
-2. `conversationId` из peer звонка; компактный UI (read/send); не ломать LiveKit HUD.
+1. `CallStateActive.peerUserId` — caller/receiver id при promote/accept.
+2. `inCallConversationIdProvider` — lazy `ensureConversation(peerUserId)` на время звонка.
+3. `InCallChatSheet` на `ActiveCallScreen` — read/send, reuse `chatControllerProvider(conversationId)`; sheet `bottom: callHudReservedHeight` — HUD не перекрывает ввод.
+4. Кнопка «Сообщения» в `CallHud` + `ChatUnreadBadge` по `unreadCountsController`.
+5. `InCallOpenChat` + `inCallOpenChatAtNotify` — active conversation вне `/chat/:id`; `set()` только в `addPostFrameCallback` (не `initState`).
+6. Sound/unread: `markRead` при открытой панели; unread не растёт для открытой беседы; **звук на каждое входящее** (в т.ч. при открытой панели — по QA).
+7. Web sound: сериализованная очередь + reuse `HTMLAudioElement` в `chat_message_sound_player_web.dart` (не `pause()` сразу после `play()`).
+8. Delivery status (WhatsApp-style): `0019_message_delivered_at.sql`, `Message.deliveredAt`, `markDelivered`, `MessageBubble` + `MessageStatusTicks` (общий с `ChatScreen`).
+9. Cleanup: `inCallOpenChat` / conversation cache при hangup.
+10. Unit-тесты: `message_delivery_status_test.dart`; обновления `chat_repository_test`, `chat_notification_logic_test`.
 
 **Acceptance**:
-- [ ] Читать и писать во время аудио/видеозвонка
-- [ ] `markRead` / sound rules согласованы с открытым in-call чатом
+- [x] Читать и писать во время активного аудио/видеозвонка — PR #67 manual QA (2 browsers)
+- [x] `markRead` при открытой in-call панели; unread не растёт для открытой беседы — PR #67
+- [x] Звук входящих во время звонка (панель открыта и закрыта) — PR #67 manual QA
+- [x] Бейдж непрочитанных на иконке чата в `CallHud` — PR #67
+- [x] HUD не перекрывает поле ввода (sheet inset) — PR #67
+- [x] Галочки доставки/прочтения (✓ / ✓✓ / синие ✓✓) — PR #67 + migration `0019` на cloud
+- [x] `dart analyze --fatal-infos` и `flutter test` green — PR #67 CI (103 tests)
+- [x] Hangup очищает in-call state — PR #67
 
-**Phase 4 DoD (core)**: 1-1 чат с историей, read receipts, typing и уведомлениями (звук + badge) работают в реальном времени — **закрыт** (`f383f71` + `1890e04` + `3f12d25`). Polish: **4.3.2** done; optional **4.4** остаётся.
+**Status**: done — `6b35c5d` (#67)
+
+**Out**:
+- `client/lib/features/call/presentation/providers/call_state.dart`
+- `client/lib/features/call/presentation/providers/call_controller.dart`
+- `client/lib/features/call/presentation/providers/in_call_conversation_id.dart`
+- `client/lib/features/call/presentation/screens/active_call_screen.dart`
+- `client/lib/features/call/presentation/widgets/call_hud.dart`
+- `client/lib/features/call/presentation/widgets/in_call_chat_sheet.dart`
+- `client/lib/features/chat/presentation/providers/in_call_open_chat.dart`
+- `client/lib/features/chat/presentation/in_call_open_chat_at_notify.dart`
+- `client/lib/features/chat/presentation/providers/chat_controller.dart`
+- `client/lib/features/chat/presentation/providers/chat_message_sound.dart`
+- `client/lib/features/chat/presentation/providers/unread_counts_controller.dart`
+- `client/lib/features/chat/presentation/providers/chat_incoming_relay.dart`
+- `client/lib/features/chat/presentation/widgets/chat_notification_listener.dart`
+- `client/lib/features/chat/presentation/widgets/message_bubble.dart`
+- `client/lib/features/chat/presentation/widgets/message_status_ticks.dart`
+- `client/lib/features/chat/presentation/screens/chat_screen.dart`
+- `client/lib/features/chat/domain/message.dart`
+- `client/lib/features/chat/domain/message_delivery_status.dart`
+- `client/lib/features/chat/data/message_dto.dart`
+- `client/lib/features/chat/data/chat_repository.dart`
+- `client/lib/features/chat/platform/chat_message_sound_player_web.dart`
+- `client/test/features/chat/message_delivery_status_test.dart`
+- `supabase/migrations/0019_message_delivered_at.sql`
+- l10n: `callOpenChat`, `chatMessageStatusSending/Sent/Delivered/Read`
+
+**Pitfalls**:
+- Route `/call` ≠ `/chat/:id` — нужен `InCallOpenChat`, не только `ActiveChatRouteSync`
+- `inCallOpenChat.set()` в `initState` → crash/provider notify during build; только `addPostFrameCallback`
+- Sheet поверх HUD без inset перекрывает ввод — `bottom: callHudReservedHeight(context)`
+- Web: hot reload ломает generated providers — **hot restart (`R`)** после provider-изменений
+- Web audio: немедленный `pause()`/revoke blob после `play()` глушит следующие звуки — reuse element + delayed pause
+- Галочки доставки требуют колонку `delivered_at` — **`0019` на cloud** (user applied manually)
+- Дублирующие LiveKit listeners в `_ActiveView` → `defunct` setState; один источник событий
+- Исходный PLAN «без миграций» — фактически добавлен `0019` для delivery ticks в рамках #67
+
+**Phase 4 DoD**: 1-1 чат с историей, read/delivery receipts, typing, уведомлениями (звук + badge) и in-call чатом работают в реальном времени — **закрыт** (`f383f71` + `1890e04` + `3f12d25` + `6b35c5d`). Phase 4 (core + polish) **полностью закрыта**.
 
 ---
 

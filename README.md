@@ -47,7 +47,7 @@ flutter build web --debug --dart-define-from-file=.env
 
 ## Статус
 
-В разработке. Текущая фаза: **Phase 4 — Текстовый чат** (Phase 3 — 1-на-1 Calls закрыта).
+В разработке. Текущая фаза: **Phase 5 — Демонстрация экрана** (Phase 4 закрыта).
 
 Закрытые шаги Phase 0:
 - 0.1 — bootstrap репозитория (`f148eb5`)
@@ -97,8 +97,9 @@ Phase 3 закрыта (`1f2745c`).
 - 4.3 — chat UI: conversations + chat screens (`f383f71`)
 - 4.3.1 — message sound + unread badges (`1890e04`)
 - 4.3.2 — per-contact unread badge on chat action (`3f12d25`)
+- 4.4 — in-call chat + delivery ticks (`6b35c5d`, migration `0019`)
 
-Phase 4 (core) закрыта. Следующий шаг (polish): **4.4** — чат во время звонка.
+Phase 4 закрыта (core + polish). Следующий шаг: **Phase 5** — демонстрация экрана (Step **5.1**).
 
 ## Лицензия
 
