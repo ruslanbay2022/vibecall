@@ -2016,6 +2016,8 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 2. `ChatScreen(conversationId)` — список сообщений (reverse `ListView`), bubble-стили для своих/чужих, поле ввода, кнопки «прикрепить» (stub), «голосовое» (stub).
 3. Pagination: при скролле к верху → подгрузка предыдущих 50.
 4. Typing-индикатор отображается, когда есть события за последние 3 секунды.
+5. Router `/chats`, `/chat/:conversationId`; ссылка с home; иконка «Начать переписку» в `ContactsScreen`.
+6. Riverpod: `ConversationsController`, `ChatController`, `ChatTypingProvider`; l10n en/ru.
 
 **Pitfalls** (интеграция с data-layer 4.2):
 - **`notifyTyping`**: канал создаётся в `peerTypingStream` — до первой подписки `notifyTyping` — no-op. В `ChatScreen`: в `initState`/provider сначала `peerTypingStream(conversationId)`, затем `notifyTyping` при вводе
@@ -2026,13 +2028,77 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 - Typing UI: debounce 3 с (PLAN Actions); события только от peer (`userId != currentUserId`)
 
 **Acceptance**:
-- [ ] Отправленное сообщение появляется у обоих участников «мгновенно» (через Realtime)
-- [ ] При открытии чата непрочитанные сообщения помечаются `read_at`
-- [ ] Pagination не дублирует записи
+- [x] `dart analyze --fatal-infos` и `flutter test` green — PR #61 CI green
+- [x] `/chats` и `/chat/:id` в router; ссылка с home; чат из контактов (`ensureConversation`)
+- [x] Realtime: отправленное сообщение видно у обоих (manual QA)
+- [x] При открытии чата входящие без `read_at` помечаются прочитанными
+- [x] Pagination вверх не дублирует сообщения; typing indicator 3 с (manual QA)
+- [x] Без SQL / без cloud push
 
-**Out**: фича `chat/`.
+**Status**: done — `f383f71` (#61)
 
-**Phase 4 DoD**: 1-1 чат с историей, read receipts, typing-индикатором работает в реальном времени.
+**Out**:
+- `client/lib/features/chat/presentation/screens/conversations_screen.dart`
+- `client/lib/features/chat/presentation/screens/chat_screen.dart`
+- `client/lib/features/chat/presentation/providers/conversations_controller.dart`
+- `client/lib/features/chat/presentation/providers/chat_controller.dart`
+- `client/lib/features/chat/presentation/providers/chat_typing_provider.dart`
+- `client/lib/app/router.dart` (маршруты `/chats`, `/chat/:conversationId`)
+- `client/lib/features/home/presentation/home_placeholder_screen.dart`
+- `client/lib/features/contacts/presentation/screens/contacts_screen.dart` (chat icon)
+- `client/l10n/app_en.arb`, `client/l10n/app_ru.arb`
+
+### Step 4.3.1 — Chat notifications (sound + unread badge)
+
+**Actions**:
+1. Asset `message_notification.wav`; `ChatMessageSound` + Web `HTMLAudioElement` replay.
+2. `globalIncomingMessageStream()` singleton; `ChatIncomingRelay` (sound + unread).
+3. `fetchUnreadCountsByConversation()`; badge в `ConversationsScreen`.
+4. Global badge на home («Чаты») и в AppBar контактов; auth-gated providers.
+5. `chat_notification_logic.dart` + unit-тесты; `ActiveChatRouteSync` для нулевого badge в открытом чате.
+
+**Acceptance**:
+- [x] Звук на входящее (не своё, dedupe по id); звук в открытом чате — по продуктовому решению PR #63
+- [x] Unread badge в списке бесед; сброс при открытии чата (`markRead` + `activeChat`)
+- [x] Global badge home/contacts; providers не падают без auth session
+- [x] `dart analyze --fatal-infos`, `flutter test` green — PR #63 CI green
+- [x] Без SQL / FCM push
+
+**Status**: done — `1890e04` (#63)
+
+**Out**:
+- `client/assets/sounds/message_notification.wav`
+- `client/lib/features/chat/presentation/providers/chat_message_sound.dart`
+- `client/lib/features/chat/presentation/providers/chat_incoming_relay.dart`
+- `client/lib/features/chat/presentation/providers/unread_counts_controller.dart`
+- `client/lib/features/chat/presentation/providers/total_unread_chat_count.dart`
+- `client/lib/features/chat/presentation/providers/chat_notification_logic.dart`
+- `client/lib/features/chat/presentation/widgets/chat_notification_listener.dart`
+- `client/lib/features/chat/presentation/widgets/chat_unread_badge.dart`
+- `client/lib/features/chat/platform/chat_message_sound_player_web.dart`
+- `client/test/features/chat/chat_notification_logic_test.dart`
+
+### Step 4.3.2 — Contact-level unread badges (planned)
+
+**Actions**:
+1. Badge на иконке «Начать переписку» у каждого контакта в `ContactsScreen`.
+2. Маппинг `otherUserId` → `conversationId` → count из `unreadCountsController`.
+
+**Acceptance**:
+- [ ] Badge у контакта с непрочитанными; 0 если нет беседы или всё прочитано
+- [ ] Обновление в realtime при входящем сообщении
+
+### Step 4.4 — In-call chat (planned)
+
+**Actions**:
+1. Панель/шторка чата на `ActiveCallScreen` при `CallStateActive`.
+2. `conversationId` из peer звонка; компактный UI (read/send); не ломать LiveKit HUD.
+
+**Acceptance**:
+- [ ] Читать и писать во время аудио/видеозвонка
+- [ ] `markRead` / sound rules согласованы с открытым in-call чатом
+
+**Phase 4 DoD (core)**: 1-1 чат с историей, read receipts, typing и уведомлениями (звук + badge) работают в реальном времени — **закрыт** (`f383f71` + `1890e04`). Опциональный polish: Step **4.3.2**, **4.4**.
 
 ---
 
