@@ -7,6 +7,7 @@ import 'package:vibecall/features/call/data/call_repository.dart';
 import 'package:vibecall/features/call/data/call_token.dart';
 import 'package:vibecall/features/call/domain/call_invitation.dart';
 import 'package:vibecall/features/call/domain/call_outcome.dart';
+import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
 import 'package:flutter/material.dart' show BuildContext;
 import 'package:vibecall/features/call/presentation/call_screen_share.dart';
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
@@ -174,16 +175,7 @@ class CallController extends _$CallController {
   }
 
   Future<void> _unpublishLocalScreenShare(LocalParticipant participant) async {
-    final screenPub =
-        participant.getTrackPublicationBySource(TrackSource.screenShareVideo);
-    if (screenPub != null) {
-      await participant.removePublishedTrack(screenPub.sid);
-    }
-    final audioPub =
-        participant.getTrackPublicationBySource(TrackSource.screenShareAudio);
-    if (audioPub != null) {
-      await participant.removePublishedTrack(audioPub.sid);
-    }
+    await CallScreenShare.unpublishScreenTracks(participant);
   }
 
   Future<void> toggleMute() async {
@@ -235,8 +227,7 @@ class CallController extends _$CallController {
       if (isParticipantScreenSharing(participant)) {
         await _unpublishLocalScreenShare(participant);
       } else {
-        await _unpublishLocalScreenShare(participant);
-        if (context != null && !context.mounted) {
+        if (lkPlatformIsDesktop() && context != null && !context.mounted) {
           _refreshActiveState();
           return false;
         }
@@ -252,7 +243,10 @@ class CallController extends _$CallController {
       }
       _refreshActiveState();
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('toggleScreenShare failed: $e\n$st');
+      }
       _refreshActiveState();
       return false;
     } finally {

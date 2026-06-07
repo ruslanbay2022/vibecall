@@ -11,9 +11,26 @@ typedef ScreenShareEndedCallback = Future<void> Function();
 class CallScreenShare {
   CallScreenShare._();
 
+  /// Removes published screen-share tracks (video + tab audio if any).
+  static Future<void> unpublishScreenTracks(LocalParticipant participant) async {
+    final screenPub =
+        participant.getTrackPublicationBySource(TrackSource.screenShareVideo);
+    if (screenPub != null) {
+      await participant.removePublishedTrack(screenPub.sid);
+    }
+    final audioPub =
+        participant.getTrackPublicationBySource(TrackSource.screenShareAudio);
+    if (audioPub != null) {
+      await participant.removePublishedTrack(audioPub.sid);
+    }
+  }
+
   /// Web: relaxed `getDisplayMedia({video: true})` (fixes Edge / strict constraints).
   /// Windows/macOS/Linux desktop: [ScreenSelectDialog] with all screens/windows.
   /// Android: LiveKit [LocalParticipant.setScreenShareEnabled].
+  ///
+  /// **User-gesture rule:** on Web/desktop the system picker / getDisplayMedia runs
+  /// before any unpublish await so Edge does not lose transient activation.
   static Future<LocalTrackPublication<LocalVideoTrack>?> start(
     LocalParticipant participant, {
     BuildContext? context,
@@ -25,6 +42,7 @@ class CallScreenShare {
     if (kIsWeb) {
       return _startWeb(participant, onEnded);
     }
+    await unpublishScreenTracks(participant);
     final pub = await participant.setScreenShareEnabled(
       true,
       screenShareCaptureOptions: const ScreenShareCaptureOptions(
@@ -41,7 +59,7 @@ class CallScreenShare {
     LocalParticipant participant,
     ScreenShareEndedCallback? onEnded,
   ) async {
-    // Relaxed constraints — LiveKit defaults use 1080p map that breaks Edge Web.
+    // Must be the first await — Edge rejects getDisplayMedia after other awaits.
     final stream = await rtc.navigator.mediaDevices.getDisplayMedia({
       'video': true,
       'audio': false,
@@ -51,6 +69,9 @@ class CallScreenShare {
       throw Exception('getDisplayMedia returned no video track');
     }
     final mediaTrack = tracks.first;
+
+    await unpublishScreenTracks(participant);
+
     // ignore: invalid_use_of_internal_member
     final track = LocalVideoTrack(
       TrackSource.screenShareVideo,
@@ -71,6 +92,7 @@ class CallScreenShare {
     BuildContext context,
   ) async {
     if (!context.mounted) return null;
+    // Picker first — same user-gesture rule as Web getDisplayMedia.
     final source = await showDialog<rtc.DesktopCapturerSource>(
       context: context,
       builder: (dialogContext) => ScreenSelectDialog(),
@@ -81,6 +103,9 @@ class CallScreenShare {
     if (kDebugMode) {
       debugPrint('Screen share source: ${source.id} (${source.name})');
     }
+
+    await unpublishScreenTracks(participant);
+
     final track = await LocalVideoTrack.createScreenShareTrack(
       ScreenShareCaptureOptions(
         sourceId: source.id,
