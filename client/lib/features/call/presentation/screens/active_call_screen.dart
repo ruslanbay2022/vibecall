@@ -125,9 +125,8 @@ class _ActiveViewState extends ConsumerState<_ActiveView> {
     final asyncConvId = ref.watch(inCallConversationIdProvider);
     final conversationId = asyncConvId.value;
 
-    final remoteTrack = active.hasVideo
-        ? participantCameraTrack(active.peer)
-        : null;
+    // Remote main view: screen share takes priority over camera (Step 5.1).
+    final remoteTrack = participantPrimaryRemoteVideoTrack(active.peer);
     final localTrack = active.hasVideo
         ? participantCameraTrack(active.room.localParticipant)
         : null;

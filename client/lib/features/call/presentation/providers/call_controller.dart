@@ -196,6 +196,23 @@ class CallController extends _$CallController {
     await track.switchCamera('');
   }
 
+  /// Returns false when enabling screen share failed (picker denied, service error).
+  Future<bool> toggleScreenShare() async {
+    final participant = _room?.localParticipant;
+    if (participant == null) return false;
+
+    final sharing = participant.isScreenShareEnabled();
+
+    try {
+      await participant.setScreenShareEnabled(!sharing);
+      _refreshActiveState();
+      return true;
+    } catch (_) {
+      _refreshActiveState();
+      return false;
+    }
+  }
+
   void resetToIdle() {
     _cleanup();
     state = const CallStateIdle();
@@ -349,6 +366,13 @@ class CallController extends _$CallController {
     _onParticipantDisconnected = null;
     _onRoomDisconnected = null;
     _onRoomMediaChanged = null;
+    // Best-effort stop screen share before disconnect.
+    try {
+      final participant = _room?.localParticipant;
+      if (participant != null && participant.isScreenShareEnabled()) {
+        participant.setScreenShareEnabled(false);
+      }
+    } catch (_) {}
     _room?.disconnect();
     _room = null;
     _currentInvitationId = null;

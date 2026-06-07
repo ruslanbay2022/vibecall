@@ -241,6 +241,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callSwitchCamera => 'Flip';
 
   @override
+  String get callScreenShare => 'Share screen';
+
+  @override
+  String get callStopScreenShare => 'Stop sharing';
+
+  @override
+  String get callScreenShareEnableFailed =>
+      'Screen share unavailable — it may be in use by another app or denied by system';
+
+  @override
   String get callScreenShareStub => 'Share';
 
   @override
