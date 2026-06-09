@@ -223,9 +223,16 @@ class CallController extends _$CallController {
     if (participant == null) return false;
 
     _screenShareBusy = true;
+    final isStopping = isParticipantScreenSharing(participant);
+    if (kDebugMode) {
+      debugPrint('[ScreenShare] toggle start, hasVideo=$_hasVideo, stopping=$isStopping');
+    }
     try {
-      if (isParticipantScreenSharing(participant)) {
+      if (isStopping) {
         await _unpublishLocalScreenShare(participant);
+        if (kDebugMode) {
+          debugPrint('[ScreenShare] stop complete');
+        }
       } else {
         if (lkPlatformIsDesktop() && context != null && !context.mounted) {
           _refreshActiveState();
@@ -237,15 +244,21 @@ class CallController extends _$CallController {
           onEnded: _onScreenShareEndedByBrowser,
         );
         if (pub == null || pub.track == null) {
+          if (kDebugMode) {
+            debugPrint('[ScreenShare] start failed: publication or track is null');
+          }
           _refreshActiveState();
           return false;
+        }
+        if (kDebugMode) {
+          debugPrint('[ScreenShare] start success, publication sid=${pub.sid}, track sid=${pub.track?.sid}');
         }
       }
       _refreshActiveState();
       return true;
     } catch (e, st) {
       if (kDebugMode) {
-        debugPrint('toggleScreenShare failed: $e\n$st');
+        debugPrint('[ScreenShare] toggle failed: $e\n$st');
       }
       _refreshActiveState();
       return false;
@@ -309,6 +322,7 @@ class CallController extends _$CallController {
 
     final room = Room(
       roomOptions: const RoomOptions(
+        fastPublish: false,
         defaultScreenShareCaptureOptions: ScreenShareCaptureOptions(
           captureScreenAudio: false,
           preferCurrentTab: false,
@@ -377,10 +391,42 @@ class CallController extends _$CallController {
   void _subscribeRoomMedia(Room room) {
     _onRoomMediaChanged?.call();
     final cancels = <CancelListenFunc>[
-      room.events.on<LocalTrackPublishedEvent>((_) => _refreshActiveState()),
-      room.events.on<LocalTrackUnpublishedEvent>((_) => _refreshActiveState()),
-      room.events.on<TrackPublishedEvent>((_) => _refreshActiveState()),
-      room.events.on<TrackUnpublishedEvent>((_) => _refreshActiveState()),
+      room.events.on<LocalTrackPublishedEvent>((event) {
+        if (kDebugMode) {
+          debugPrint('[ScreenShare] LocalTrackPublished: source=${event.publication.source}, sid=${event.publication.sid}');
+        }
+        _refreshActiveState();
+      }),
+      room.events.on<LocalTrackUnpublishedEvent>((event) {
+        if (kDebugMode) {
+          debugPrint('[ScreenShare] LocalTrackUnpublished: source=${event.publication.source}, sid=${event.publication.sid}');
+        }
+        _refreshActiveState();
+      }),
+      room.events.on<TrackPublishedEvent>((event) {
+        if (kDebugMode) {
+          debugPrint('[ScreenShare] TrackPublished (remote): participant=${event.participant.identity}, source=${event.publication.source}, sid=${event.publication.sid}');
+        }
+        _refreshActiveState();
+      }),
+      room.events.on<TrackUnpublishedEvent>((event) {
+        if (kDebugMode) {
+          debugPrint('[ScreenShare] TrackUnpublished (remote): participant=${event.participant.identity}, source=${event.publication.source}, sid=${event.publication.sid}');
+        }
+        _refreshActiveState();
+      }),
+      room.events.on<TrackSubscribedEvent>((event) {
+        if (kDebugMode) {
+          debugPrint('[ScreenShare] TrackSubscribed: source=${event.publication.source}, sid=${event.track.sid}');
+        }
+        _refreshActiveState();
+      }),
+      room.events.on<TrackUnsubscribedEvent>((event) {
+        if (kDebugMode) {
+          debugPrint('[ScreenShare] TrackUnsubscribed: source=${event.publication.source}, sid=${event.track.sid}');
+        }
+        _refreshActiveState();
+      }),
       room.events.on<TrackMutedEvent>((_) => _refreshActiveState()),
       room.events.on<TrackUnmutedEvent>((_) => _refreshActiveState()),
     ];
