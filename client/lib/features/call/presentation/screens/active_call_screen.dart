@@ -161,13 +161,13 @@ class _ActiveViewState extends ConsumerState<_ActiveView> {
             ),
           ),
         if (layout.pip != null)
-          GestureDetector(
-            onTap: () => setState(() => _remoteVideoSwapped = !_remoteVideoSwapped),
-            child: Positioned(
-              top: 48,
-              left: 16,
-              width: 120,
-              height: 180,
+          Positioned(
+            top: 48,
+            left: 16,
+            width: 120,
+            height: 180,
+            child: GestureDetector(
+              onTap: () => setState(() => _remoteVideoSwapped = !_remoteVideoSwapped),
               child: Tooltip(
                 message: AppLocalizations.of(context).callSwapRemoteVideo,
                 child: ClipRRect(
