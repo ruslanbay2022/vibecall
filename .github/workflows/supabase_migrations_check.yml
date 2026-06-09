@@ -29,9 +29,8 @@ jobs:
         with:
           version: latest
 
-      # Step 0.7: scaffolding only — supabase/migrations/ contains only .gitkeep.
-      # First real migration arrives in Step 1.1; this workflow no-ops gracefully
-      # until then so the PR check stays green and the wiring is already in place.
+      # Lint all SQL files in supabase/migrations/ (17 files as of Step 4.4).
+      # Step 0.7 baseline skipped when no files exist (.gitkeep only).
       - name: Lint migrations (skip if none)
         shell: bash
         run: |
