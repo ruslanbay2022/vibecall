@@ -307,7 +307,14 @@ class CallController extends _$CallController {
       return;
     }
 
-    final room = Room();
+    final room = Room(
+      roomOptions: const RoomOptions(
+        defaultScreenShareCaptureOptions: ScreenShareCaptureOptions(
+          captureScreenAudio: false,
+          preferCurrentTab: false,
+        ),
+      ),
+    );
     _room = room;
 
     _onParticipantConnected =
@@ -328,7 +335,20 @@ class CallController extends _$CallController {
 
     _subscribeRoomMedia(room);
 
-    await room.connect(token.wsUrl, token.token);
+    await room.connect(
+      token.wsUrl,
+      token.token,
+      connectOptions: const ConnectOptions(
+        timeouts: Timeouts(
+          connection: Duration(seconds: 15),
+          debounce: Duration(milliseconds: 20),
+          publish: Duration(seconds: 20),
+          subscribe: Duration(seconds: 10),
+          peerConnection: Duration(seconds: 15),
+          iceRestart: Duration(seconds: 10),
+        ),
+      ),
+    );
     await _enableLocalTracks(
       room.localParticipant,
       enableLocalCamera: enableLocalCamera,
