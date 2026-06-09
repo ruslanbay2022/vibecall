@@ -489,5 +489,9 @@
   "callOpenChat": "Messages",
   "@callOpenChat": {
     "description": "Button label to open in-call chat sheet"
+  },
+  "callSwapRemoteVideo": "Swap main and picture-in-picture",
+  "@callSwapRemoteVideo": {
+    "description": "Tooltip for tapping remote picture-in-picture to swap with main video"
   }
 }

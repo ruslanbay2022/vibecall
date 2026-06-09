@@ -357,4 +357,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get callOpenChat => 'Сообщения';
+
+  @override
+  String get callSwapRemoteVideo => 'Поменять основное видео и миниатюру';
 }

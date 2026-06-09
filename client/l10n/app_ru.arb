@@ -107,5 +107,6 @@
   "chatRetry": "Повторить",
   "chatStartConversation": "Начать переписку",
   "chatUnreadBadge": "{count} непрочитанных",
-  "callOpenChat": "Сообщения"
+  "callOpenChat": "Сообщения",
+  "callSwapRemoteVideo": "Поменять основное видео и миниатюру"
 }

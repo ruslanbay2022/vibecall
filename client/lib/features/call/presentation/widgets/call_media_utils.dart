@@ -31,3 +31,28 @@ VideoTrack? participantPrimaryRemoteVideoTrack(Participant? participant) {
   return participantScreenShareTrack(participant) ??
       participantCameraTrack(participant);
 }
+
+/// Remote layout when peer has camera + screen: main + optional PiP.
+class RemoteVideoLayout {
+  const RemoteVideoLayout({this.main, this.pip});
+  final VideoTrack? main;
+  final VideoTrack? pip;
+  bool get isDual => main != null && pip != null;
+}
+
+/// Default: main=screen, pip=camera. [swapped] exchanges them.
+RemoteVideoLayout remoteVideoLayout(
+  Participant? peer, {
+  bool swapped = false,
+}) {
+  final screen = participantScreenShareTrack(peer);
+  final camera = participantCameraTrack(peer);
+
+  if (swapped) {
+    return RemoteVideoLayout(
+      main: camera ?? screen,
+      pip: (camera != null && screen != null) ? screen : null,
+    );
+  }
+  return RemoteVideoLayout(main: screen ?? camera, pip: screen != null ? camera : null);
+}
