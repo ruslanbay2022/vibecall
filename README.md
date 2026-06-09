@@ -99,7 +99,10 @@ Phase 3 закрыта (`1f2745c`).
 - 4.3.2 — per-contact unread badge on chat action (`3f12d25`)
 - 4.4 — in-call chat + delivery ticks (`6b35c5d`, migration `0019`)
 
-Phase 4 закрыта (core + polish). Следующий шаг: **Phase 5** — демонстрация экрана (Step **5.1**).
+Закрытые шаги Phase 5:
+- 5.1 — screen share enable (`4ac37c1`, #69 + #70; Web manual QA OK)
+
+Следующий шаг: **Phase 5** Step **5.2** — UI с несколькими треками (PiP camera + screen, swap).
 
 ## Лицензия
 

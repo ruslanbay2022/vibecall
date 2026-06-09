@@ -2175,24 +2175,58 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 
 ### Step 5.1 — Включение screen share
 
-**Actions**:
-1. На Web: `room.localParticipant.setScreenShareEnabled(true)` — `livekit_client` вызовет `navigator.mediaDevices.getDisplayMedia`.
-2. На Android: `setScreenShareEnabled(true)` требует ForegroundService и системный диалог. Добавить `ScreenCaptureService` в `AndroidManifest.xml`:
-   ```xml
-   <service
-     android:name="io.livekit.android.foregroundservice.ScreenCaptureService"
-     android:foregroundServiceType="mediaProjection"
-     android:exported="false" />
-   ```
-   и permission `android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION`.
-3. На Windows/Linux desktop: проверить, что `flutter_webrtc` поддерживает desktop capturer. На Linux может потребоваться Wayland-portal — задокументировать ограничение.
+**Actions** — зафиксировать реализацию:
+
+1. `CallController.toggleScreenShare` — через `CallScreenShare.start` / `unpublishScreenTracks`; `_screenShareBusy`; cleanup на hangup.
+2. `CallScreenShare` — платформенные пути:
+   - **Web:** unpublish camera → `setScreenShareEnabled`; fallback relaxed `getDisplayMedia`; restore camera on stop; `simulcast: false`.
+   - **Desktop (Win/macOS/Linux):** `ScreenSelectDialog` — все мониторы/окна.
+   - **Android:** `setScreenShareEnabled` + manifest `ScreenCaptureService`.
+3. `call_media_utils` — `isParticipantScreenSharing`, `participantScreenShareTrack`, `participantPrimaryRemoteVideoTrack` (screen > camera).
+4. `ActiveCallScreen` — remote main = `participantPrimaryRemoteVideoTrack` (минимальный render для 5.1; dual PiP — Step 5.2).
+5. `CallHud` — кнопка screen share, `toggleScreenShare(context:)`, SnackBar при ошибке.
+6. `RoomOptions(fastPublish: false)`, custom `Timeouts` (publish 20s).
+7. JWT `livekit.ts` — `SCREEN_SHARE` + `SCREEN_SHARE_AUDIO` в `canPublishSources` **всегда** (не только video call).
+8. Direct `flutter_webrtc` в `pubspec.yaml` для relaxed Web capture.
+9. `[ScreenShare]` debug logs (`kDebugMode`): publish/subscribe stages.
+10. Unit-тесты: `call_media_utils_test.dart` (22 tests screen share helpers).
 
 **Acceptance**:
-- [ ] На Web появляется системный picker, расшаренный экран виден у собеседника
-- [ ] На Android системный диалог, потом виден экран у собеседника
-- [ ] На Windows расшаренное окно/экран виден у собеседника
+- [x] Web: системный picker, расшаренный экран/окно виден у собеседника — PR #70 manual QA (Chrome↔Edge, A→B и B→A)
+- [x] Web: stop share → remote снова camera (или avatar) — PR #70 manual QA
+- [x] Hangup во время screen share — cleanup без зависшего capture — PR #69/#70
+- [x] User cancel picker — без crash, кнопка off-state — PR #69
+- [x] Audio-call + screen share: remote main показывает screen (`hasVideo=false`) — код #69 + JWT #70
+- [x] `dart analyze --fatal-infos`, `flutter test`, `flutter build web` green — PR #69/#70 CI (126 tests)
+- [ ] Android: системный диалог + remote видит экран — **Deferred**: manual QA не проводился; manifest/service добавлены в #69
+- [ ] Windows: picker + remote видит окно/экран — **Deferred**: `ScreenSelectDialog` в #70; manual QA не проводился
 
-**Out**: код screen share в `CallController`.
+**Status**: done — `4ac37c1` (#69 `93e08ee` + #70)
+
+**Out**:
+- `client/lib/features/call/presentation/call_screen_share.dart`
+- `client/lib/features/call/presentation/providers/call_controller.dart`
+- `client/lib/features/call/presentation/providers/call_state.dart`
+- `client/lib/features/call/presentation/screens/active_call_screen.dart`
+- `client/lib/features/call/presentation/widgets/call_hud.dart`
+- `client/lib/features/call/presentation/widgets/call_media_utils.dart`
+- `client/android/app/src/main/AndroidManifest.xml`
+- `client/pubspec.yaml` — `flutter_webrtc: ^1.4.0`
+- `client/test/features/call/call_media_utils_test.dart`
+- `supabase/functions/_shared/livekit.ts`
+- l10n: `callScreenShare`, `callStopScreenShare`, `callScreenShareEnableFailed`
+
+**Pitfalls** (Step 5.1):
+- PR #69 squash в `main` без Web-fix → потребовался follow-up PR #70 (`call_screen_share.dart`)
+- Capture banner «localhost демонстрирует…» ≠ успешный LiveKit publish — смотреть `[ScreenShare]` logs
+- Web video call: camera + screen одновременно → `TrackPublishException`; fix: unpublish camera перед share
+- `RoomOptions(fastPublish: false)` — меньше negotiate race при publish
+- JWT fix требует **redeploy** `generate-call-token` + `accept-call` и **новый звонок** (старый токен без `SCREEN_SHARE` для audio)
+- Chrome picker вкладка «Окно» — часто только окна текущего монитора; workaround: «Весь экран»
+- Web: `setScreenShareEnabled` catch → fallback `getDisplayMedia` может открыть **второй** picker при publish-fail
+- Hot reload недостаточен — **hot restart (`R`)** после provider/LiveKit изменений
+- Step 5.2 intentionally out of scope: dual PiP, swap camera/screen, одновременный показ двух remote video
+- Linux Wayland desktop capturer — не тестировался; может потребовать portal (defer → Pitfalls 5.3/docs)
 
 ### Step 5.2 — UI с несколькими треками
 
