@@ -2230,13 +2230,40 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 
 ### Step 5.2 — UI с несколькими треками
 
-**Actions**:
-1. `ActiveCallScreen` обрабатывает 2 video-source у удалённого участника (camera + screen).
-2. Layout: главное окно — screen, маленькое PiP — камера. При нажатии — swap.
+**Actions** — фактическая реализация #72:
 
-**Acceptance**: layout автоматически адаптируется к включению/выключению screen share с обеих сторон.
+1. `call_media_utils.dart` — `RemoteVideoLayout` (`main`, `pip`, `isDual`); `remoteVideoLayout(peer, {swapped})`: default main=screen, pip=camera; swap меняет местами.
+2. `ActiveCallScreen._ActiveView` — remote render через `remoteVideoLayout`; main fullscreen; remote PiP `120×180` **слева** (`top: 48, left: 16`); local PiP camera **справа** без изменений.
+3. Tap remote PiP → `_remoteVideoSwapped` toggle; `Tooltip` + l10n `callSwapRemoteVideo`.
+4. Сброс `_remoteVideoSwapped` когда dual исчезает (`!layout.isDual`).
+5. `ValueKey` по `track.sid` для main и pip.
+6. Review fix: `Positioned` — прямой child `Stack`, `GestureDetector` внутри (не наоборот).
+7. Unit-тесты `remoteVideoLayout`: dual default, swapped, solo camera/screen, null peer, muted pubs (7 tests).
+8. `participantPrimaryRemoteVideoTrack` **сохранён** (5.1 helper).
 
-**Out**: обновлённый `ActiveCallScreen`.
+**Acceptance**:
+- [x] Remote layout: при camera+screen у peer — main=screen, PiP=camera (default) — PR #72 + unit tests
+- [x] Tap PiP swap main ↔ pip — PR #72 code + unit `swapped: true`
+- [x] Только camera / только screen / нет треков — fullscreen или avatar — unit tests + Web manual
+- [x] Stop screen share → camera fullscreen, swap reset — Web manual + code
+- [x] Local PiP + HUD + in-call chat без регрессии — PR #72 scope
+- [x] `dart analyze --fatal-infos`, `flutter test` (133), `flutter build web` green — PR #72 CI
+- [ ] Dual+swap manual на desktop/Android (оба трека одновременно) — **Deferred**: Web sharer unpublish camera; desktop QA не проводился
+
+**Status**: done — `98d136e` (#72)
+
+**Out**:
+- `client/lib/features/call/presentation/widgets/call_media_utils.dart`
+- `client/lib/features/call/presentation/screens/active_call_screen.dart`
+- `client/test/features/call/call_media_utils_test.dart`
+- l10n: `callSwapRemoteVideo` (en/ru)
+
+**Pitfalls** (Step 5.2):
+- **Web 5.1:** при screen share camera unpublish — у remote часто **нет** dual PiP; UI показывает один screen fullscreen — ожидаемо
+- `Positioned` должен быть прямым child `Stack` — иначе runtime crash при PiP (#72 review fix)
+- Remote PiP слева, local PiP справа — не перекрывать
+- Swap state сбрасывать при исчезновении dual — иначе перепутанный main после stop share
+- Dual/swap manual QA на Web ограничен; полный swap — desktop/Android когда peer публикует camera+screen одновременно
 
 ### Step 5.3 — Desktop builds
 

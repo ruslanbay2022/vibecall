@@ -101,8 +101,9 @@ Phase 3 закрыта (`1f2745c`).
 
 Закрытые шаги Phase 5:
 - 5.1 — screen share enable (`4ac37c1`, #69 + #70; Web manual QA OK)
+- 5.2 — dual remote video layout + PiP swap (`98d136e`, #72)
 
-Следующий шаг: **Phase 5** Step **5.2** — UI с несколькими треками (PiP camera + screen, swap).
+Следующий шаг: **Phase 5** Step **5.3** — Desktop builds (CI + release artifacts).
 
 ## Лицензия
 
