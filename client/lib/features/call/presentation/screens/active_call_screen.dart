@@ -100,6 +100,7 @@ class _ActiveView extends ConsumerStatefulWidget {
 
 class _ActiveViewState extends ConsumerState<_ActiveView> {
   bool _chatOpen = false;
+  bool _remoteVideoSwapped = false;
 
   void _toggleChat(String conversationId) {
     final opening = !_chatOpen;
@@ -125,19 +126,25 @@ class _ActiveViewState extends ConsumerState<_ActiveView> {
     final asyncConvId = ref.watch(inCallConversationIdProvider);
     final conversationId = asyncConvId.value;
 
-    // Remote main view: screen share takes priority over camera (Step 5.1).
-    final remoteTrack = participantPrimaryRemoteVideoTrack(active.peer);
+    final layout = remoteVideoLayout(active.peer, swapped: _remoteVideoSwapped);
     final localTrack = active.hasVideo
         ? participantCameraTrack(active.room.localParticipant)
         : null;
 
+    // Reset swap when dual disappears.
+    if (!layout.isDual && _remoteVideoSwapped) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _remoteVideoSwapped = false);
+      });
+    }
+
     return Stack(
       children: [
-        if (remoteTrack != null)
+        if (layout.main != null)
           Positioned.fill(
             child: VideoTrackRenderer(
-              key: ValueKey('remote-${remoteTrack.sid}'),
-              remoteTrack,
+              key: ValueKey('remote-main-${layout.main!.sid}'),
+              layout.main!,
               fit: VideoViewFit.cover,
             ),
           )
@@ -149,6 +156,27 @@ class _ActiveViewState extends ConsumerState<_ActiveView> {
                 child: CircleAvatar(
                   radius: 64,
                   child: Icon(Icons.person, size: 64),
+                ),
+              ),
+            ),
+          ),
+        if (layout.pip != null)
+          Positioned(
+            top: 48,
+            left: 16,
+            width: 120,
+            height: 180,
+            child: GestureDetector(
+              onTap: () => setState(() => _remoteVideoSwapped = !_remoteVideoSwapped),
+              child: Tooltip(
+                message: AppLocalizations.of(context).callSwapRemoteVideo,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: VideoTrackRenderer(
+                    key: ValueKey('remote-pip-${layout.pip!.sid}'),
+                    layout.pip!,
+                    fit: VideoViewFit.cover,
+                  ),
                 ),
               ),
             ),

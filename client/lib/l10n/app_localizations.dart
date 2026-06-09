@@ -745,6 +745,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Messages'**
   String get callOpenChat;
+
+  /// Tooltip for tapping remote picture-in-picture to swap with main video
+  ///
+  /// In en, this message translates to:
+  /// **'Swap main and picture-in-picture'**
+  String get callSwapRemoteVideo;
 }
 
 class _AppLocalizationsDelegate

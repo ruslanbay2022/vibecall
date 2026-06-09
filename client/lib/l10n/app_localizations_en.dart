@@ -356,4 +356,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get callOpenChat => 'Messages';
+
+  @override
+  String get callSwapRemoteVideo => 'Swap main and picture-in-picture';
 }

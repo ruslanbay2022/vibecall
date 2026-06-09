@@ -150,6 +150,83 @@ void main() {
     });
   });
 
+  group('remoteVideoLayout', () {
+    test('dual default: screen main, camera pip', () {
+      final participant = MockParticipant();
+      final cameraTrack = MockVideoTrack();
+      final screenTrack = MockVideoTrack();
+      participant.addPublication(TrackSource.camera, MockTrackPublication(muted: false, track: cameraTrack));
+      participant.addPublication(TrackSource.screenShareVideo, MockTrackPublication(muted: false, track: screenTrack));
+      final layout = remoteVideoLayout(participant);
+      expect(layout.main, equals(screenTrack));
+      expect(layout.pip, equals(cameraTrack));
+      expect(layout.isDual, isTrue);
+    });
+
+    test('dual swapped: camera main, screen pip', () {
+      final participant = MockParticipant();
+      final cameraTrack = MockVideoTrack();
+      final screenTrack = MockVideoTrack();
+      participant.addPublication(TrackSource.camera, MockTrackPublication(muted: false, track: cameraTrack));
+      participant.addPublication(TrackSource.screenShareVideo, MockTrackPublication(muted: false, track: screenTrack));
+      final layout = remoteVideoLayout(participant, swapped: true);
+      expect(layout.main, equals(cameraTrack));
+      expect(layout.pip, equals(screenTrack));
+      expect(layout.isDual, isTrue);
+    });
+
+    test('only camera: main=camera, pip=null', () {
+      final participant = MockParticipant();
+      final cameraTrack = MockVideoTrack();
+      participant.addPublication(TrackSource.camera, MockTrackPublication(muted: false, track: cameraTrack));
+      final layout = remoteVideoLayout(participant);
+      expect(layout.main, equals(cameraTrack));
+      expect(layout.pip, isNull);
+      expect(layout.isDual, isFalse);
+    });
+
+    test('only screen: main=screen, pip=null', () {
+      final participant = MockParticipant();
+      final screenTrack = MockVideoTrack();
+      participant.addPublication(TrackSource.screenShareVideo, MockTrackPublication(muted: false, track: screenTrack));
+      final layout = remoteVideoLayout(participant);
+      expect(layout.main, equals(screenTrack));
+      expect(layout.pip, isNull);
+      expect(layout.isDual, isFalse);
+    });
+
+    test('both null when participant is null', () {
+      final layout = remoteVideoLayout(null);
+      expect(layout.main, isNull);
+      expect(layout.pip, isNull);
+      expect(layout.isDual, isFalse);
+    });
+
+    test('muted screen: main=camera, pip=null', () {
+      final participant = MockParticipant();
+      final cameraTrack = MockVideoTrack();
+      final screenTrack = MockVideoTrack();
+      participant.addPublication(TrackSource.camera, MockTrackPublication(muted: false, track: cameraTrack));
+      participant.addPublication(TrackSource.screenShareVideo, MockTrackPublication(muted: true, track: screenTrack));
+      final layout = remoteVideoLayout(participant);
+      expect(layout.main, equals(cameraTrack));
+      expect(layout.pip, isNull);
+      expect(layout.isDual, isFalse);
+    });
+
+    test('muted camera with screen active: main=screen, pip=null', () {
+      final participant = MockParticipant();
+      final cameraTrack = MockVideoTrack();
+      final screenTrack = MockVideoTrack();
+      participant.addPublication(TrackSource.camera, MockTrackPublication(muted: true, track: cameraTrack));
+      participant.addPublication(TrackSource.screenShareVideo, MockTrackPublication(muted: false, track: screenTrack));
+      final layout = remoteVideoLayout(participant);
+      expect(layout.main, equals(screenTrack));
+      expect(layout.pip, isNull);
+      expect(layout.isDual, isFalse);
+    });
+  });
+
   group('participantPrimaryRemoteVideoTrack', () {
     test('returns null when participant is null', () {
       expect(participantPrimaryRemoteVideoTrack(null), isNull);
