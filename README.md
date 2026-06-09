@@ -47,7 +47,7 @@ flutter build web --debug --dart-define-from-file=.env
 
 ## Статус
 
-В разработке. Текущая фаза: **Phase 5 — Демонстрация экрана** (Phase 4 закрыта).
+В разработке. Текущая фаза: **Phase 6 — Production** (Phase 5 закрыта).
 
 Закрытые шаги Phase 0:
 - 0.1 — bootstrap репозитория (`f148eb5`)
@@ -102,8 +102,9 @@ Phase 3 закрыта (`1f2745c`).
 Закрытые шаги Phase 5:
 - 5.1 — screen share enable (`4ac37c1`, #69 + #70; Web manual QA OK)
 - 5.2 — dual remote video layout + PiP swap (`98d136e`, #72)
+- 5.3 — desktop release on tag (`55026ba`, #74; linux+windows .zip)
 
-Следующий шаг: **Phase 5** Step **5.3** — Desktop builds (CI + release artifacts).
+Phase 5 (screen share + desktop release) — **закрыта** по коду. Следующий шаг: **Phase 6** — Production (Step 6.1 — Oracle Cloud).
 
 ## Лицензия
 
