@@ -121,7 +121,7 @@ class CallHud extends ConsumerWidget {
                   ? l10n.callStopScreenShare
                   : l10n.callScreenShare,
               onPressed: () async {
-                final ok = await notifier.toggleScreenShare();
+                final ok = await notifier.toggleScreenShare(context: context);
                 if (!ok && context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text(l10n.callScreenShareEnableFailed)),

@@ -7,7 +7,11 @@ import 'package:vibecall/features/call/data/call_repository.dart';
 import 'package:vibecall/features/call/data/call_token.dart';
 import 'package:vibecall/features/call/domain/call_invitation.dart';
 import 'package:vibecall/features/call/domain/call_outcome.dart';
+import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
+import 'package:flutter/material.dart' show BuildContext;
+import 'package:vibecall/features/call/presentation/call_screen_share.dart';
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
+import 'package:vibecall/features/call/presentation/widgets/call_media_utils.dart';
 import 'package:vibecall/features/chat/presentation/providers/in_call_open_chat.dart';
 
 part 'call_controller.g.dart';
@@ -25,6 +29,7 @@ class CallController extends _$CallController {
   CancelListenFunc? _onRoomDisconnected;
   CancelListenFunc? _onRoomMediaChanged;
   bool _hangupInProgress = false;
+  bool _screenShareBusy = false;
 
   /// Override in tests to mock LiveKit connection.
   Future<void> Function(CallToken token, {required bool video})?
@@ -163,10 +168,14 @@ class CallController extends _$CallController {
   Future<void> _stopLocalScreenShareIfNeeded() async {
     try {
       final participant = _room?.localParticipant;
-      if (participant != null && participant.isScreenShareEnabled()) {
-        await participant.setScreenShareEnabled(false);
+      if (participant != null) {
+        await _unpublishLocalScreenShare(participant);
       }
     } catch (_) {}
+  }
+
+  Future<void> _unpublishLocalScreenShare(LocalParticipant participant) async {
+    await CallScreenShare.unpublishScreenTracks(participant);
   }
 
   Future<void> toggleMute() async {
@@ -207,20 +216,64 @@ class CallController extends _$CallController {
   }
 
   /// Returns false when enabling screen share failed (picker denied, service error).
-  Future<bool> toggleScreenShare() async {
+  /// Pass [context] on desktop for [ScreenSelectDialog] (all monitors/windows).
+  Future<bool> toggleScreenShare({BuildContext? context}) async {
+    if (_screenShareBusy) return false;
     final participant = _room?.localParticipant;
     if (participant == null) return false;
 
-    final sharing = participant.isScreenShareEnabled();
-
+    _screenShareBusy = true;
+    final isStopping = isParticipantScreenSharing(participant);
+    if (kDebugMode) {
+      debugPrint('[ScreenShare] toggle start, hasVideo=$_hasVideo, stopping=$isStopping');
+    }
     try {
-      await participant.setScreenShareEnabled(!sharing);
+      if (isStopping) {
+        await _unpublishLocalScreenShare(participant);
+        if (kDebugMode) {
+          debugPrint('[ScreenShare] stop complete');
+        }
+      } else {
+        if (lkPlatformIsDesktop() && context != null && !context.mounted) {
+          _refreshActiveState();
+          return false;
+        }
+        final pub = await CallScreenShare.start(
+          participant,
+          context: context,
+          onEnded: _onScreenShareEndedByBrowser,
+        );
+        if (pub == null || pub.track == null) {
+          if (kDebugMode) {
+            debugPrint('[ScreenShare] start failed: publication or track is null');
+          }
+          _refreshActiveState();
+          return false;
+        }
+        if (kDebugMode) {
+          debugPrint('[ScreenShare] start success, publication sid=${pub.sid}, track sid=${pub.track?.sid}');
+        }
+      }
       _refreshActiveState();
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[ScreenShare] toggle failed: $e\n$st');
+      }
       _refreshActiveState();
       return false;
+    } finally {
+      _screenShareBusy = false;
     }
+  }
+
+  Future<void> _onScreenShareEndedByBrowser() async {
+    final participant = _room?.localParticipant;
+    if (participant == null) return;
+    try {
+      await _unpublishLocalScreenShare(participant);
+    } catch (_) {}
+    _refreshActiveState();
   }
 
   void resetToIdle() {
@@ -267,7 +320,15 @@ class CallController extends _$CallController {
       return;
     }
 
-    final room = Room();
+    final room = Room(
+      roomOptions: const RoomOptions(
+        fastPublish: false,
+        defaultScreenShareCaptureOptions: ScreenShareCaptureOptions(
+          captureScreenAudio: false,
+          preferCurrentTab: false,
+        ),
+      ),
+    );
     _room = room;
 
     _onParticipantConnected =
@@ -288,7 +349,20 @@ class CallController extends _$CallController {
 
     _subscribeRoomMedia(room);
 
-    await room.connect(token.wsUrl, token.token);
+    await room.connect(
+      token.wsUrl,
+      token.token,
+      connectOptions: const ConnectOptions(
+        timeouts: Timeouts(
+          connection: Duration(seconds: 15),
+          debounce: Duration(milliseconds: 20),
+          publish: Duration(seconds: 20),
+          subscribe: Duration(seconds: 10),
+          peerConnection: Duration(seconds: 15),
+          iceRestart: Duration(seconds: 10),
+        ),
+      ),
+    );
     await _enableLocalTracks(
       room.localParticipant,
       enableLocalCamera: enableLocalCamera,
@@ -317,10 +391,42 @@ class CallController extends _$CallController {
   void _subscribeRoomMedia(Room room) {
     _onRoomMediaChanged?.call();
     final cancels = <CancelListenFunc>[
-      room.events.on<LocalTrackPublishedEvent>((_) => _refreshActiveState()),
-      room.events.on<LocalTrackUnpublishedEvent>((_) => _refreshActiveState()),
-      room.events.on<TrackPublishedEvent>((_) => _refreshActiveState()),
-      room.events.on<TrackUnpublishedEvent>((_) => _refreshActiveState()),
+      room.events.on<LocalTrackPublishedEvent>((event) {
+        if (kDebugMode) {
+          debugPrint('[ScreenShare] LocalTrackPublished: source=${event.publication.source}, sid=${event.publication.sid}');
+        }
+        _refreshActiveState();
+      }),
+      room.events.on<LocalTrackUnpublishedEvent>((event) {
+        if (kDebugMode) {
+          debugPrint('[ScreenShare] LocalTrackUnpublished: source=${event.publication.source}, sid=${event.publication.sid}');
+        }
+        _refreshActiveState();
+      }),
+      room.events.on<TrackPublishedEvent>((event) {
+        if (kDebugMode) {
+          debugPrint('[ScreenShare] TrackPublished (remote): participant=${event.participant.identity}, source=${event.publication.source}, sid=${event.publication.sid}');
+        }
+        _refreshActiveState();
+      }),
+      room.events.on<TrackUnpublishedEvent>((event) {
+        if (kDebugMode) {
+          debugPrint('[ScreenShare] TrackUnpublished (remote): participant=${event.participant.identity}, source=${event.publication.source}, sid=${event.publication.sid}');
+        }
+        _refreshActiveState();
+      }),
+      room.events.on<TrackSubscribedEvent>((event) {
+        if (kDebugMode) {
+          debugPrint('[ScreenShare] TrackSubscribed: source=${event.publication.source}, sid=${event.track.sid}');
+        }
+        _refreshActiveState();
+      }),
+      room.events.on<TrackUnsubscribedEvent>((event) {
+        if (kDebugMode) {
+          debugPrint('[ScreenShare] TrackUnsubscribed: source=${event.publication.source}, sid=${event.track.sid}');
+        }
+        _refreshActiveState();
+      }),
       room.events.on<TrackMutedEvent>((_) => _refreshActiveState()),
       room.events.on<TrackUnmutedEvent>((_) => _refreshActiveState()),
     ];

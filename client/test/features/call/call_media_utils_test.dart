@@ -107,9 +107,17 @@ void main() {
       expect(isParticipantScreenSharing(participant), isFalse);
     });
 
-    test('returns true when screen share publication is not muted', () {
+    test('returns false when screen share publication has no video track', () {
       final participant = MockParticipant();
       final pub = MockTrackPublication(muted: false);
+      participant.addPublication(TrackSource.screenShareVideo, pub);
+      expect(isParticipantScreenSharing(participant), isFalse);
+    });
+
+    test('returns true when screen share has active video track', () {
+      final participant = MockParticipant();
+      final track = MockVideoTrack();
+      final pub = MockTrackPublication(muted: false, track: track);
       participant.addPublication(TrackSource.screenShareVideo, pub);
       expect(isParticipantScreenSharing(participant), isTrue);
     });
