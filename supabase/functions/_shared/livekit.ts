@@ -1,14 +1,15 @@
 import { AccessToken, TrackSource } from "https://esm.sh/livekit-server-sdk@2.6.1";
 
 function publishSources(hasVideo: boolean): TrackSource[] {
-  return hasVideo
-    ? [
-      TrackSource.CAMERA,
-      TrackSource.MICROPHONE,
-      TrackSource.SCREEN_SHARE,
-      TrackSource.SCREEN_SHARE_AUDIO,
-    ]
-    : [TrackSource.MICROPHONE];
+  const sources: TrackSource[] = [
+    TrackSource.MICROPHONE,
+    TrackSource.SCREEN_SHARE,
+    TrackSource.SCREEN_SHARE_AUDIO,
+  ];
+  if (hasVideo) {
+    sources.unshift(TrackSource.CAMERA);
+  }
+  return sources;
 }
 
 export async function issueLiveKitToken(

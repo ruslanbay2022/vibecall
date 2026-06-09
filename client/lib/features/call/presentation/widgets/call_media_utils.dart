@@ -15,9 +15,7 @@ VideoTrack? participantCameraTrack(Participant? participant) {
 }
 
 bool isParticipantScreenSharing(Participant? participant) {
-  if (participant == null) return false;
-  final pub = participant.getTrackPublicationBySource(TrackSource.screenShareVideo);
-  return pub != null && !pub.muted;
+  return participantScreenShareTrack(participant) != null;
 }
 
 VideoTrack? participantScreenShareTrack(Participant? participant) {
