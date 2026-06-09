@@ -2268,14 +2268,30 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 ### Step 5.3 — Desktop builds
 
 **Actions**:
-1. Включить `windows` и `linux` в CI matrix.
-2. Сборка релизных артефактов как .zip в GitHub Releases (через `softprops/action-gh-release` на тег).
 
-**Acceptance**: артефакты Windows/Linux собираются, локально запускаются.
+1. `flutter_desktop.yml` (Step 0.7) — PR CI: `linux` + `windows` release build.
+2. `desktop_release.yml` — push tag `v*` → zip linux+windows → `softprops/action-gh-release`.
+3. Stub `--dart-define` в release (как CI); production env — Phase 6.
+4. Optional `workflow_dispatch` для теста без тега.
 
-**Out**: workflow для desktop release.
+**Acceptance**:
+- [x] Windows/Linux собираются в CI на PR — `flutter_desktop.yml` (Step 0.7)
+- [x] Tag `v*` публикует `.zip` в GitHub Releases — PR #74 (`55026ba`)
+- [ ] Локальный запуск распакованного билда — **Deferred** (не тестировался)
+- [x] §12.1 migration index исправлен (этот docs-close PR)
 
-**Phase 5 DoD**: screen share работает на Web, Android и Windows. Desktop-билды публикуются.
+**Status**: done — `55026ba` (#74)
+
+**Out**: `.github/workflows/desktop_release.yml`
+
+**Pitfalls** (Step 5.3):
+- Linux `bundle/` целиком в zip; Windows `Release/` + DLLs
+- `permissions: contents: write` для `GITHUB_TOKEN` на release job
+- `build_runner` обязателен (generated `.g.dart`)
+- Stub `--dart-define` — release без production secrets; production env — Phase 6
+- Не путать с Phase 6.5 Android APK release
+
+**Phase 5 DoD**: screen share Web — **закрыт** (5.1–5.2); desktop release CI+zip — **закрыт** (5.3); Android/Windows screen share manual — **partial** (Deferred 5.1); Android APK release — Phase 6.5.
 
 ---
 
@@ -2475,11 +2491,18 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 - `0008_call_history.sql`
 - `0009_call_rls.sql`
 - `0010_pg_cron_call_timeout.sql`
-- `0011_conversations_messages.sql`
-- `0012_chat_rls.sql`
 - `0013_avatars_storage.sql`
+- `0014_call_invitations_realtime.sql`
+- `0015_call_history_on_terminal_state.sql`
+- `0016_conversations_messages.sql`
+- `0017_chat_rls.sql`
+- `0018_chat_realtime.sql`
+- `0019_message_delivered_at.sql`
 
-Полные тексты — в шагах, где они вводятся (см. Phase 1–4).
+**Примечания:**
+- Номера `0011`/`0012` в раннем PLAN **не использовались** — чат введён как `0016`/`0017` (Step 4.2).
+- Пропуск `0011`/`0012` в нумерации файлов — намеренный (не ошибка).
+- Полные тексты — в шагах Phase 1–4 (как сейчас).
 
 ### 12.2 Сводка Edge Functions
 
