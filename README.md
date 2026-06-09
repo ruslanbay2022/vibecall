@@ -47,7 +47,7 @@ flutter build web --debug --dart-define-from-file=.env
 
 ## Статус
 
-В разработке. Текущая фаза: **Phase 5 — Демонстрация экрана** (Phase 4 закрыта).
+В разработке. Текущая фаза: **Phase 6 — Production** (Phase 5 закрыта).
 
 Закрытые шаги Phase 0:
 - 0.1 — bootstrap репозитория (`f148eb5`)
