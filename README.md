@@ -104,7 +104,12 @@ Phase 3 закрыта (`1f2745c`).
 - 5.2 — dual remote video layout + PiP swap (`98d136e`, #72)
 - 5.3 — desktop release on tag (`55026ba`, #74; linux+windows .zip)
 
-Phase 5 (screen share + desktop release) — **закрыта** по коду. Следующий шаг: **Phase 6** — Production (Step 6.1 — FirstVDS VPS).
+Phase 5 (screen share + desktop release) — **закрыта** по коду.
+
+Закрытые шаги Phase 6:
+- 6.1 — FirstVDS VPS + Docker bootstrap (`78fd3f3`, #76 + #77; manual QA: SSH + hello-world)
+
+Следующий шаг: **Phase 6** Step **6.2** — DuckDNS (`vibecall.duckdns.org`).
 
 ## Лицензия
 
