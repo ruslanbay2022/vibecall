@@ -104,7 +104,7 @@ Phase 3 закрыта (`1f2745c`).
 - 5.2 — dual remote video layout + PiP swap (`98d136e`, #72)
 - 5.3 — desktop release on tag (`55026ba`, #74; linux+windows .zip)
 
-Phase 5 (screen share + desktop release) — **закрыта** по коду. Следующий шаг: **Phase 6** — Production (Step 6.1 — Oracle Cloud).
+Phase 5 (screen share + desktop release) — **закрыта** по коду. Следующий шаг: **Phase 6** — Production (Step 6.1 — FirstVDS VPS).
 
 ## Лицензия
 

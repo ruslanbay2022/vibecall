@@ -8,8 +8,11 @@ fi
 
 sudo apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y upgrade
+# Ubuntu 22.04 (FirstVDS): compose v2 package is docker-compose-v2, not docker-compose-plugin
+sudo add-apt-repository -y universe
+sudo apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install \
-  docker.io docker-compose-plugin ufw curl ca-certificates
+  docker.io docker-compose-v2 ufw curl ca-certificates
 
 sudo usermod -aG docker "$USER"
 
