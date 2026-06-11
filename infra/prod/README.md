@@ -84,7 +84,7 @@ docker run --rm hello-world
 
 ## §6 Что дальше
 
-- **Step 6.2** — DuckDNS (динамический DNS) — см. §7
+- **Step 6.2** — DuckDNS — **done** (§7)
 - **Step 6.3** — `infra/prod/docker-compose.yml` + Caddy + LiveKit
 - **Step 6.4** — `ufw.sh` на VM
 
@@ -115,7 +115,7 @@ ssh -i $key ubuntu@<PUBLIC_IP> "sed -i 's/\r$//' ~/*.sh && sudo bash ~/install-d
 ```
 
 Установщик:
-- Создаёт `/etc/duckdns/` (mode 700)
+- Создаёт `/etc/duckdns/` — **`chown root:ubuntu` + `chmod 750`** (ubuntu cron должен traverse каталог для чтения env)
 - Копирует `duckdns-update.sh` → `/usr/local/bin/duckdns-update`
 - **`chown root:ubuntu` + `chmod 640`** на `duckdns.env` — cron пользователя `ubuntu` может читать token
 - Если `/etc/duckdns/duckdns.env` отсутствует — **останавливается с инструкцией**:
