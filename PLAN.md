@@ -2312,21 +2312,23 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
    - **OS:** Ubuntu 22.04 LTS
    - **ДЦ:** Москва (WEB DC / IXcellerate)
    - **Не заказывать:** Windows (+лицензия), ispmanager (TLS — Caddy в Step 6.3)
-3. SSH: добавить **public** key (`ssh-keygen -t ed25519`); пользователь `root` или `ubuntu` — как в письме FirstVDS.
+3. SSH: добавить **public** key (`ssh-keygen -t ed25519`); пользователь **`ubuntu`** (FirstVDS, ключ `.pem`). На Windows — `icacls` для `.pem` только `(R)` текущему user.
 4. Bootstrap на VM — `[infra/prod/bootstrap-vm.sh](infra/prod/bootstrap-vm.sh)` (см. `[infra/prod/README.md](infra/prod/README.md)`):
    ```bash
-   scp infra/prod/bootstrap-vm.sh <user>@<PUBLIC_IP>:~/
-   ssh <user>@<PUBLIC_IP> 'bash ~/bootstrap-vm.sh'
+   scp -i ~/vibecall.pem infra/prod/bootstrap-vm.sh ubuntu@<PUBLIC_IP>:~/
+   # Windows: после scp — sed -i 's/\r$//' ~/bootstrap-vm.sh (CRLF)
+   ssh -i ~/vibecall.pem ubuntu@<PUBLIC_IP> 'bash ~/bootstrap-vm.sh'
    # re-login SSH после usermod -aG docker
    ```
+   Ubuntu 22.04 FirstVDS: пакет **`docker-compose-v2`** (не `docker-compose-plugin`).
 5. Порты LiveKit (Step 6.4) — на FirstVDS KVM достаточно **UFW на VM**; отдельного cloud Security List (как в OCI) **нет**.
 
 **Acceptance**:
-- [ ] SSH на VDS работает (ключ, без пароля)
-- [ ] `docker run --rm hello-world` → `Hello from Docker!`
-- [ ] Runbook `infra/prod/README.md` актуален под FirstVDS
+- [x] SSH на VDS работает (`ubuntu` + ed25519 `.pem`) — manual QA 2026-03
+- [x] `docker run --rm hello-world` → `Hello from Docker!` — manual QA 2026-03
+- [x] Runbook + bootstrap актуальны под FirstVDS — #77 (`78fd3f3`)
 
-**Status**: partial — runbook в репо (`bd9e4a5`, #76); VDS bootstrap — **manual** (пользователь)
+**Status**: done — `78fd3f3` (#76 `bd9e4a5` runbook + #77 FirstVDS/bootstrap fix; manual VDS QA)
 
 **Out**:
 - VDS на FirstVDS (вне git)
@@ -2339,6 +2341,10 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 - **Не** `ufw enable` в bootstrap — риск потерять SSH до Step 6.4
 - ispmanager не нужен (+399 ₽/мес); Caddy выдаст Let's Encrypt в 6.3
 - Прогрев (1 GB RAM) — **недостаточно** для LiveKit; минимум **4 GB** (Разгон)
+- Windows: `.pem` только `(R)` для текущего user в `icacls` — иначе `UNPROTECTED PRIVATE KEY FILE`
+- `bootstrap-vm.sh` с CRLF ломает `set -euo pipefail` на Linux — `sed` или `.gitattributes` `*.sh eol=lf`
+- Ubuntu 22.04 FirstVDS: пакет `docker-compose-v2`, не `docker-compose-plugin`
+- VPN (`happ-tun` и т.п.) может влиять на SSH timeout — проверять `Test-NetConnection -Port 22`
 
 ### Step 6.2 — DuckDNS поддомен
 
