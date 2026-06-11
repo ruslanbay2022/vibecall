@@ -10,6 +10,7 @@ client/.env
 infra/**/.env
 infra/**/*.env
 !infra/dev/cloudflared.example.env
+!infra/prod/duckdns.env.example
 supabase/.env*
 supabase/functions/**/.env
 
