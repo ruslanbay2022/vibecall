@@ -84,8 +84,68 @@ docker run --rm hello-world
 
 ## §6 Что дальше
 
-- **Step 6.2** — DuckDNS (динамический DNS)
+- **Step 6.2** — DuckDNS (динамический DNS) — см. §7
 - **Step 6.3** — `infra/prod/docker-compose.yml` + Caddy + LiveKit
 - **Step 6.4** — `ufw.sh` на VM
 
 Конфиги LiveKit и Caddy будут добавлены в соответствующих шагах — не раньше.
+
+---
+
+## §7 DuckDNS (Step 6.2)
+
+DuckDNS предоставляет бесплатный динамический DNS для поддомена `vibecall.duckdns.org`.
+
+### 7.1 Регистрация
+
+1. Открой https://www.duckdns.org → войти через один из провайдеров (GitHub, Google, Twitter).
+2. В поле **domains** введи **`vibecall`** → кнопка **add domain**.
+3. Скопируй **token** (понадобится на VDS).
+
+### 7.2 Установка на VDS
+
+```powershell
+# Windows (см. §4 — путь к .pem)
+$key = "D:\VPS\privatekey-XXXX.pem"
+scp -i $key infra/prod/duckdns-update.sh ubuntu@<PUBLIC_IP>:~/
+scp -i $key infra/prod/duckdns.env.example ubuntu@<PUBLIC_IP>:~/
+scp -i $key infra/prod/install-duckdns.sh ubuntu@<PUBLIC_IP>:~/
+
+ssh -i $key ubuntu@<PUBLIC_IP> "sed -i 's/\r$//' ~/*.sh && sudo bash ~/install-duckdns.sh"
+```
+
+Установщик:
+- Создаёт `/etc/duckdns/` (mode 700)
+- Копирует `duckdns-update.sh` → `/usr/local/bin/duckdns-update`
+- **`chown root:ubuntu` + `chmod 640`** на `duckdns.env` — cron пользователя `ubuntu` может читать token
+- Если `/etc/duckdns/duckdns.env` отсутствует — **останавливается с инструкцией**:
+
+```bash
+sudo cp duckdns.env.example /etc/duckdns/duckdns.env
+sudo nano /etc/duckdns/duckdns.env   # вставить реальный token
+```
+
+Повторно запустить установщик после создания env:
+
+```bash
+sudo bash ~/install-duckdns.sh
+```
+
+Установщик также добавляет cron (`*/5 * * * *`) для пользователя `ubuntu` и проверяет update от имени `ubuntu`.
+
+### 7.3 Verification
+
+```bash
+dig +short vibecall.duckdns.org
+# Ожидание: IP твоей VDS (curl -4 ifconfig.me)
+```
+
+Windows: `nslookup vibecall.duckdns.org` или `Resolve-DnsName vibecall.duckdns.org`.
+
+### 7.4 Обновление вручную
+
+```bash
+/usr/local/bin/duckdns-update
+```
+
+Лог: `/var/log/duckdns-update.log` (владелец `ubuntu`).
