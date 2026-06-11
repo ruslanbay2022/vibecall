@@ -9,7 +9,8 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 mkdir -p /etc/duckdns
-chmod 700 /etc/duckdns
+chown root:ubuntu /etc/duckdns
+chmod 750 /etc/duckdns
 
 if [[ ! -f /etc/duckdns/duckdns.env ]]; then
   echo ""

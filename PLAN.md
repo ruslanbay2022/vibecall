@@ -2349,18 +2349,38 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 ### Step 6.2 — DuckDNS поддомен
 
 **Actions**:
-1. Зарегистрироваться на https://www.duckdns.org, получить токен.
-2. Создать поддомен `vibecall.duckdns.org`.
-3. На VM cron каждые 5 минут обновляет IP:
-   ```bash
-   echo 'url="https://www.duckdns.org/update?domains=vibecall&token=TOKEN&ip=" | curl -k -o ~/duckdns.log -K -' | sudo tee /usr/local/bin/duckdns-update
-   sudo chmod +x /usr/local/bin/duckdns-update
-   (crontab -l 2>/dev/null; echo '*/5 * * * * /usr/local/bin/duckdns-update') | crontab -
+1. Зарегистрироваться на https://www.duckdns.org, subdomain **`vibecall`**, скопировать token.
+2. На VM — скрипты из репо (см. `[infra/prod/README.md](infra/prod/README.md)` §7):
+   ```powershell
+   scp -i ~/vibecall.pem infra/prod/duckdns-*.sh infra/prod/duckdns.env.example ubuntu@<PUBLIC_IP>:~/
+   ssh -i ~/vibecall.pem ubuntu@<PUBLIC_IP> "sed -i 's/\r$//' ~/*.sh"
    ```
+   ```bash
+   sudo cp duckdns.env.example /etc/duckdns/duckdns.env
+   sudo nano /etc/duckdns/duckdns.env   # DUCKDNS_DOMAIN=vibecall, DUCKDNS_TOKEN=...
+   sudo bash ~/install-duckdns.sh       # cron */5, первый update
+   ```
+3. Проверка: `dig +short vibecall.duckdns.org` → IP VDS.
 
-**Acceptance**: `dig vibecall.duckdns.org` возвращает IP VM.
+**Acceptance**:
+- [x] `dig +short vibecall.duckdns.org` → IP VDS — manual QA 2026-06
+- [x] Скрипты + runbook §7 в репо — #79 (`ce8c829`)
+- [x] Cron ubuntu `*/5` + `duckdns-update` → OK — manual QA 2026-06
 
-**Out**: рабочий DNS-A-record.
+**Status**: done — `ce8c829` (#79 DuckDNS scripts; manual dig QA 2026-06)
+
+**Out**:
+- `[infra/prod/duckdns-update.sh](infra/prod/duckdns-update.sh)`, `duckdns.env.example`, `install-duckdns.sh`
+- `[infra/prod/README.md](infra/prod/README.md)` §7
+- `/etc/duckdns/duckdns.env` на VDS (вне git)
+- DNS A-record `vibecall.duckdns.org` → VDS IP
+
+**Pitfalls** (Step 6.2):
+- Token только в `/etc/duckdns/duckdns.env` на VM — **never git**
+- `/etc/duckdns`: **`chown root:ubuntu` + `chmod 750`** — иначе cron-user `ubuntu` не может открыть env при `640` (каталог `700` блокирует traverse)
+- `duckdns.env`: `chown root:ubuntu`, `chmod 640`
+- Сначала создать env, затем повторить `install-duckdns.sh` (скрипт выходит с инструкцией если env нет)
+- Windows CRLF на `.sh` — `sed -i 's/\r$//'` перед install
 
 ### Step 6.3 — Caddy + LiveKit prod
 
