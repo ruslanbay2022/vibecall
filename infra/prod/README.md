@@ -104,24 +104,24 @@ DuckDNS предоставляет бесплатный динамический
 
 ### 7.2 Установка на VDS
 
-```bash
-# С локальной машины (корень репозитория)
-scp -i ~/.ssh/firstvds-vibecall.pem infra/prod/duckdns-update.sh ubuntu@<PUBLIC_IP>:~/
-scp -i ~/.ssh/firstvds-vibecall.pem infra/prod/duckdns.env.example ubuntu@<PUBLIC_IP>:~/
-scp -i ~/.ssh/firstvds-vibecall.pem infra/prod/install-duckdns.sh ubuntu@<PUBLIC_IP>:~/
+```powershell
+# Windows (см. §4 — путь к .pem)
+$key = "D:\VPS\privatekey-XXXX.pem"
+scp -i $key infra/prod/duckdns-update.sh ubuntu@<PUBLIC_IP>:~/
+scp -i $key infra/prod/duckdns.env.example ubuntu@<PUBLIC_IP>:~/
+scp -i $key infra/prod/install-duckdns.sh ubuntu@<PUBLIC_IP>:~/
 
-# На VDS
-ssh -i ~/.ssh/firstvds-vibecall.pem ubuntu@<PUBLIC_IP> 'sudo bash ~/install-duckdns.sh'
+ssh -i $key ubuntu@<PUBLIC_IP> "sed -i 's/\r$//' ~/*.sh && sudo bash ~/install-duckdns.sh"
 ```
 
 Установщик:
 - Создаёт `/etc/duckdns/` (mode 700)
 - Копирует `duckdns-update.sh` → `/usr/local/bin/duckdns-update`
+- **`chown root:ubuntu` + `chmod 640`** на `duckdns.env` — cron пользователя `ubuntu` может читать token
 - Если `/etc/duckdns/duckdns.env` отсутствует — **останавливается с инструкцией**:
 
 ```bash
 sudo cp duckdns.env.example /etc/duckdns/duckdns.env
-sudo chmod 600 /etc/duckdns/duckdns.env
 sudo nano /etc/duckdns/duckdns.env   # вставить реальный token
 ```
 
@@ -131,7 +131,7 @@ sudo nano /etc/duckdns/duckdns.env   # вставить реальный token
 sudo bash ~/install-duckdns.sh
 ```
 
-Установщик также добавляет cron (`*/5 * * * *`) для пользователя `ubuntu`.
+Установщик также добавляет cron (`*/5 * * * *`) для пользователя `ubuntu` и проверяет update от имени `ubuntu`.
 
 ### 7.3 Verification
 
@@ -145,7 +145,7 @@ Windows: `nslookup vibecall.duckdns.org` или `Resolve-DnsName vibecall.duckdn
 ### 7.4 Обновление вручную
 
 ```bash
-sudo /usr/local/bin/duckdns-update
+/usr/local/bin/duckdns-update
 ```
 
-Лог: `/var/log/duckdns-update.log`.
+Лог: `/var/log/duckdns-update.log` (владелец `ubuntu`).
