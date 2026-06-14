@@ -88,7 +88,7 @@ docker run --rm hello-world
 - **Step 6.3** — Caddy + LiveKit — **done** (§8)
 - **Step 6.4** — `ufw.sh` — **done** (§9)
 - **Step 6.5** — Supabase secrets — **done** (§10)
-- **Step 6.6** — Cloudflare Pages — см. `infra/pages/README.md`
+- **Step 6.6** — Cloudflare Pages — **done** (`infra/pages/README.md`)
 
 ---
 
@@ -309,7 +309,8 @@ curl -I https://vibecall.duckdns.org
 ### 9.4 Что дальше
 
 - **Step 6.5** — Supabase secrets — **done** (§10)
-- **Step 6.6** — Cloudflare Pages (web release)
+- **Step 6.6** — Cloudflare Pages — **done** (`infra/pages/README.md`)
+- **Step 6.7** — Android APK release
 
 ---
 
