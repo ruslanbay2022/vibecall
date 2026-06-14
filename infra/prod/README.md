@@ -87,7 +87,7 @@ docker run --rm hello-world
 - **Step 6.2** — DuckDNS — **done** (§7)
 - **Step 6.3** — Caddy + LiveKit — **done** (§8)
 - **Step 6.4** — `ufw.sh` — **done** (§9)
-- **Step 6.5** — Supabase secrets — см. §10
+- **Step 6.5** — Supabase secrets — **done** (§10)
 
 ---
 

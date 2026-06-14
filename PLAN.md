@@ -2443,17 +2443,39 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 - Windows: `curl` = alias PowerShell — использовать **`curl.exe -I`**
 - `docker compose ps` — только **на VDS** (`ssh ... "cd ~ && docker compose ps"`), не на Windows `cd ~`
 - UDP `nmap` с Windows может быть `open|filtered` — TCP 443 + curl достаточно для manual QA
-- Звонок 4G — Step 6.5 (Supabase secrets + prod LK URL)
+- Звонок 4G — optional/deferred (инфра готова, не блокер; manual QA при необходимости)
 
 ### Step 6.5 — Переключение Edge Function
 
-**Actions**:
-1. `supabase secrets set LIVEKIT_WS_URL=wss://vibecall.duckdns.org LIVEKIT_API_KEY=<prod> LIVEKIT_API_SECRET=<prod>`
-2. Локально проверить, что dev-инсталляция всё ещё работает с dev-ключами через `LIVEKIT_WS_URL_DEV` (опц.).
+**Actions** (факт #86 + manual):
+1. `[infra/prod/README.md](infra/prod/README.md)` §10 — runbook `supabase secrets set` (prod `wss://vibecall.duckdns.org`), verify, test call, dev/prod note
+2. User manual: `supabase secrets set LIVEKIT_WS_URL=... LIVEKIT_API_KEY=... LIVEKIT_API_SECRET=...` (keys из VDS `~/.env`, не в git)
+3. `client/.env.example` — comment: `LIVEKIT_WS_URL` fallback; calls use `wsUrl` from Edge (#86)
+4. CI: `client/windows/CMakeLists.txt` — MSVC coroutine deprecation workaround (#86)
 
-**Acceptance**: реальный звонок через prod LiveKit работает.
+**Acceptance**:
+- [x] README §10 runbook в репо — #86 (`89cef27`)
+- [x] Supabase Edge secrets → prod LiveKit — manual QA 2026-06 (user `secrets set`)
+- [x] Реальный звонок через prod `wss://vibecall.duckdns.org` — manual QA 2026-06 (Desktop + Web)
+- [ ] Звонок callee на 4G — **optional/deferred** (не блокер 6.5)
+- [ ] `LIVEKIT_WS_URL_DEV` dual-env — **optional/deferred** (§10.5 manual workaround)
 
-**Out**: обновлённые секреты.
+**Status**: done — `89cef27` (#86 runbook; manual prod secrets + call QA 2026-06-14)
+
+**Out**:
+- `[infra/prod/README.md](infra/prod/README.md)` §10
+- Supabase project secrets (prod `LIVEKIT_*`, вне git)
+- Edge Functions `generate-call-token`, `accept-call` → prod LiveKit URL/keys
+
+**Pitfalls** (Step 6.5):
+- Keys в Supabase **должны совпадать** с VDS `~/.env` — иначе JWT invalid / validate fail
+- `LIVEKIT_WS_URL` = **`wss://`** (не `ws://`)
+- После secrets set все cloud-звонки → prod; dev tunnel не для E2E через Supabase Cloud
+- PowerShell: `supabase secrets set` — **одна строка** или backtick `` ` `` (не bash `\`)
+- `client/.env` для теста: prod `SUPABASE_URL`/`ANON_KEY`; `flutter run` с `--dart-define-from-file=.env`
+- Web localhost: два клиента = **разные аккаунты** + изолированные профили (избежать `refresh_token_already_used`)
+- Edge Web WSS: возможны `ERR_CONNECTION_TIMED_OUT` локально — Chrome/Desktop стабильнее; prod infra OK если Desktop звонит
+- **Не** коммитить secrets / IP VDS
 
 ### Step 6.6 — Веб-релиз (Cloudflare Pages)
 
