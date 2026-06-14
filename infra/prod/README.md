@@ -86,7 +86,8 @@ docker run --rm hello-world
 
 - **Step 6.2** — DuckDNS — **done** (§7)
 - **Step 6.3** — Caddy + LiveKit — **done** (§8)
-- **Step 6.4** — `ufw.sh` — см. §9
+- **Step 6.4** — `ufw.sh` — **done** (§9)
+- **Step 6.5** — Supabase secrets — см. §10
 
 ---
 
@@ -306,5 +307,62 @@ curl -I https://vibecall.duckdns.org
 
 ### 9.4 Что дальше
 
-- **Step 6.5** — Supabase secrets с prod LiveKit ключами
-- **Звонок через 4G** — проверка NAT/TURN после 6.5
+- **Step 6.5** — Supabase secrets — см. §10
+
+---
+
+## §10 Supabase secrets — prod LiveKit (Step 6.5)
+
+Переключение Edge Functions на prod LiveKit (`wss://vibecall.duckdns.org`).
+
+### 10.1 Предусловия
+
+- Prod keys из VDS `~/.env` (Step 6.3) — сохранены в password manager, **не в git**
+- Supabase CLI: `supabase login`, `supabase link` к **prod** проекту
+- Edge Functions уже задеплоены (Phase 3)
+
+### 10.2 Set secrets
+
+**Команда** (подставить реальные значения из VDS, **не** коммитить):
+
+```bash
+supabase secrets set \
+  LIVEKIT_WS_URL=wss://vibecall.duckdns.org \
+  LIVEKIT_API_KEY=<prod-from-vds-env> \
+  LIVEKIT_API_SECRET=<prod-from-vds-env>
+```
+
+Проверить (без вывода secret):
+
+```bash
+supabase secrets list
+# LIVEKIT_WS_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET — present
+```
+
+### 10.3 Redeploy (опционально)
+
+Secrets подхватываются Edge runtime. При сомнениях:
+
+```bash
+supabase functions deploy generate-call-token
+supabase functions deploy accept-call
+```
+
+### 10.4 Тест звонка
+
+1. Два клиента (Web: Chrome + Edge, или Desktop) с `client/.env` → **prod Supabase** URL/anon key
+2. Исходящий звонок → callee принимает → аудио/видео
+3. На VDS: комната появляется на время звонка:
+
+```bash
+livekit-cli list-rooms --url wss://vibecall.duckdns.org \
+  --api-key "$LIVEKIT_API_KEY" --api-secret "$LIVEKIT_API_SECRET"
+```
+
+4. Опционально: callee на **4G** (закрывает Deferred 6.4)
+
+### 10.5 Dev после prod switch
+
+- Edge secrets = prod → локальный dev LiveKit tunnel **не используется** для облачных звонков
+- Локальный dev: отдельный Supabase project или временно вернуть dev secrets (вручную)
+- `LIVEKIT_WS_URL` в `client/.env` — fallback; звонки используют `wsUrl` из ответа Edge Function
