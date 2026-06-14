@@ -11,6 +11,7 @@ infra/**/.env
 infra/**/*.env
 !infra/dev/cloudflared.example.env
 !infra/prod/duckdns.env.example
+!infra/pages/env.example
 !infra/prod/.env.example
 supabase/.env*
 supabase/functions/**/.env
