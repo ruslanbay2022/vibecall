@@ -87,7 +87,7 @@ docker run --rm hello-world
 - **Step 6.2** — DuckDNS — **done** (§7)
 - **Step 6.3** — Caddy + LiveKit — **done** (§8)
 - **Step 6.4** — `ufw.sh` — **done** (§9)
-- **Step 6.5** — Supabase secrets — см. §10
+- **Step 6.5** — Supabase secrets — **done** (§10)
 
 ---
 
@@ -307,7 +307,8 @@ curl -I https://vibecall.duckdns.org
 
 ### 9.4 Что дальше
 
-- **Step 6.5** — Supabase secrets — см. §10
+- **Step 6.5** — Supabase secrets — **done** (§10)
+- **Step 6.6** — Cloudflare Pages (web release)
 
 ---
 
@@ -350,6 +351,8 @@ supabase functions deploy accept-call
 
 ### 10.4 Тест звонка
 
+**Manual QA 2026-06:** prod `secrets set` + звонок Desktop + Web — OK (Chrome/Desktop стабильнее Edge для WSS с localhost).
+
 1. Два клиента (Web: Chrome + Edge, или Desktop) с `client/.env` → **prod Supabase** URL/anon key
 2. Исходящий звонок → callee принимает → аудио/видео
 3. На VDS: комната появляется на время звонка:
@@ -359,7 +362,7 @@ livekit-cli list-rooms --url wss://vibecall.duckdns.org \
   --api-key "$LIVEKIT_API_KEY" --api-secret "$LIVEKIT_API_SECRET"
 ```
 
-4. Опционально: callee на **4G** (закрывает Deferred 6.4)
+4. Опционально: callee на **4G** (NAT/TURN; не блокер — инфра готова)
 
 ### 10.5 Dev после prod switch
 
