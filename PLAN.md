@@ -2384,70 +2384,34 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 
 ### Step 6.3 — Caddy + LiveKit prod
 
-**Actions**:
-1. `[infra/prod/livekit-prod.yaml](infra/prod/livekit-prod.yaml)`:
-   ```yaml
-   port: 7880
-   bind_addresses: ["0.0.0.0"]
-   rtc:
-     tcp_port: 7881
-     port_range_start: 50000
-     port_range_end: 60000
-     use_external_ip: true
-   turn:
-     enabled: true
-     domain: vibecall.duckdns.org
-     tls_port: 5349
-     udp_port: 3478
-     external_tls: true
-   keys:
-     ${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}
-   logging:
-     level: info
-   ```
-2. `[infra/prod/Caddyfile](infra/prod/Caddyfile)`:
-   ```
-   vibecall.duckdns.org {
-     reverse_proxy /rtc* localhost:7880
-     reverse_proxy /twirp* localhost:7880
-     reverse_proxy localhost:7880
-   }
-   ```
-3. `[infra/prod/docker-compose.yml](infra/prod/docker-compose.yml)`:
-   ```yaml
-   services:
-     livekit:
-       image: livekit/livekit-server:v1.7.2
-       restart: always
-       network_mode: host
-       env_file: .env
-       volumes:
-         - ./livekit-prod.yaml:/etc/livekit.yaml:ro
-       command: --config /etc/livekit.yaml
-     caddy:
-       image: caddy:2-alpine
-       restart: always
-       ports: ["80:80","443:443"]
-       volumes:
-         - ./Caddyfile:/etc/caddy/Caddyfile:ro
-         - caddy_data:/data
-         - caddy_config:/config
-   volumes:
-     caddy_data:
-     caddy_config:
-   ```
-4. `.env` (на VM, gitignored):
-   ```
-   LIVEKIT_API_KEY=APIxxxxxxxxxxxx
-   LIVEKIT_API_SECRET=<32+ random bytes base64>
-   ```
-5. `docker compose up -d`.
+**Actions** (факт #81):
+1. `[infra/prod/livekit-prod.yaml](infra/prod/livekit-prod.yaml)` — prod config (`use_external_ip: true`, TURN `vibecall.duckdns.org`, logging info). Keys **не** в yaml (LiveKit не раскрывает `${VAR}` в конфиг-файле) — передаются через `--keys` в docker compose из `.env`.
+2. `[infra/prod/Caddyfile](infra/prod/Caddyfile)` — reverse proxy на `localhost:7880` (оба сервиса `network_mode: host`).
+3. `[infra/prod/docker-compose.yml](infra/prod/docker-compose.yml)` — LiveKit (`v1.7.2`) + Caddy (`2-alpine`), оба `network_mode: host`.
+4. `[infra/prod/.env.example](infra/prod/.env.example)` + `.gitignore` exception. Реальный `.env` на VDS генерируется через `openssl rand`.
+5. `infra/prod/README.md` §8 — deploy runbook (scp → `.env` → `docker compose up -d` → `curl` + `livekit-cli`).
 
 **Acceptance**:
-- [ ] `curl -I https://vibecall.duckdns.org` → 200 (Caddy выдал сертификат Let's Encrypt)
-- [ ] LiveKit CLI: `livekit-cli list-rooms --url wss://vibecall.duckdns.org --api-key ... --api-secret ...` → пусто без ошибок
+- [x] `curl -I https://vibecall.duckdns.org` → LE cert OK (HTTP/2 200) — manual QA 2026-06
+- [x] `livekit-cli list-rooms` на `wss://vibecall.duckdns.org` → exit 0 — manual QA 2026-06
+- [x] Prod compose + runbook §8 в репо — #81 (`60d6f65`)
 
-**Out**: `infra/prod/*`.
+**Status**: done — `60d6f65` (#81 Caddy + LiveKit prod; manual HTTPS/WSS QA 2026-06-14)
+
+**Out**:
+- `[infra/prod/livekit-prod.yaml](infra/prod/livekit-prod.yaml)`, `[Caddyfile](infra/prod/Caddyfile)`, `[docker-compose.yml](infra/prod/docker-compose.yml)`, `[.env.example](infra/prod/.env.example)`
+- `[infra/prod/README.md](infra/prod/README.md)` §8
+- `infra/prod/.env` на VDS (вне git)
+- HTTPS/WSS на `vibecall.duckdns.org`
+
+**Pitfalls** (Step 6.3):
+- Keys **не** в `livekit-prod.yaml` — LiveKit не раскрывает `${VAR}` в yaml; только `--keys` в compose из `.env`
+- Caddy bridge + `localhost:7880` **не работает** при LiveKit `host` — нужен host networking для Caddy или `host.docker.internal`
+- Prod keys **≠** dev (`devkey`) — отдельные значения для Step 6.5
+- Let's Encrypt: порты 80/443 reachable; первый cert ~1–2 мин (`docker compose logs caddy`)
+- TURN `external_tls: true` — полный TURN/TLS через L4 в Step 6.4+; 6.3 = HTTPS + list-rooms
+- UFW enable — только Step 6.4 с правилами 22/80/443
+- Сохранить prod keys для `supabase secrets set` (Step 6.5)
 
 ### Step 6.4 — Firewall (UFW на VDS)
 
