@@ -311,7 +311,7 @@ curl -I https://vibecall.duckdns.org
 
 - **Step 6.5** — Supabase secrets — **done** (§10)
 - **Step 6.6** — Cloudflare Pages — **done** (`infra/pages/README.md`)
-- **Step 6.7** — Android APK release
+- **Step 6.7** — Android APK release — см. §11
 
 ---
 
@@ -409,7 +409,7 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-GitHub → Releases → APK + desktop zips.
+GitHub → Releases → APK + desktop zips (`desktop_release.yml` запускается параллельно на тот же tag). Если в release только один тип артефакта — подождать второй workflow или Re-run failed jobs.
 
 ### 11.4 Verify
 

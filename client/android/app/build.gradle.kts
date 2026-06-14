@@ -31,10 +31,10 @@ android {
     }
 
     val keystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
-    val keystoreFile = if (keystorePath != null) file(keystorePath) else null
-    val releaseSigning = keystoreFile?.let {
+    val keystoreFile = keystorePath?.let { file(it) }?.takeIf { it.exists() }
+    if (keystoreFile != null) {
         signingConfigs.create("release") {
-            storeFile = it
+            storeFile = keystoreFile
             storePassword = System.getenv("ANDROID_STORE_PASSWORD") ?: ""
             keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: "upload"
             keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: ""
@@ -43,8 +43,8 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (keystoreFile != null && keystoreFile.exists()) {
-                releaseSigning
+            signingConfig = if (keystoreFile != null) {
+                signingConfigs.getByName("release")
             } else {
                 signingConfigs.getByName("debug")
             }
