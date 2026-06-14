@@ -110,8 +110,9 @@ Phase 5 (screen share + desktop release) — **закрыта** по коду.
 - 6.1 — FirstVDS VPS + Docker bootstrap (`78fd3f3`, #76 + #77; manual QA: SSH + hello-world)
 - 6.2 — DuckDNS `vibecall.duckdns.org` (`ce8c829`, #79; manual QA: dig → VDS IP)
 - 6.3 — Caddy + LiveKit prod (`60d6f65`, #81; manual QA: HTTPS + livekit-cli list-rooms)
+- 6.4 — UFW firewall (`d3d23b5`, #84; manual QA: ufw active + HTTPS 200 после enable)
 
-Следующий шаг: **Phase 6** Step **6.4** — UFW на VDS (`ufw.sh`).
+Следующий шаг: **Phase 6** Step **6.5** — Supabase secrets (prod LiveKit).
 
 ## Лицензия
 

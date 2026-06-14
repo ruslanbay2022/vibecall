@@ -2415,30 +2415,35 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 
 ### Step 6.4 — Firewall (UFW на VDS)
 
-**Actions**:
-1. `[infra/prod/ufw.sh](infra/prod/ufw.sh)`:
-   ```bash
-   #!/usr/bin/env bash
-   set -euo pipefail
-   ufw default deny incoming
-   ufw default allow outgoing
-   ufw allow 22/tcp
-   ufw allow 80/tcp
-   ufw allow 443/tcp
-   ufw allow 7881/tcp
-   ufw allow 3478/udp
-   ufw allow 5349/tcp
-   ufw allow 5349/udp
-   ufw allow 50000:60000/udp
-   ufw --force enable
-   ```
-2. **FirstVDS (KVM):** UFW на VM — основной и достаточный барьер; отдельного network ACL в консоли нет (в отличие от Oracle OCI Security List). Перед `ufw enable` убедиться, что **22/tcp** в правилах — иначе потеря SSH.
+**Actions** (факт #84):
+- `[infra/prod/ufw.sh](infra/prod/ufw.sh)` — idempotent, `22/tcp` до `enable`, sleep 5, `ufw show added`
+- FirstVDS: UFW на VM = основной барьер (нет cloud ACL)
+- README §9 — scp, `sed` CRLF, `sudo bash ufw.sh`
+- Verification: `curl -I https://vibecall.duckdns.org` после UFW; `nmap` опционально (Windows: `curl.exe -I`, `Test-NetConnection -Port 443`)
 
 **Acceptance**:
-- [ ] `nmap -p 443,3478,5349,50000-50005 vibecall.duckdns.org` показывает open
-- [ ] Звонок проходит через мобильный 4G (NAT-trace через TURN/443)
+- [x] UFW active, правила PLAN (22/80/443/7881/3478/5349/50000-60000) — manual QA 2026-06
+- [x] Доступ снаружи после UFW: `curl -I https://vibecall.duckdns.org` → 200 — manual QA 2026-06
+- [x] `ufw.sh` + README §9 в репо — #84 (`d3d23b5`)
+- [ ] Звонок через мобильный 4G — **Deferred → Step 6.5** (после `supabase secrets set`)
 
-**Out**: `ufw.sh`
+**Status**: done — `d3d23b5` (#84 UFW; manual QA 2026-06-14)
+
+**Deferred**: PLAN 6.4 звонок 4G/NAT-TURN — Step 6.5 после prod LiveKit secrets
+
+**Out**:
+- `[infra/prod/ufw.sh](infra/prod/ufw.sh)`
+- `[infra/prod/README.md](infra/prod/README.md)` §9
+- UFW active на VDS
+
+**Pitfalls** (Step 6.4):
+- **22/tcp** обязателен до `ufw enable` — иначе lockout SSH
+- Повторный `ufw.sh` — дубликаты правил OK, идемпотентен
+- **7880** не открывать — WSS только :443
+- Windows: `curl` = alias PowerShell — использовать **`curl.exe -I`**
+- `docker compose ps` — только **на VDS** (`ssh ... "cd ~ && docker compose ps"`), не на Windows `cd ~`
+- UDP `nmap` с Windows может быть `open|filtered` — TCP 443 + curl достаточно для manual QA
+- Звонок 4G — Step 6.5 (Supabase secrets + prod LK URL)
 
 ### Step 6.5 — Переключение Edge Function
 
