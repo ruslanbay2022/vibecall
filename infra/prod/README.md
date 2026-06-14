@@ -159,11 +159,15 @@ LiveKit + Caddy на prod VDS с автоматическим Let's Encrypt TLS.
 | Файл | Назначение |
 |------|------------|
 | `docker-compose.yml` | LiveKit (`v1.7.2`) + Caddy (`2-alpine`), оба `network_mode: host` |
-| `livekit-prod.yaml` | Prod config: RTC 7881/tcp + 50000–60000/udp, TURN 3478+5349, keys из env |
+| `livekit-prod.yaml` | Prod config: RTC 7881/tcp + 50000–60000/udp, TURN 3478+5349 (без keys в yaml) |
 | `Caddyfile` | Reverse proxy `vibecall.duckdns.org` → `localhost:7880`; авто ACME |
 | `.env.example` | Шаблон для `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET` |
 
+**Keys:** `docker-compose.yml` передаёт `--keys` из `.env` (LiveKit не раскрывает `${VAR}` в yaml).
+
 **Networking:** оба сервиса в `network_mode: host` → Caddy видит LiveKit на `localhost:7880`; Let's Encrypt challenge на портах 80/443 напрямую.
+
+**TURN/TLS (5349):** `external_tls: true` — полный TURN-over-TLS через L4 proxy в Step 6.4+; для 6.3 достаточно HTTPS/WSS + `list-rooms`.
 
 ### 8.2 Deploy на VDS
 
@@ -189,21 +193,23 @@ scp -i ~/.ssh/firstvds-vibecall.pem infra/prod/livekit-prod.yaml ubuntu@<PUBLIC_
 scp -i ~/.ssh/firstvds-vibecall.pem infra/prod/.env.example ubuntu@<PUBLIC_IP>:~/
 ```
 
+Все файлы должны быть **в одной директории** на VDS (например `~/`). Запуск `docker compose` — из этой директории.
+
 ### 8.3 Генерация prod keys и `.env`
 
-На VDS:
+На VDS (в каталоге с `docker-compose.yml`):
 
 ```bash
 # Сгенерировать ключи (НЕ использовать devkey/devsecret!)
 LIVEKIT_API_KEY="API$(openssl rand -hex 8)"
 LIVEKIT_API_SECRET=$(openssl rand -base64 32)
 
-# Создать .env
-cp .env.example .env
-sed -i "s/APIxxxxxxxxxxxx/$LIVEKIT_API_KEY/" .env
-sed -i "s|replace-with-openssl-rand-base64-32|$LIVEKIT_API_SECRET|" .env
+# Создать .env (без sed — secret может содержать / и +)
+printf '%s\n' "LIVEKIT_API_KEY=$LIVEKIT_API_KEY" "LIVEKIT_API_SECRET=$LIVEKIT_API_SECRET" > .env
 chmod 600 .env
 ```
+
+Альтернатива: `cp .env.example .env` и `nano .env`.
 
 **Сохранить значения** `LIVEKIT_API_KEY` и `LIVEKIT_API_SECRET` — они понадобятся в Step 6.5 (`supabase secrets set`).
 

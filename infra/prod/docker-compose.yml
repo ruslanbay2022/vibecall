@@ -6,7 +6,12 @@ services:
     env_file: .env
     volumes:
       - ./livekit-prod.yaml:/etc/livekit.yaml:ro
-    command: --config /etc/livekit.yaml
+    # Keys from .env via compose interpolation (yaml keys block does not expand env vars)
+    command:
+      - --config
+      - /etc/livekit.yaml
+      - --keys
+      - "${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
 
   caddy:
     image: caddy:2-alpine
