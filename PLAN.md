@@ -2425,11 +2425,11 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 - [x] UFW active, правила PLAN (22/80/443/7881/3478/5349/50000-60000) — manual QA 2026-06
 - [x] Доступ снаружи после UFW: `curl -I https://vibecall.duckdns.org` → 200 — manual QA 2026-06
 - [x] `ufw.sh` + README §9 в репо — #84 (`d3d23b5`)
-- [ ] Звонок через мобильный 4G — **Deferred → Step 6.5** (после `supabase secrets set`)
+- [ ] Звонок через мобильный 4G — **optional/deferred** (инфра + prod LiveKit готовы; manual QA при необходимости)
 
 **Status**: done — `d3d23b5` (#84 UFW; manual QA 2026-06-14)
 
-**Deferred**: PLAN 6.4 звонок 4G/NAT-TURN — Step 6.5 после prod LiveKit secrets
+**Deferred**: PLAN 6.4 звонок 4G/NAT-TURN — optional; prod secrets + LAN звонок проверены в Step 6.5 (2026-06)
 
 **Out**:
 - `[infra/prod/ufw.sh](infra/prod/ufw.sh)`
