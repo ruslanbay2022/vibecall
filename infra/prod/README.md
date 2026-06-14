@@ -43,7 +43,7 @@ ssh-keygen -t ed25519 -C "vibecall-prod"
 | 5349 | TCP, UDP | TURN-over-TLS |
 | 50000–60000 | UDP | RTP media |
 
-До Step 6.4 **не включать** `ufw enable` — риск потерять SSH.
+До Step 6.4 **не включать** `ufw enable` — риск потерять SSH. Правила применяются через `ufw.sh` (§9).
 
 ## §4 Bootstrap VM (после первого SSH)
 
@@ -85,8 +85,8 @@ docker run --rm hello-world
 ## §6 Что дальше
 
 - **Step 6.2** — DuckDNS — **done** (§7)
-- **Step 6.3** — Caddy + LiveKit — см. §8
-- **Step 6.4** — `ufw.sh` на VM
+- **Step 6.3** — Caddy + LiveKit — **done** (§8)
+- **Step 6.4** — `ufw.sh` — см. §9
 
 ---
 
@@ -247,3 +247,64 @@ docker compose down
 docker compose up -d
 docker compose logs -f livekit caddy
 ```
+
+---
+
+## §9 UFW (Step 6.4)
+
+Файрвол `ufw` на VDS — основной барьер (FirstVDS KVM без cloud firewall).
+
+### 9.1 Правила
+
+| Port(s) | Protocol | Назначение |
+|---------|----------|------------|
+| 22 | TCP | SSH |
+| 80 | TCP | Caddy HTTP → Let's Encrypt |
+| 443 | TCP | HTTPS / WSS |
+| 7881 | TCP | WebRTC TCP fallback |
+| 3478 | UDP | STUN |
+| 5349 | TCP, UDP | TURN-over-TLS |
+| 50000–60000 | UDP | RTP media |
+
+Порт **7880** (LiveKit сигналинг) **не** открывается — только 443 через Caddy.
+
+### 9.2 Установка
+
+```powershell
+# Windows (корень репозитория)
+$key = "D:\VPS\privatekey-XXXX.pem"
+scp -i $key infra/prod/ufw.sh ubuntu@<PUBLIC_IP>:~/
+ssh -i $key ubuntu@<PUBLIC_IP> "sed -i 's/\r$//' ~/ufw.sh && sudo bash ~/ufw.sh"
+```
+
+```bash
+# Linux / macOS
+scp -i ~/.ssh/firstvds-vibecall.pem infra/prod/ufw.sh ubuntu@<PUBLIC_IP>:~/
+ssh -i ~/.ssh/firstvds-vibecall.pem ubuntu@<PUBLIC_IP> 'sudo bash ~/ufw.sh'
+```
+
+Скрипт:
+- Показывает правила до `enable` + задержка 5 сек
+- Идемпотентен — повторный запуск безопасен
+- **Не отключает** существующие Docker-правила
+
+### 9.3 Verification
+
+С локального ПК (Windows / Linux):
+
+```powershell
+nmap -p 443,3478,5349,50000-50005 vibecall.duckdns.org
+```
+
+Ожидание: `open` на 443/tcp, `open|filtered` на UDP (nmap UDP может требовать admin).
+
+После UFW проверить что HTTPS работает:
+
+```bash
+curl -I https://vibecall.duckdns.org
+```
+
+### 9.4 Что дальше
+
+- **Step 6.5** — Supabase secrets с prod LiveKit ключами
+- **Звонок через 4G** — проверка NAT/TURN после 6.5
