@@ -85,10 +85,8 @@ docker run --rm hello-world
 ## §6 Что дальше
 
 - **Step 6.2** — DuckDNS — **done** (§7)
-- **Step 6.3** — `infra/prod/docker-compose.yml` + Caddy + LiveKit
+- **Step 6.3** — Caddy + LiveKit — см. §8
 - **Step 6.4** — `ufw.sh` на VM
-
-Конфиги LiveKit и Caddy будут добавлены в соответствующих шагах — не раньше.
 
 ---
 
@@ -149,3 +147,94 @@ Windows: `nslookup vibecall.duckdns.org` или `Resolve-DnsName vibecall.duckdn
 ```
 
 Лог: `/var/log/duckdns-update.log` (владелец `ubuntu`).
+
+---
+
+## §8 Caddy + LiveKit deploy (Step 6.3)
+
+LiveKit + Caddy на prod VDS с автоматическим Let's Encrypt TLS.
+
+### 8.1 Файлы в репо
+
+| Файл | Назначение |
+|------|------------|
+| `docker-compose.yml` | LiveKit (`v1.7.2`) + Caddy (`2-alpine`), оба `network_mode: host` |
+| `livekit-prod.yaml` | Prod config: RTC 7881/tcp + 50000–60000/udp, TURN 3478+5349, keys из env |
+| `Caddyfile` | Reverse proxy `vibecall.duckdns.org` → `localhost:7880`; авто ACME |
+| `.env.example` | Шаблон для `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET` |
+
+**Networking:** оба сервиса в `network_mode: host` → Caddy видит LiveKit на `localhost:7880`; Let's Encrypt challenge на портах 80/443 напрямую.
+
+### 8.2 Deploy на VDS
+
+```powershell
+# Windows — копирование файлов на VDS (корень репозитория)
+$key = "D:\VPS\privatekey-XXXX.pem"
+$files = @(
+  "infra/prod/docker-compose.yml",
+  "infra/prod/Caddyfile",
+  "infra/prod/livekit-prod.yaml",
+  "infra/prod/.env.example"
+)
+foreach ($f in $files) {
+  scp -i $key $f ubuntu@<PUBLIC_IP>:~/
+}
+```
+
+```bash
+# Linux / macOS
+scp -i ~/.ssh/firstvds-vibecall.pem infra/prod/docker-compose.yml ubuntu@<PUBLIC_IP>:~/
+scp -i ~/.ssh/firstvds-vibecall.pem infra/prod/Caddyfile ubuntu@<PUBLIC_IP>:~/
+scp -i ~/.ssh/firstvds-vibecall.pem infra/prod/livekit-prod.yaml ubuntu@<PUBLIC_IP>:~/
+scp -i ~/.ssh/firstvds-vibecall.pem infra/prod/.env.example ubuntu@<PUBLIC_IP>:~/
+```
+
+### 8.3 Генерация prod keys и `.env`
+
+На VDS:
+
+```bash
+# Сгенерировать ключи (НЕ использовать devkey/devsecret!)
+LIVEKIT_API_KEY="API$(openssl rand -hex 8)"
+LIVEKIT_API_SECRET=$(openssl rand -base64 32)
+
+# Создать .env
+cp .env.example .env
+sed -i "s/APIxxxxxxxxxxxx/$LIVEKIT_API_KEY/" .env
+sed -i "s|replace-with-openssl-rand-base64-32|$LIVEKIT_API_SECRET|" .env
+chmod 600 .env
+```
+
+**Сохранить значения** `LIVEKIT_API_KEY` и `LIVEKIT_API_SECRET` — они понадобятся в Step 6.5 (`supabase secrets set`).
+
+### 8.4 Запуск
+
+```bash
+docker compose up -d
+docker compose ps
+```
+
+Первый Let's Encrypt сертификат может занять ~1 минуту:
+
+```bash
+docker compose logs -f caddy   # ждать "certificate obtained successfully"
+```
+
+### 8.5 Verification
+
+```bash
+curl -I https://vibecall.duckdns.org
+# Ожидание: HTTP/2 200 (или 404 — оба без cert error)
+
+livekit-cli list-rooms --url wss://vibecall.duckdns.org \
+  --api-key "$LIVEKIT_API_KEY" --api-secret "$LIVEKIT_API_SECRET"
+# Ожидание: exit 0, пустой список
+```
+
+### 8.6 Stop / Restart
+
+```bash
+docker compose down
+docker compose up -d
+docker compose logs -f livekit caddy
+```
