@@ -2479,14 +2479,39 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 
 ### Step 6.6 — Веб-релиз (Cloudflare Pages)
 
-**Actions**:
-1. Cloudflare Pages → подключить GitHub repo → build command: `cd client && flutter build web --release --dart-define-from-file=.env`. Build output: `client/build/web`.
-2. Environment Variables (production) — те же ключи, что в `.env`, но prod-Supabase, prod-LK URL.
-3. Custom domain опционально (DuckDNS можно использовать для `www`).
+**Actions** (факт #88 + manual):
+1. `[infra/pages/build.sh](infra/pages/build.sh)` — CF Pages build: Flutter 3.41.x, `build_runner`, `flutter build web` с `--dart-define` из CF env vars
+2. `[infra/pages/README.md](infra/pages/README.md)` — runbook: CF project, env vars, Supabase Auth URLs, verify
+3. `[infra/pages/env.example](infra/pages/env.example)` — шаблон `SUPABASE_*`, `ENV=prod`, optional `LIVEKIT_WS_URL`
+4. `[client/web/_redirects](client/web/_redirects)` — SPA fallback для go_router
+5. User manual: CF Pages проект (`bash infra/pages/build.sh`, output `client/build/web`), env vars, Supabase Site URL + Redirect URLs
 
-**Acceptance**: production-URL открывается, sign-in/звонки работают.
+**Acceptance**:
+- [x] `infra/pages/*` runbook + build script в репо — #88 (`8378c5e`)
+- [x] CF Pages deploy — manual QA 2026-06 (`https://vibecall-d85.pages.dev`)
+- [x] Sign-in на prod web — manual QA 2026-06
+- [x] Prod звонок (sign-in + call через prod Supabase/LiveKit) — manual QA 2026-06
+- [ ] Screen share на prod web — **partial/deferred** (проблемы; фикс позже, не блокер 6.6)
+- [ ] Custom domain (DuckDNS/www) — **optional/deferred**
+- [ ] GH Actions → `cloudflare/pages-action` — **optional/deferred** (см. infra/pages README)
 
-**Out**: рабочий Cloudflare Pages проект.
+**Status**: done — `8378c5e` (#88 runbook; manual CF Pages + auth + call QA 2026-06)
+
+**Out**:
+- `[infra/pages/README.md](infra/pages/README.md)`, `[build.sh](infra/pages/build.sh)`, `[env.example](infra/pages/env.example)`
+- `[client/web/_redirects](client/web/_redirects)`
+- Рабочий CF Pages проект: `https://vibecall-d85.pages.dev` (вне git: env vars в CF Dashboard)
+
+**Pitfalls** (Step 6.6):
+- **Root directory** CF = repo root (не `client/`) — иначе `infra/pages/build.sh` не найден
+- **Output dir** = `client/build/web` (не `build/web`)
+- `SUPABASE_URL` без `/rest/v1/` — только `https://<ref>.supabase.co`
+- `SUPABASE_ANON_KEY` = **anon public**, не `service_role`
+- CF builder **не** читает `client/.env` — только Environment variables
+- Supabase **Site URL** без trailing slash; **Redirect URLs** = `https://<project>.pages.dev/**`
+- Первый CF build 10–20 min (install Flutter)
+- Env vars change → **Retry deployment**
+- Screen share Web — отдельные баги (Phase 5); не блокируют закрытие 6.6
 
 ### Step 6.7 — Android релиз
 

@@ -43,6 +43,8 @@ CF Dashboard → **Settings → Environment variables → Production**:
 
 Без этого email confirm / OAuth redirect сломаны на prod Web.
 
+**Manual QA 2026-06:** `https://vibecall-d85.pages.dev` — deploy OK, sign-in, prod звонок; screen share — deferred.
+
 ## Deploy & verify
 
 1. Первый deploy может занять 10–15+ минут (установка Flutter SDK)
