@@ -89,6 +89,7 @@ docker run --rm hello-world
 - **Step 6.4** — `ufw.sh` — **done** (§9)
 - **Step 6.5** — Supabase secrets — **done** (§10)
 - **Step 6.6** — Cloudflare Pages — **done** (`infra/pages/README.md`)
+- **Step 6.7** — Android APK release — см. §11
 
 ---
 
@@ -310,7 +311,7 @@ curl -I https://vibecall.duckdns.org
 
 - **Step 6.5** — Supabase secrets — **done** (§10)
 - **Step 6.6** — Cloudflare Pages — **done** (`infra/pages/README.md`)
-- **Step 6.7** — Android APK release
+- **Step 6.7** — Android APK release — см. §11
 
 ---
 
@@ -371,3 +372,45 @@ livekit-cli list-rooms --url wss://vibecall.duckdns.org \
 - Edge secrets = prod → локальный dev LiveKit tunnel **не используется** для облачных звонков
 - Локальный dev: отдельный Supabase project или временно вернуть dev secrets (вручную)
 - `LIVEKIT_WS_URL` в `client/.env` — fallback; звонки используют `wsUrl` из ответа Edge Function
+
+---
+
+## §11 Android release APK (Step 6.7)
+
+### 11.1 Keystore (один раз, локально)
+
+```powershell
+keytool -genkey -v -keystore upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+```
+
+Base64 для GitHub Secret:
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("upload-keystore.jks"))
+```
+
+### 11.2 GitHub Secrets
+
+Repo Settings → Secrets and variables → Actions:
+
+| Secret | Value |
+|--------|-------|
+| `ANDROID_KEYSTORE_BASE64` | base64 of `.jks` |
+| `ANDROID_KEY_ALIAS` | e.g. `upload` |
+| `ANDROID_KEY_PASSWORD` | key password |
+| `ANDROID_STORE_PASSWORD` | store password |
+| `PROD_SUPABASE_URL` | `https://<ref>.supabase.co` |
+| `PROD_SUPABASE_ANON_KEY` | anon public key |
+
+### 11.3 Release
+
+```powershell
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+GitHub → Releases → APK + desktop zips (`desktop_release.yml` запускается параллельно на тот же tag). Если в release только один тип артефакта — подождать второй workflow или Re-run failed jobs.
+
+### 11.4 Verify
+
+Установить APK на Android → sign-in → prod звонок.
