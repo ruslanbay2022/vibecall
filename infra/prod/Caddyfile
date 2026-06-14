@@ -1,0 +1,5 @@
+vibecall.duckdns.org {
+  reverse_proxy /rtc* localhost:7880
+  reverse_proxy /twirp* localhost:7880
+  reverse_proxy localhost:7880
+}

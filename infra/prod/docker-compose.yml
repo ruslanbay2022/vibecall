@@ -1,0 +1,27 @@
+services:
+  livekit:
+    image: livekit/livekit-server:v1.7.2
+    restart: always
+    network_mode: host
+    env_file: .env
+    volumes:
+      - ./livekit-prod.yaml:/etc/livekit.yaml:ro
+    # Keys from .env via compose interpolation (yaml keys block does not expand env vars)
+    command:
+      - --config
+      - /etc/livekit.yaml
+      - --keys
+      - "${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: always
+    network_mode: host
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:
