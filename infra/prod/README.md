@@ -200,12 +200,15 @@ scp -i ~/.ssh/firstvds-vibecall.pem infra/prod/.env.example ubuntu@<PUBLIC_IP>:~
 На VDS (в каталоге с `docker-compose.yml`):
 
 ```bash
-# Сгенерировать ключи (НЕ использовать devkey/devsecret!)
+# Сгенерировать ключи на VDS (НЕ в PowerShell one-liner — openssl только на Linux)
 LIVEKIT_API_KEY="API$(openssl rand -hex 8)"
 LIVEKIT_API_SECRET=$(openssl rand -base64 32)
 
-# Создать .env (без sed — secret может содержать / и +)
-printf '%s\n' "LIVEKIT_API_KEY=$LIVEKIT_API_KEY" "LIVEKIT_API_SECRET=$LIVEKIT_API_SECRET" > .env
+# Создать .env (echo, не sed — secret может содержать / + =)
+{
+  echo "LIVEKIT_API_KEY=$LIVEKIT_API_KEY"
+  echo "LIVEKIT_API_SECRET=$LIVEKIT_API_SECRET"
+} > .env
 chmod 600 .env
 ```
 
