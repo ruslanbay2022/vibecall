@@ -350,8 +350,32 @@ class CallController extends _$CallController {
     }
 
     final room = Room(
+      // Tuned for high-latency paths (e.g. when peers route media through a
+      // VPN). adaptiveStream + dynacast make the SFU deliver only the quality
+      // actually rendered; 540p capture, a bitrate cap and maintainFramerate
+      // keep motion smooth under congestion; speech audio + DTX + RED trade
+      // raw quality for lower bandwidth and packet-loss resilience.
       roomOptions: const RoomOptions(
+        adaptiveStream: true,
+        dynacast: true,
         fastPublish: false,
+        defaultCameraCaptureOptions: CameraCaptureOptions(
+          params: VideoParametersPresets.h540_169,
+          maxFrameRate: 30,
+        ),
+        defaultVideoPublishOptions: VideoPublishOptions(
+          simulcast: true,
+          degradationPreference: DegradationPreference.maintainFramerate,
+          videoEncoding: VideoEncoding(
+            maxFramerate: 30,
+            maxBitrate: 1200 * 1000,
+          ),
+        ),
+        defaultAudioPublishOptions: AudioPublishOptions(
+          encoding: AudioEncoding.presetSpeech,
+          dtx: true,
+          red: true,
+        ),
         defaultScreenShareCaptureOptions: ScreenShareCaptureOptions(
           captureScreenAudio: false,
           preferCurrentTab: false,
