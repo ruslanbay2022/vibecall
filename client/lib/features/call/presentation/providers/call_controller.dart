@@ -32,6 +32,7 @@ class CallController extends _$CallController {
   CancelListenFunc? _onRoomMediaChanged;
   bool _hangupInProgress = false;
   bool _screenShareBusy = false;
+  bool _cameraBusy = false;
 
   /// Override in tests to mock LiveKit connection.
   Future<void> Function(CallToken token, {required bool video})?
@@ -208,27 +209,32 @@ class CallController extends _$CallController {
   }
 
   /// Returns false when enabling the camera failed (e.g. device in use).
+  ///
+  /// Uses [LocalParticipant.setCameraEnabled] symmetrically (mute/unmute) so the
+  /// camera track keeps a stable sid across toggles. Unpublishing + republishing
+  /// instead churned the sid, triggering renegotiation, renderer rebuilds and
+  /// races (web Uncaught Error, Android white frame).
   Future<bool> toggleCamera() async {
+    if (_cameraBusy) return false;
     final participant = _room?.localParticipant;
     if (participant == null) return false;
 
     final pub = participant.getTrackPublicationBySource(TrackSource.camera);
     final cameraOn = pub != null && !pub.muted;
 
+    _cameraBusy = true;
     try {
-      if (cameraOn) {
-        await participant.removePublishedTrack(pub.sid);
-      } else {
-        if (!await CallMediaPermissions.ensureCamera()) {
-          return false;
-        }
-        await participant.setCameraEnabled(true);
+      if (!cameraOn && !await CallMediaPermissions.ensureCamera()) {
+        return false;
       }
+      await participant.setCameraEnabled(!cameraOn);
       _refreshActiveState();
       return true;
     } catch (_) {
       _refreshActiveState();
       return false;
+    } finally {
+      _cameraBusy = false;
     }
   }
 
