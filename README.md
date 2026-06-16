@@ -113,8 +113,9 @@ Phase 5 (screen share + desktop release) — **закрыта** по коду.
 - 6.4 — UFW firewall (`d3d23b5`, #84; manual QA: ufw active + HTTPS 200 после enable)
 - 6.5 — Supabase secrets prod LiveKit (`89cef27`, #86; manual QA: secrets set + prod звонок)
 - 6.6 — Cloudflare Pages web release (`8378c5e`, #88; manual QA: https://vibecall-d85.pages.dev sign-in + prod звонок)
+- 6.7 — Android APK release (`ddab7d4`, #90; manual QA: tag v0.1.0 → Releases APK + sign-in; prod звонок Android — partial/deferred)
 
-Следующий шаг: **Phase 6** Step **6.7** — Android APK release (GitHub Releases on tag).
+Следующий шаг: **Phase 6** Step **6.8** — финальный README + troubleshooting.
 
 ## Лицензия
 

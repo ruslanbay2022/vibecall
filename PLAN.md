@@ -2515,14 +2515,38 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 
 ### Step 6.7 — Android релиз
 
-**Actions**:
-1. GitHub Actions: на push tag `v*` собирать APK и публиковать в GitHub Releases.
-2. Создать keystore локально, положить в GitHub Secrets (`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`, `ANDROID_STORE_PASSWORD`).
-3. Подписать APK в workflow.
+**Actions** (факт #90 + manual):
+1. `[.github/workflows/android_release.yml](.github/workflows/android_release.yml)` — tag `v*` + `workflow_dispatch`: decode keystore from GH Secrets, `build_runner`, `flutter build apk --release` с prod `--dart-define`, `action-gh-release`
+2. `[client/android/app/build.gradle.kts](client/android/app/build.gradle.kts)` — release signing из env (`ANDROID_KEYSTORE_PATH`, passwords); fallback debug локально
+3. `[infra/prod/README.md](infra/prod/README.md)` §11 — runbook: keystore, 6 GH Secrets, `git tag` + push
+4. User manual: keystore → Secrets → `git tag v0.1.0 && git push origin v0.1.0` → APK в GitHub Releases (параллельно desktop zips)
 
-**Acceptance**: `git tag v0.1.0 && git push --tags` → APK появляется в Releases.
+**Acceptance**:
+- [x] `android_release.yml` + Gradle signing в репо — #90 (`ddab7d4`)
+- [x] 6 GH Secrets настроены — manual QA 2026-06 (user)
+- [x] Tag `v0.1.0` → signed APK в Releases — manual QA 2026-06
+- [x] Install APK → sign-in — manual QA 2026-06
+- [ ] Prod звонок Android ↔ desktop — **partial/deferred** (manifest без `RECORD_AUDIO`/`CAMERA`, нет runtime permissions/wakelock; fix отдельный PR)
+- [ ] Play Store / AAB — **out of scope**
 
-**Out**: workflow для тег-релизов.
+**Status**: done — `ddab7d4` (#90 workflow; manual tag release QA 2026-06)
+
+**Out**:
+- `[.github/workflows/android_release.yml](.github/workflows/android_release.yml)`
+- `[client/android/app/build.gradle.kts](client/android/app/build.gradle.kts)` (env signing)
+- `[infra/prod/README.md](infra/prod/README.md)` §11
+- APK в GitHub Releases на tag (вне git: keystore + secrets в GH Settings)
+
+**Pitfalls** (Step 6.7):
+- Secrets только на **job env** — `if: env.SECRET` на step без job-level env пропускает decode keystore
+- Fail-fast: все 6 secrets обязательны в release workflow
+- `PROD_SUPABASE_URL` без `/rest/v1/` — только `https://<ref>.supabase.co`
+- `PROD_SUPABASE_ANON_KEY` = **anon public**, не `service_role`
+- `desktop_release.yml` + `android_release.yml` на один tag — ждать оба workflow; `overwrite_files: false`
+- `workflow_dispatch` без tag → `ref_name` = branch name (не для prod release)
+- Keystore **никогда** в git — только `ANDROID_KEYSTORE_BASE64` secret
+- Локальный `flutter build apk --release` без env → debug signing (ожидаемо)
+- Android prod call media — отдельный баг (permissions); не блокирует закрытие 6.7 release pipeline
 
 ### Step 6.8 — Документация
 
