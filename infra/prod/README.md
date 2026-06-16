@@ -89,7 +89,7 @@ docker run --rm hello-world
 - **Step 6.4** — `ufw.sh` — **done** (§9)
 - **Step 6.5** — Supabase secrets — **done** (§10)
 - **Step 6.6** — Cloudflare Pages — **done** (`infra/pages/README.md`)
-- **Step 6.7** — Android APK release — см. §11
+- **Step 6.7** — Android APK release — **done** (§11)
 
 ---
 
@@ -311,7 +311,7 @@ curl -I https://vibecall.duckdns.org
 
 - **Step 6.5** — Supabase secrets — **done** (§10)
 - **Step 6.6** — Cloudflare Pages — **done** (`infra/pages/README.md`)
-- **Step 6.7** — Android APK release — см. §11
+- **Step 6.7** — Android APK release — **done** (§11)
 
 ---
 
@@ -414,3 +414,5 @@ GitHub → Releases → APK + desktop zips (`desktop_release.yml` запуска
 ### 11.4 Verify
 
 Установить APK на Android → sign-in → prod звонок.
+
+**Manual QA 2026-06:** tag `v0.1.0` → `vibecall-android-v0.1.0.apk` в Releases; install + sign-in OK; prod звонок Android ↔ desktop — **partial/deferred** (mic/camera permissions, wakelock — fix отдельный PR).
