@@ -46,6 +46,12 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Impeller (Vulkan) on Android renders flutter_webrtc external
+             textures as blank/white frames while the decoder keeps feeding the
+             surface. Force the Skia/OpenGL backend so remote+local video shows. -->
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="false" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
