@@ -53,6 +53,7 @@ void main() {
     }
 
     setUp(() {
+      TestWidgetsFlutterBinding.ensureInitialized();
       mockRepo = MockCallRepository();
       when(() => mockRepo.currentUserId).thenReturn('user-a');
     });

@@ -319,6 +319,14 @@
   "@callCameraEnableFailed": {
     "description": "Snackbar when local camera cannot be opened"
   },
+  "callMediaPermissionRequired": "Microphone or camera permission is required for calls",
+  "@callMediaPermissionRequired": {
+    "description": "Error when mic/camera permission was denied before or during a call"
+  },
+  "callMicPermissionRequired": "Microphone permission is required for calls",
+  "@callMicPermissionRequired": {
+    "description": "Error when microphone permission was denied"
+  },
   "callSwitchCamera": "Flip",
   "@callSwitchCamera": {
     "description": "Button to switch between front and back camera"

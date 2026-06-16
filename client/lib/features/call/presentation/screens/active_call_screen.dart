@@ -281,6 +281,10 @@ class _ErrorView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final displayMessage = switch (message) {
+      callMediaPermissionDeniedMessageId => l10n.callMediaPermissionRequired,
+      _ => message,
+    };
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -289,7 +293,7 @@ class _ErrorView extends ConsumerWidget {
           children: [
             const Icon(Icons.error_outline, size: 48, color: Colors.red),
             const SizedBox(height: 16),
-            Text(message, textAlign: TextAlign.center),
+            Text(displayMessage, textAlign: TextAlign.center),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => ref.read(callControllerProvider.notifier).resetToIdle(),

@@ -524,6 +524,18 @@ abstract class AppLocalizations {
   /// **'Camera unavailable — it may be in use by the other participant or another app'**
   String get callCameraEnableFailed;
 
+  /// Error when mic/camera permission was denied before or during a call
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone or camera permission is required for calls'**
+  String get callMediaPermissionRequired;
+
+  /// Error when microphone permission was denied
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone permission is required for calls'**
+  String get callMicPermissionRequired;
+
   /// Button to switch between front and back camera
   ///
   /// In en, this message translates to:

@@ -238,6 +238,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Camera unavailable — it may be in use by the other participant or another app';
 
   @override
+  String get callMediaPermissionRequired =>
+      'Microphone or camera permission is required for calls';
+
+  @override
+  String get callMicPermissionRequired =>
+      'Microphone permission is required for calls';
+
+  @override
   String get callSwitchCamera => 'Flip';
 
   @override

@@ -7,12 +7,14 @@ import 'package:vibecall/features/call/data/call_repository.dart';
 import 'package:vibecall/features/call/data/call_token.dart';
 import 'package:vibecall/features/call/domain/call_invitation.dart';
 import 'package:vibecall/features/call/domain/call_outcome.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb, debugPrint, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart' show BuildContext;
+import 'package:vibecall/features/call/data/call_media_permissions.dart';
 import 'package:vibecall/features/call/presentation/call_screen_share.dart';
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
 import 'package:vibecall/features/call/presentation/widgets/call_media_utils.dart';
 import 'package:vibecall/features/chat/presentation/providers/in_call_open_chat.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 part 'call_controller.g.dart';
 
@@ -85,6 +87,13 @@ class CallController extends _$CallController {
     _peerUserId = receiverId;
     state = const CallStateConnecting();
 
+    if (!await CallMediaPermissions.ensureForCall(video: video)) {
+      state = const CallStateError(
+        message: callMediaPermissionDeniedMessageId,
+      );
+      return;
+    }
+
     try {
       final repo = ref.read(callRepositoryProvider);
       final token = await repo.startCall(receiverId, hasVideo: video);
@@ -112,6 +121,13 @@ class CallController extends _$CallController {
     _hasVideo = inv.hasVideo;
     _peerUserId = inv.callerId;
     state = const CallStateConnecting();
+
+    if (!await CallMediaPermissions.ensureMicrophone()) {
+      state = const CallStateError(
+        message: callMediaPermissionDeniedMessageId,
+      );
+      return;
+    }
 
     try {
       final repo = ref.read(callRepositoryProvider);
@@ -182,7 +198,11 @@ class CallController extends _$CallController {
     final participant = _room?.localParticipant;
     if (participant == null) return;
     try {
-      await participant.setMicrophoneEnabled(!participant.isMicrophoneEnabled());
+      final enabling = !participant.isMicrophoneEnabled();
+      if (enabling && !await CallMediaPermissions.ensureMicrophone()) {
+        return;
+      }
+      await participant.setMicrophoneEnabled(enabling);
       _refreshActiveState();
     } catch (_) {}
   }
@@ -199,6 +219,9 @@ class CallController extends _$CallController {
       if (cameraOn) {
         await participant.removePublishedTrack(pub.sid);
       } else {
+        if (!await CallMediaPermissions.ensureCamera()) {
+          return false;
+        }
         await participant.setCameraEnabled(true);
       }
       _refreshActiveState();
@@ -381,11 +404,19 @@ class CallController extends _$CallController {
     if (participant == null) return;
     try {
       await participant.setMicrophoneEnabled(true);
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[CallController] setMicrophoneEnabled failed: $e');
+      }
+    }
     if (!enableLocalCamera) return;
     try {
       await participant.setCameraEnabled(true);
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[CallController] setCameraEnabled failed: $e');
+      }
+    }
   }
 
   void _subscribeRoomMedia(Room room) {
@@ -463,6 +494,7 @@ class CallController extends _$CallController {
     if (peerUserId == null) return;
 
     _connectedAt = DateTime.now();
+    _setCallWakelock(enabled: true);
     state = CallStateActive(
       room: room,
       peer: remote,
@@ -472,6 +504,7 @@ class CallController extends _$CallController {
   }
 
   void _cleanup() {
+    _setCallWakelock(enabled: false);
     _outgoingSub?.cancel();
     _outgoingSub = null;
     _onParticipantConnected?.call();
@@ -494,5 +527,26 @@ class CallController extends _$CallController {
 
   void _dispose() {
     _cleanup();
+  }
+
+  void _setCallWakelock({required bool enabled}) {
+    if (kIsWeb) return;
+    if (defaultTargetPlatform != TargetPlatform.android &&
+        defaultTargetPlatform != TargetPlatform.iOS) {
+      return;
+    }
+    unawaited(() async {
+      try {
+        if (enabled) {
+          await WakelockPlus.enable();
+        } else {
+          await WakelockPlus.disable();
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[CallController] wakelock ${enabled ? 'enable' : 'disable'} failed: $e');
+        }
+      }
+    }());
   }
 }

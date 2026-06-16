@@ -415,4 +415,6 @@ GitHub → Releases → APK + desktop zips (`desktop_release.yml` запуска
 
 Установить APK на Android → sign-in → prod звонок.
 
-**Manual QA 2026-06:** tag `v0.1.0` → `vibecall-android-v0.1.0.apk` в Releases; install + sign-in OK; prod звонок Android ↔ desktop — **partial/deferred** (mic/camera permissions, wakelock — fix отдельный PR).
+**Manual QA 2026-06:** tag `v0.1.0` → `vibecall-android-v0.1.0.apk` в Releases; install + sign-in OK; prod звонок Android ↔ desktop — **partial/deferred** (mic/camera permissions, wakelock — fix PR #92).
+
+**MIUI / Xiaomi:** если звонок обрывается в фоне — Настройки → Приложения → VibeCall → **Без ограничений** (энергосбережение). После fix #92 wakelock держит экран; агрессивный фон может всё ещё требовать ручной whitelist.
