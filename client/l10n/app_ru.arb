@@ -71,6 +71,8 @@
   "callCameraOff": "Выкл. камеру",
   "callCameraOn": "Вкл. камеру",
   "callCameraEnableFailed": "Камера недоступна — возможно, её использует собеседник или другое приложение",
+  "callMediaPermissionRequired": "Для звонков нужны разрешения на микрофон и камеру",
+  "callMicPermissionRequired": "Для звонков нужно разрешение на микрофон",
   "callSwitchCamera": "Повернуть",
   "callScreenShare": "Демонстрация",
   "callStopScreenShare": "Остановить",

@@ -12,32 +12,35 @@ class CallMediaPermissions {
         defaultTargetPlatform == TargetPlatform.iOS;
   }
 
-  static Future<bool> ensureForCall({required bool video}) async {
+  static Future<bool> ensureMicrophone() async {
     if (!_needsRuntimePermissions) return true;
+    return _request(Permission.microphone, label: 'microphone');
+  }
 
+  static Future<bool> ensureCamera() async {
+    if (!_needsRuntimePermissions) return true;
+    return _request(Permission.camera, label: 'camera');
+  }
+
+  static Future<bool> ensureForCall({required bool video}) async {
+    if (!await ensureMicrophone()) return false;
+    if (video && !await ensureCamera()) return false;
+    return true;
+  }
+
+  static Future<bool> _request(Permission permission, {required String label}) async {
     try {
-      final mic = await Permission.microphone.request();
-      if (!mic.isGranted) {
+      final status = await permission.request();
+      if (!status.isGranted) {
         if (kDebugMode) {
-          debugPrint('[CallMediaPermissions] microphone denied: $mic');
+          debugPrint('[CallMediaPermissions] $label denied: $status');
         }
         return false;
       }
-
-      if (!video) return true;
-
-      final camera = await Permission.camera.request();
-      if (!camera.isGranted) {
-        if (kDebugMode) {
-          debugPrint('[CallMediaPermissions] camera denied: $camera');
-        }
-        return false;
-      }
-
       return true;
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('[CallMediaPermissions] request failed: $e');
+        debugPrint('[CallMediaPermissions] $label request failed: $e');
       }
       if (e is MissingPluginException) return true;
       return false;

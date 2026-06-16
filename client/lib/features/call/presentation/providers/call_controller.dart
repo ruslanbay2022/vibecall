@@ -89,7 +89,7 @@ class CallController extends _$CallController {
 
     if (!await CallMediaPermissions.ensureForCall(video: video)) {
       state = const CallStateError(
-        message: 'Microphone or camera permission is required for calls.',
+        message: callMediaPermissionDeniedMessageId,
       );
       return;
     }
@@ -122,9 +122,9 @@ class CallController extends _$CallController {
     _peerUserId = inv.callerId;
     state = const CallStateConnecting();
 
-    if (!await CallMediaPermissions.ensureForCall(video: inv.hasVideo)) {
+    if (!await CallMediaPermissions.ensureMicrophone()) {
       state = const CallStateError(
-        message: 'Microphone or camera permission is required for calls.',
+        message: callMediaPermissionDeniedMessageId,
       );
       return;
     }
@@ -198,7 +198,11 @@ class CallController extends _$CallController {
     final participant = _room?.localParticipant;
     if (participant == null) return;
     try {
-      await participant.setMicrophoneEnabled(!participant.isMicrophoneEnabled());
+      final enabling = !participant.isMicrophoneEnabled();
+      if (enabling && !await CallMediaPermissions.ensureMicrophone()) {
+        return;
+      }
+      await participant.setMicrophoneEnabled(enabling);
       _refreshActiveState();
     } catch (_) {}
   }
@@ -215,6 +219,9 @@ class CallController extends _$CallController {
       if (cameraOn) {
         await participant.removePublishedTrack(pub.sid);
       } else {
+        if (!await CallMediaPermissions.ensureCamera()) {
+          return false;
+        }
         await participant.setCameraEnabled(true);
       }
       _refreshActiveState();

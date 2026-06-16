@@ -239,6 +239,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Камера недоступна — возможно, её использует собеседник или другое приложение';
 
   @override
+  String get callMediaPermissionRequired =>
+      'Для звонков нужны разрешения на микрофон и камеру';
+
+  @override
+  String get callMicPermissionRequired =>
+      'Для звонков нужно разрешение на микрофон';
+
+  @override
   String get callSwitchCamera => 'Повернуть';
 
   @override
