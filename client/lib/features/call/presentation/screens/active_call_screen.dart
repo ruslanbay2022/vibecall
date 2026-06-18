@@ -9,6 +9,7 @@ import 'package:vibecall/features/call/presentation/providers/call_state.dart';
 import 'package:vibecall/features/call/presentation/providers/in_call_conversation_id.dart';
 import 'package:vibecall/features/call/presentation/widgets/call_hud.dart';
 import 'package:vibecall/features/call/presentation/widgets/call_media_utils.dart';
+import 'package:vibecall/features/call/presentation/widgets/call_peer_name_text.dart';
 import 'package:vibecall/features/call/presentation/widgets/in_call_chat_sheet.dart';
 import 'package:vibecall/features/chat/presentation/providers/in_call_open_chat.dart';
 import 'package:vibecall/features/chat/presentation/providers/unread_counts_controller.dart';
@@ -75,7 +76,10 @@ class _OutgoingView extends ConsumerWidget {
             child: Icon(Icons.person, size: 48),
           ),
           const SizedBox(height: 16),
-          Text(l10n.callOutgoing(receiverId)),
+          CallPeerNameText(
+            userId: receiverId,
+            labelBuilder: l10n.callOutgoing,
+          ),
           const SizedBox(height: 32),
           ElevatedButton.icon(
             onPressed: () => ref.read(callControllerProvider.notifier).cancel(),

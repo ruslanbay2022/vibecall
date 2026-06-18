@@ -6,17 +6,16 @@ import 'package:vibecall/features/call/domain/call_history_entry.dart';
 import 'package:vibecall/features/call/presentation/providers/call_controller.dart';
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
 import 'package:vibecall/features/call/presentation/providers/outgoing_ringtone.dart';
+import 'package:vibecall/features/call/presentation/widgets/call_peer_display.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
 /// Display label for call confirmation (prefers @username).
 String callPeerDisplayName(CallHistoryEntry entry) {
-  final username = entry.peer.username;
-  if (username != null && username.isNotEmpty) {
-    return '@$username';
-  }
-  final name = entry.displayName;
-  if (name.isNotEmpty) return name;
-  return entry.peer.id;
+  return formatCallPeerLabel(
+    userId: entry.peer.id,
+    username: entry.peer.username,
+    displayName: entry.displayName.isNotEmpty ? entry.displayName : null,
+  );
 }
 
 bool canStartCallFromHistory(CallState callState) {
