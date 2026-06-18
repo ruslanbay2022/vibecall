@@ -26,16 +26,22 @@ class CallPeerNameText extends ConsumerWidget {
         labelBuilder(name),
         style: style,
         textAlign: textAlign,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
       ),
       loading: () => Text(
         labelBuilder('…'),
         style: style,
         textAlign: textAlign,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
       ),
       error: (error, _) => Text(
         labelBuilder(userId),
         style: style,
         textAlign: textAlign,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }

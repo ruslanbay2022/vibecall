@@ -65,24 +65,34 @@ class IncomingCallOverlay extends ConsumerWidget {
                       ),
                       const SizedBox(height: 24),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          ElevatedButton.icon(
-                            onPressed: () => _reject(context, ref, inv),
-                            icon: const Icon(Icons.call_end),
-                            label: Text(l10n.rejectCall),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                              foregroundColor: Colors.white,
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => _reject(context, ref, inv),
+                              icon: const Icon(Icons.call_end),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(l10n.rejectCall),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                              ),
                             ),
                           ),
-                          ElevatedButton.icon(
-                            onPressed: () => _accept(context, ref, inv),
-                            icon: const Icon(Icons.call),
-                            label: Text(l10n.acceptCall),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => _accept(context, ref, inv),
+                              icon: const Icon(Icons.call),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(l10n.acceptCall),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                              ),
                             ),
                           ),
                         ],
