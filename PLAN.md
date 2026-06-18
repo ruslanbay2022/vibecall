@@ -2519,17 +2519,18 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 1. `[.github/workflows/android_release.yml](.github/workflows/android_release.yml)` — tag `v*` + `workflow_dispatch`: decode keystore from GH Secrets, `build_runner`, `flutter build apk --release` с prod `--dart-define`, `action-gh-release`
 2. `[client/android/app/build.gradle.kts](client/android/app/build.gradle.kts)` — release signing из env (`ANDROID_KEYSTORE_PATH`, passwords); fallback debug локально
 3. `[infra/prod/README.md](infra/prod/README.md)` §11 — runbook: keystore, 6 GH Secrets, `git tag` + push
-4. User manual: keystore → Secrets → `git tag v0.1.0 && git push origin v0.1.0` → APK в GitHub Releases (параллельно desktop zips)
+4. User manual: keystore → Secrets → `git tag v0.1.3 && git push origin v0.1.3` → APK в GitHub Releases (параллельно desktop zips)
 
 **Acceptance**:
 - [x] `android_release.yml` + Gradle signing в репо — #90 (`ddab7d4`)
 - [x] 6 GH Secrets настроены — manual QA 2026-06 (user)
 - [x] Tag `v0.1.0` → signed APK в Releases — manual QA 2026-06
+- [x] Tag `v0.1.3` → signed APK в Releases — #97
 - [x] Install APK → sign-in — manual QA 2026-06
-- [ ] Prod звонок Android ↔ desktop — **partial/deferred** (manifest без `RECORD_AUDIO`/`CAMERA`, нет runtime permissions/wakelock; fix отдельный PR)
+- [x] Prod звонок Android ↔ desktop — fixed #92 (`f084922`), camera #93 (`c29936b`), ringback/disconnect #96 (`a575134`); manual QA v0.1.3
 - [ ] Play Store / AAB — **out of scope**
 
-**Status**: done — `ddab7d4` (#90 workflow; manual tag release QA 2026-06)
+**Status**: done — `ddab7d4` (#90 workflow; releases `v0.1.0`–`v0.1.3`; call media fixes #92–#96)
 
 **Out**:
 - `[.github/workflows/android_release.yml](.github/workflows/android_release.yml)`
@@ -2546,19 +2547,37 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 - `workflow_dispatch` без tag → `ref_name` = branch name (не для prod release)
 - Keystore **никогда** в git — только `ANDROID_KEYSTORE_BASE64` secret
 - Локальный `flutter build apk --release` без env → debug signing (ожидаемо)
-- Android prod call media — отдельный баг (permissions); не блокирует закрытие 6.7 release pipeline
+- Android prod call media — **fixed** #92–#96 (permissions, wakelock, camera, ringback, disconnect); не блокирует 6.7 pipeline
 
 ### Step 6.8 — Документация
 
-**Actions**:
-1. Дописать `[README.md](README.md)`: как клонировать, запустить локально, запустить prod-инсталляцию, ссылки на DuckDNS, Cloudflare Pages, Supabase Dashboard.
-2. Раздел Troubleshooting: типичные ошибки (порты, TURN, NAT).
+**Actions** (факт #98):
+1. `[README.md](README.md)` — финальный rewrite: quick start, prod URLs, troubleshooting, releases, статус
+2. Troubleshooting table: Auth URLs, Android media (#92), camera (#93), ringback/disconnect (#96), VPN latency
+3. Prod stack documented: CF Pages, LiveKit DuckDNS, Releases v0.1.3
 
-**Acceptance**: новый разработчик может пройти README от 0 до запущенного приложения за <1 час.
+**Acceptance**:
+- [x] README quick start + troubleshooting — новый dev < 1h
+- [x] Prod URLs без secrets (web, LiveKit, Supabase ref, Android)
+- [x] Troubleshooting: Auth, Android media/camera, ringback, VPN
+- [x] Phase 6 DoD закрыт
 
-**Out**: финальный README.
+**Status**: done — docs PR #98 (base `4bf26a6`)
 
-**Phase 6 DoD**: production-инсталляция работает, веб-версия открыта по публичному URL, Android APK скачивается из Releases. Бюджет: **основной стек $0** (Supabase/CF/DuckDNS/GitHub); **VPS FirstVDS ~500–900 ₽/мес** — единственная платная часть MVP.
+**Out**: финальный README.md
+
+**Phase 6 DoD** — ✅ **закрыта**:
+- [x] Prod VDS + LiveKit + DuckDNS + UFW (#76–#84)
+- [x] Supabase prod secrets (#86)
+- [x] CF Pages web (#88)
+- [x] Android APK Releases v0.1.3 (#90, #97)
+- [x] Final README (#98)
+- [x] Бюджет: $0 стек + VPS FirstVDS ~500–900 ₽/мес
+
+**Pitfalls** (Step 6.8):
+- README не дублирует runbooks — ссылки на `infra/prod/`, `infra/pages/`
+- Troubleshooting — из manual QA (#92–#96 fixes)
+- Deferred: screen share prod web, Play Store, iOS
 
 ---
 

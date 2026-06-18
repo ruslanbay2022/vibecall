@@ -405,16 +405,18 @@ Repo Settings → Secrets and variables → Actions:
 ### 11.3 Release
 
 ```powershell
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.3
+git push origin v0.1.3
 ```
 
 GitHub → Releases → APK + desktop zips (`desktop_release.yml` запускается параллельно на тот же tag). Если в release только один тип артефакта — подождать второй workflow или Re-run failed jobs.
 
 ### 11.4 Verify
 
-Установить APK на Android → sign-in → prod звонок.
+Установить APK на Android → sign-in → prod звонок (audio/video, ringback, permissions).
 
-**Manual QA 2026-06:** tag `v0.1.0` → `vibecall-android-v0.1.0.apk` в Releases; install + sign-in OK; prod звонок Android ↔ desktop — **partial/deferred** (mic/camera permissions, wakelock — fix PR #92).
+**Manual QA 2026-06:** `v0.1.0` — install + sign-in OK. **v0.1.3** — prod звонок Android ↔ desktop OK; media/wakelock #92, camera #93, ringback/disconnect #96.
 
-**MIUI / Xiaomi:** если звонок обрывается в фоне — Настройки → Приложения → VibeCall → **Без ограничений** (энергосбережение). После fix #92 wakelock держит экран; агрессивный фон может всё ещё требовать ручной whitelist.
+**MIUI / Xiaomi:** если звонок обрывается в фоне — Настройки → Приложения → VibeCall → **Без ограничений** (энергосбережение). Wakelock (#92) держит экран; агрессивный фон может всё ещё требовать ручной whitelist.
+
+> Troubleshooting (Auth, ringback, camera, VPN) — см. [README.md §Troubleshooting](../../README.md#troubleshooting).
