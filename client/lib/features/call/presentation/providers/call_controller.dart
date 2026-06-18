@@ -33,6 +33,10 @@ class CallController extends _$CallController {
   bool _hangupInProgress = false;
   bool _screenShareBusy = false;
   bool _cameraBusy = false;
+  /// Outgoing caller: keep ringback until callee answers (WebRTC mic steals
+  /// Android audio focus and stops audioplayers loop).
+  bool _deferLocalMediaUntilActive = false;
+  bool _enableLocalCameraOnActive = false;
 
   /// Override in tests to mock LiveKit connection.
   Future<void> Function(CallToken token, {required bool video})?
@@ -104,6 +108,8 @@ class CallController extends _$CallController {
         roomName: token.roomName,
         receiverId: receiverId,
       );
+      _deferLocalMediaUntilActive = true;
+      _enableLocalCameraOnActive = video;
       await _connectRoom(
         token,
         video: video,
@@ -386,7 +392,7 @@ class CallController extends _$CallController {
 
     _onParticipantConnected =
         room.events.on<ParticipantConnectedEvent>((event) {
-      _promoteToActive(room, peer: event.participant);
+      unawaited(_promoteToActive(room, peer: event.participant));
     });
 
     _onParticipantDisconnected =
@@ -416,14 +422,16 @@ class CallController extends _$CallController {
         ),
       ),
     );
-    await _enableLocalTracks(
-      room.localParticipant,
-      enableLocalCamera: enableLocalCamera,
-    );
+    if (!_deferLocalMediaUntilActive) {
+      await _enableLocalTracks(
+        room.localParticipant,
+        enableLocalCamera: enableLocalCamera,
+      );
+    }
 
     // Callee accept: caller may already be in the room — ParticipantConnected
     // does not re-fire for existing remotes; check after connect.
-    _promoteToActive(room);
+    await _promoteToActive(room);
   }
 
   /// Enables mic/camera without failing the call when hardware is busy or denied.
@@ -511,7 +519,7 @@ class CallController extends _$CallController {
     );
   }
 
-  void _promoteToActive(Room room, {RemoteParticipant? peer}) {
+  Future<void> _promoteToActive(Room room, {RemoteParticipant? peer}) async {
     if (state is CallStateActive) return;
     if (state is! CallStateConnecting && state is! CallStateOutgoing) {
       return;
@@ -525,6 +533,15 @@ class CallController extends _$CallController {
 
     _connectedAt = DateTime.now();
     _setCallWakelock(enabled: true);
+
+    if (_deferLocalMediaUntilActive) {
+      await _enableLocalTracks(
+        room.localParticipant,
+        enableLocalCamera: _enableLocalCameraOnActive,
+      );
+      _deferLocalMediaUntilActive = false;
+    }
+
     state = CallStateActive(
       room: room,
       peer: remote,
@@ -550,6 +567,8 @@ class CallController extends _$CallController {
     _currentInvitationId = null;
     _connectedAt = null;
     _peerUserId = null;
+    _deferLocalMediaUntilActive = false;
+    _enableLocalCameraOnActive = false;
     if (ref.mounted) {
       ref.read(inCallOpenChatProvider.notifier).set(null);
     }
