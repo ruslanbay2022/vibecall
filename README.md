@@ -29,7 +29,7 @@ Copy-Item .env.example .env
 # Заполнить SUPABASE_URL, SUPABASE_ANON_KEY, ENV=dev
 
 # 3. Codegen (riverpod + freezed)
-dart run build_runner build --delete-conflicting-outputs
+dart run build_runner build
 
 # 4. Запустить
 flutter run -d chrome --dart-define-from-file=.env
@@ -45,6 +45,11 @@ flutter run --dart-define-from-file=.env
 ### Dev LiveKit (опционально)
 
 Локальный LiveKit + Cloudflare Tunnel — см. [infra/dev/README.md](infra/dev/README.md).
+
+### Дополнительные тулчейны
+
+- **Supabase CLI** — `supabase start` / migrations; без scoop/winget можно положить бинарь в `.tools/` (gitignored) — см. [PLAN.md](PLAN.md) Phase 0
+- **Docker Desktop** — для `supabase start` и dev LiveKit
 
 ---
 
@@ -67,7 +72,8 @@ flutter run --dart-define-from-file=.env
 |----------|---------|
 | `SUPABASE_URL is empty` | `--dart-define-from-file=.env` или APK из Releases |
 | Web sign-in fail | Supabase Auth: Site URL + Redirect URLs = Pages URL (без trailing slash) |
-| WSS / звонок timeout | Prod Edge secrets `LIVEKIT_*`; HTTPS на VDS; VPN добавляет latency |
+| WSS / звонок timeout | Prod Edge secrets `LIVEKIT_*`; HTTPS на VDS; UFW 443/7881; VPN добавляет latency |
+| ICE / NAT (no media) | UFW на VDS (§6.4); HTTPS/WSS только; при жёстком NAT — TURN (не настроен в MVP) |
 | Обрыв связи при звонке | #96 — graceful end; не должно быть raw Error / бесконечного «Подключение…» |
 | Нет ringback у звонящего | #95/#96 — ringback до ответа; на Android mic откладывается до answer |
 | Белый кадр видео (Android) | #93 — Impeller отключён в `AndroidManifest.xml` |
