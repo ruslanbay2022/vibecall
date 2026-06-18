@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vibecall/features/call/domain/call_history_entry.dart';
 import 'package:vibecall/features/call/presentation/providers/call_controller.dart';
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
+import 'package:vibecall/features/call/presentation/providers/outgoing_ringtone.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
 /// Display label for call confirmation (prefers @username).
@@ -49,6 +52,9 @@ Future<void> showCallPeerLaunchDialog({
             tooltip: l10n.callAudioButton,
             onPressed: () {
               Navigator.pop(dialogContext);
+              unawaited(ref
+                  .read(outgoingRingtoneProvider.notifier)
+                  .unlockForNextRing());
               ref.read(callControllerProvider.notifier).startCall(
                     receiverId: receiverId,
                     video: false,
@@ -60,6 +66,9 @@ Future<void> showCallPeerLaunchDialog({
             tooltip: l10n.callVideoButton,
             onPressed: () {
               Navigator.pop(dialogContext);
+              unawaited(ref
+                  .read(outgoingRingtoneProvider.notifier)
+                  .unlockForNextRing());
               ref.read(callControllerProvider.notifier).startCall(
                     receiverId: receiverId,
                     video: true,

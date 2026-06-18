@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vibecall/features/call/presentation/providers/call_controller.dart';
+import 'package:vibecall/features/call/presentation/providers/outgoing_ringtone.dart';
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
 import 'package:vibecall/features/chat/data/chat_repository.dart';
 import 'package:vibecall/features/chat/presentation/providers/total_unread_chat_count.dart';
@@ -228,17 +231,33 @@ class _ContactList extends ConsumerWidget {
                         IconButton(
                           icon: const Icon(Icons.phone),
                           onPressed: canCall
-                              ? () => ref
-                                  .read(callControllerProvider.notifier)
-                                  .startCall(receiverId: otherUserId, video: false)
+                              ? () {
+                                  unawaited(ref
+                                      .read(outgoingRingtoneProvider.notifier)
+                                      .unlockForNextRing());
+                                  ref
+                                      .read(callControllerProvider.notifier)
+                                      .startCall(
+                                        receiverId: otherUserId,
+                                        video: false,
+                                      );
+                                }
                               : null,
                         ),
                         IconButton(
                           icon: const Icon(Icons.videocam),
                           onPressed: canCall
-                              ? () => ref
-                                  .read(callControllerProvider.notifier)
-                                  .startCall(receiverId: otherUserId, video: true)
+                              ? () {
+                                  unawaited(ref
+                                      .read(outgoingRingtoneProvider.notifier)
+                                      .unlockForNextRing());
+                                  ref
+                                      .read(callControllerProvider.notifier)
+                                      .startCall(
+                                        receiverId: otherUserId,
+                                        video: true,
+                                      );
+                                }
                               : null,
                         ),
                       ],
