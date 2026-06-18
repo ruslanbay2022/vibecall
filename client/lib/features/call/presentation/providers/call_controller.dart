@@ -244,12 +244,6 @@ class CallController extends _$CallController {
     }
   }
 
-  Future<void> switchCamera() async {
-    final track = _room?.localParticipant?.videoTrackPublications.firstOrNull?.track;
-    if (track == null) return;
-    await track.switchCamera('');
-  }
-
   /// Returns false when enabling screen share failed (picker denied, service error).
   /// Pass [context] on desktop for [ScreenSelectDialog] (all monitors/windows).
   Future<bool> toggleScreenShare({BuildContext? context}) async {

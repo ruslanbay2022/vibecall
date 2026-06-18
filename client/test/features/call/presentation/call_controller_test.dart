@@ -251,15 +251,6 @@ void main() {
       expect(controller.state, isA<CallStateIdle>());
     });
 
-    test('switchCamera does not throw when room is null', () async {
-      final controller = createController();
-
-      await controller.switchCamera();
-
-      // no-op, should not throw
-      expect(controller.state, isA<CallStateIdle>());
-    });
-
     test('CallStateEnded has durationSec default 0', () {
       const state = CallStateEnded(outcome: CallOutcome.busy);
       expect(state.durationSec, 0);

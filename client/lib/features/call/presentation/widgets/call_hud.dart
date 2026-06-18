@@ -87,13 +87,6 @@ class CallHud extends ConsumerWidget {
                     }
                   },
                 ),
-              if (active.hasVideo)
-                _IconLabel(
-                  icon: Icons.flip_camera_ios,
-                  label: l10n.callSwitchCamera,
-                  enabled: isCameraOn,
-                  onPressed: () => notifier.switchCamera(),
-                ),
               _IconLabel(
                 icon: chatOpen ? Icons.chat : Icons.chat_bubble_outline,
                 label: l10n.callOpenChat,
