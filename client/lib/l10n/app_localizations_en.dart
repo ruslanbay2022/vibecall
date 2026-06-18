@@ -242,6 +242,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Microphone or camera permission is required for calls';
 
   @override
+  String get callConnectionLost => 'Connection lost';
+
+  @override
   String get callMicPermissionRequired =>
       'Microphone permission is required for calls';
 

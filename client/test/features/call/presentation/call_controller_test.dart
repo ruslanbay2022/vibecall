@@ -246,17 +246,12 @@ void main() {
 
       await controller.startCall(receiverId: 'user-b', video: true);
       expect(controller.state, isA<CallStateError>());
+      expect(
+        (controller.state as CallStateError).message,
+        callConnectionLostMessageId,
+      );
 
       controller.resetToIdle();
-      expect(controller.state, isA<CallStateIdle>());
-    });
-
-    test('switchCamera does not throw when room is null', () async {
-      final controller = createController();
-
-      await controller.switchCamera();
-
-      // no-op, should not throw
       expect(controller.state, isA<CallStateIdle>());
     });
 

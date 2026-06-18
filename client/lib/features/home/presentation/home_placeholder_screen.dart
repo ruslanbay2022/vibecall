@@ -7,6 +7,7 @@ import 'package:vibecall/app/env.dart';
 import 'package:vibecall/features/auth/data/auth_repository.dart';
 import 'package:vibecall/features/chat/presentation/providers/total_unread_chat_count.dart';
 import 'package:vibecall/features/chat/presentation/widgets/chat_unread_badge.dart';
+import 'package:vibecall/features/contacts/presentation/providers/contact_tab_badges_controller.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
 class HomePlaceholderScreen extends ConsumerStatefulWidget {
@@ -48,6 +49,8 @@ class _HomePlaceholderScreenState extends ConsumerState<HomePlaceholderScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final unreadTotal = ref.watch(totalUnreadChatCountProvider);
+    final contactBadgeTotal =
+        ref.watch(contactTabBadgesControllerProvider).totalUnseen;
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.appTitle),
@@ -91,9 +94,12 @@ class _HomePlaceholderScreenState extends ConsumerState<HomePlaceholderScreen> {
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
-            TextButton(
-              onPressed: () => context.push('/contacts'),
-              child: Text(l10n.contactsTitle),
+            ChatUnreadBadge(
+              count: contactBadgeTotal,
+              child: TextButton(
+                onPressed: () => context.push('/contacts'),
+                child: Text(l10n.contactsTitle),
+              ),
             ),
             const SizedBox(height: 4),
             TextButton(

@@ -8,6 +8,7 @@ import 'package:vibecall/features/call/presentation/providers/call_controller.da
 import 'package:vibecall/features/call/presentation/providers/call_state.dart';
 import 'package:vibecall/features/call/presentation/providers/incoming_call_listener.dart';
 import 'package:vibecall/features/call/presentation/providers/incoming_ringtone.dart';
+import 'package:vibecall/features/call/presentation/widgets/call_peer_name_text.dart';
 import 'package:vibecall/l10n/app_localizations.dart';
 
 class IncomingCallOverlay extends ConsumerWidget {
@@ -56,31 +57,42 @@ class IncomingCallOverlay extends ConsumerWidget {
                         style: Theme.of(context).textTheme.labelMedium,
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        l10n.incomingCallFrom(inv.callerId),
+                      CallPeerNameText(
+                        userId: inv.callerId,
+                        labelBuilder: l10n.incomingCallFrom,
                         style: Theme.of(context).textTheme.bodyLarge,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          ElevatedButton.icon(
-                            onPressed: () => _reject(context, ref, inv),
-                            icon: const Icon(Icons.call_end),
-                            label: Text(l10n.rejectCall),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                              foregroundColor: Colors.white,
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => _reject(context, ref, inv),
+                              icon: const Icon(Icons.call_end),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(l10n.rejectCall),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                              ),
                             ),
                           ),
-                          ElevatedButton.icon(
-                            onPressed: () => _accept(context, ref, inv),
-                            icon: const Icon(Icons.call),
-                            label: Text(l10n.acceptCall),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => _accept(context, ref, inv),
+                              icon: const Icon(Icons.call),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(l10n.acceptCall),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                              ),
                             ),
                           ),
                         ],

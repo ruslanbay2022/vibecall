@@ -64,72 +64,68 @@ class CallHud extends ConsumerWidget {
       ),
       child: SafeArea(
         top: false,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _IconLabel(
-              icon: isMuted ? Icons.mic_off : Icons.mic,
-              label: isMuted ? l10n.callUnmute : l10n.callMute,
-              onPressed: () => notifier.toggleMute(),
-            ),
-            if (active.hasVideo)
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
               _IconLabel(
-                icon: isCameraOn ? Icons.videocam : Icons.videocam_off,
-                label: isCameraOn ? l10n.callCameraOff : l10n.callCameraOn,
+                icon: isMuted ? Icons.mic_off : Icons.mic,
+                label: isMuted ? l10n.callUnmute : l10n.callMute,
+                onPressed: () => notifier.toggleMute(),
+              ),
+              if (active.hasVideo)
+                _IconLabel(
+                  icon: isCameraOn ? Icons.videocam : Icons.videocam_off,
+                  label: isCameraOn ? l10n.callCameraOff : l10n.callCameraOn,
+                  onPressed: () async {
+                    final ok = await notifier.toggleCamera();
+                    if (!ok && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.callCameraEnableFailed)),
+                      );
+                    }
+                  },
+                ),
+              _IconLabel(
+                icon: chatOpen ? Icons.chat : Icons.chat_bubble_outline,
+                label: l10n.callOpenChat,
+                onPressed: () {
+                  unawaited(
+                    ref
+                        .read(chatMessageSoundProvider.notifier)
+                        .unlockForNextSound(),
+                  );
+                  (onToggleChat ?? () {})();
+                },
+                enabled: onToggleChat != null,
+                badgeCount: chatUnreadCount,
+              ),
+              _IconLabel(
+                icon: Icons.call_end,
+                label: l10n.callEndButton,
+                color: Colors.red,
+                iconSize: 36,
+                onPressed: () => notifier.hangup(),
+              ),
+              _IconLabel(
+                icon: isScreenSharing
+                    ? Icons.stop_screen_share
+                    : Icons.screen_share,
+                label: isScreenSharing
+                    ? l10n.callStopScreenShare
+                    : l10n.callScreenShare,
                 onPressed: () async {
-                  final ok = await notifier.toggleCamera();
+                  final ok = await notifier.toggleScreenShare(context: context);
                   if (!ok && context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.callCameraEnableFailed)),
+                      SnackBar(content: Text(l10n.callScreenShareEnableFailed)),
                     );
                   }
                 },
               ),
-            if (active.hasVideo)
-              _IconLabel(
-                icon: Icons.flip_camera_ios,
-                label: l10n.callSwitchCamera,
-                enabled: isCameraOn,
-                onPressed: () => notifier.switchCamera(),
-              ),
-            _IconLabel(
-              icon: chatOpen ? Icons.chat : Icons.chat_bubble_outline,
-              label: l10n.callOpenChat,
-              onPressed: () {
-                unawaited(
-                  ref
-                      .read(chatMessageSoundProvider.notifier)
-                      .unlockForNextSound(),
-                );
-                (onToggleChat ?? () {})();
-              },
-              enabled: onToggleChat != null,
-              badgeCount: chatUnreadCount,
-            ),
-            _IconLabel(
-              icon: Icons.call_end,
-              label: l10n.callEndButton,
-              color: Colors.red,
-              iconSize: 36,
-              onPressed: () => notifier.hangup(),
-            ),
-            _IconLabel(
-              icon: isScreenSharing
-                  ? Icons.stop_screen_share
-                  : Icons.screen_share,
-              label: isScreenSharing
-                  ? l10n.callStopScreenShare
-                  : l10n.callScreenShare,
-              onPressed: () async {
-                final ok = await notifier.toggleScreenShare(context: context);
-                if (!ok && context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.callScreenShareEnableFailed)),
-                  );
-                }
-              },
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       ),
@@ -167,12 +163,21 @@ class _IconLabel extends StatelessWidget {
       iconButton = ChatUnreadBadge(count: badgeCount, child: iconButton);
     }
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        iconButton,
-        Text(label, style: const TextStyle(color: Colors.white, fontSize: 10)),
-      ],
+    return SizedBox(
+      width: 64,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          iconButton,
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white, fontSize: 10),
+            maxLines: 2,
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 }

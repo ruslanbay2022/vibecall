@@ -53,6 +53,9 @@ class CallStateEnded extends CallState {
 /// [CallStateError.message] sentinel — map to [AppLocalizations.callMediaPermissionRequired] in UI.
 const callMediaPermissionDeniedMessageId = 'call_media_permission_denied';
 
+/// [CallStateError.message] sentinel — map to [AppLocalizations.callConnectionLost] in UI.
+const callConnectionLostMessageId = 'call_connection_lost';
+
 class CallStateError extends CallState {
   final String message;
 

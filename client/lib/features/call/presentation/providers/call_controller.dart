@@ -33,6 +33,10 @@ class CallController extends _$CallController {
   bool _hangupInProgress = false;
   bool _screenShareBusy = false;
   bool _cameraBusy = false;
+  /// Outgoing caller: keep ringback until callee answers (WebRTC mic steals
+  /// Android audio focus and stops audioplayers loop).
+  bool _deferLocalMediaUntilActive = false;
+  bool _enableLocalCameraOnActive = false;
 
   /// Override in tests to mock LiveKit connection.
   Future<void> Function(CallToken token, {required bool video})?
@@ -79,6 +83,27 @@ class CallController extends _$CallController {
     state = CallStateEnded(outcome: outcome, durationSec: durationSec);
   }
 
+  void _endAfterRoomDisconnect() {
+    final durationSec = _computeDuration();
+    final outcome = switch (state) {
+      CallStateActive() => CallOutcome.accepted,
+      CallStateOutgoing() => CallOutcome.cancelled,
+      CallStateConnecting() => CallOutcome.missed,
+      _ => CallOutcome.missed,
+    };
+    _cleanup();
+    state = CallStateEnded(outcome: outcome, durationSec: durationSec);
+  }
+
+  void _handleSetupFailure({required bool isCallee}) {
+    if (state is CallStateOutgoing || _currentInvitationId != null) {
+      _setEnded(isCallee ? CallOutcome.missed : CallOutcome.cancelled);
+      return;
+    }
+    _cleanup();
+    state = const CallStateError(message: callConnectionLostMessageId);
+  }
+
   Future<void> startCall({
     required String receiverId,
     required bool video,
@@ -104,6 +129,8 @@ class CallController extends _$CallController {
         roomName: token.roomName,
         receiverId: receiverId,
       );
+      _deferLocalMediaUntilActive = true;
+      _enableLocalCameraOnActive = video;
       await _connectRoom(
         token,
         video: video,
@@ -111,9 +138,11 @@ class CallController extends _$CallController {
       );
     } on CallBusyException {
       _setEnded(CallOutcome.busy);
-    } catch (e) {
-      _cleanup();
-      state = CallStateError(message: e.toString());
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[CallController] startCall failed: $e\n$st');
+      }
+      _handleSetupFailure(isCallee: false);
     }
   }
 
@@ -139,9 +168,14 @@ class CallController extends _$CallController {
         video: inv.hasVideo,
         enableLocalCamera: false,
       );
-    } catch (e) {
-      _cleanup();
-      state = CallStateError(message: e.toString());
+      if (state is CallStateConnecting) {
+        _setEnded(CallOutcome.missed);
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[CallController] accept failed: $e\n$st');
+      }
+      _handleSetupFailure(isCallee: true);
     }
   }
 
@@ -236,12 +270,6 @@ class CallController extends _$CallController {
     } finally {
       _cameraBusy = false;
     }
-  }
-
-  Future<void> switchCamera() async {
-    final track = _room?.localParticipant?.videoTrackPublications.firstOrNull?.track;
-    if (track == null) return;
-    await track.switchCamera('');
   }
 
   /// Returns false when enabling screen share failed (picker denied, service error).
@@ -386,18 +414,24 @@ class CallController extends _$CallController {
 
     _onParticipantConnected =
         room.events.on<ParticipantConnectedEvent>((event) {
-      _promoteToActive(room, peer: event.participant);
+      unawaited(_promoteToActive(room, peer: event.participant));
     });
 
     _onParticipantDisconnected =
         room.events.on<ParticipantDisconnectedEvent>((event) {
-      hangup();
+      final current = state;
+      if (current is CallStateActive) {
+        unawaited(hangup());
+      } else if (current is CallStateConnecting) {
+        _setEnded(CallOutcome.missed);
+      } else if (current is CallStateOutgoing) {
+        _setEnded(CallOutcome.cancelled);
+      }
     });
 
     _onRoomDisconnected = room.events.on<RoomDisconnectedEvent>((event) {
-      final durationSec = _computeDuration();
-      _cleanup();
-      state = CallStateEnded(outcome: CallOutcome.accepted, durationSec: durationSec);
+      if (_hangupInProgress) return;
+      _endAfterRoomDisconnect();
     });
 
     _subscribeRoomMedia(room);
@@ -416,14 +450,16 @@ class CallController extends _$CallController {
         ),
       ),
     );
-    await _enableLocalTracks(
-      room.localParticipant,
-      enableLocalCamera: enableLocalCamera,
-    );
+    if (!_deferLocalMediaUntilActive) {
+      await _enableLocalTracks(
+        room.localParticipant,
+        enableLocalCamera: enableLocalCamera,
+      );
+    }
 
     // Callee accept: caller may already be in the room — ParticipantConnected
     // does not re-fire for existing remotes; check after connect.
-    _promoteToActive(room);
+    await _promoteToActive(room);
   }
 
   /// Enables mic/camera without failing the call when hardware is busy or denied.
@@ -511,7 +547,7 @@ class CallController extends _$CallController {
     );
   }
 
-  void _promoteToActive(Room room, {RemoteParticipant? peer}) {
+  Future<void> _promoteToActive(Room room, {RemoteParticipant? peer}) async {
     if (state is CallStateActive) return;
     if (state is! CallStateConnecting && state is! CallStateOutgoing) {
       return;
@@ -525,6 +561,15 @@ class CallController extends _$CallController {
 
     _connectedAt = DateTime.now();
     _setCallWakelock(enabled: true);
+
+    if (_deferLocalMediaUntilActive) {
+      await _enableLocalTracks(
+        room.localParticipant,
+        enableLocalCamera: _enableLocalCameraOnActive,
+      );
+      _deferLocalMediaUntilActive = false;
+    }
+
     state = CallStateActive(
       room: room,
       peer: remote,
@@ -550,6 +595,8 @@ class CallController extends _$CallController {
     _currentInvitationId = null;
     _connectedAt = null;
     _peerUserId = null;
+    _deferLocalMediaUntilActive = false;
+    _enableLocalCameraOnActive = false;
     if (ref.mounted) {
       ref.read(inCallOpenChatProvider.notifier).set(null);
     }
