@@ -2550,15 +2550,33 @@ LIVEKIT_WS_URL=wss://<tunnel-or-prod-domain>
 
 ### Step 6.8 — Документация
 
-**Actions**:
-1. Дописать `[README.md](README.md)`: как клонировать, запустить локально, запустить prod-инсталляцию, ссылки на DuckDNS, Cloudflare Pages, Supabase Dashboard.
-2. Раздел Troubleshooting: типичные ошибки (порты, TURN, NAT).
+**Actions** (факт #98):
+1. `[README.md](README.md)` — финальный rewrite: quick start, prod URLs, troubleshooting, releases, статус
+2. Troubleshooting table: Auth URLs, Android media (#92), camera (#93), ringback/disconnect (#96), VPN latency
+3. Prod stack documented: CF Pages, LiveKit DuckDNS, Releases v0.1.3
 
-**Acceptance**: новый разработчик может пройти README от 0 до запущенного приложения за <1 час.
+**Acceptance**:
+- [x] README quick start + troubleshooting — новый dev < 1h
+- [x] Prod URLs без secrets (web, LiveKit, Supabase ref, Android)
+- [x] Troubleshooting: Auth, Android media/camera, ringback, VPN
+- [x] Phase 6 DoD закрыт
 
-**Out**: финальный README.
+**Status**: done — docs PR #98 (base `4bf26a6`)
 
-**Phase 6 DoD**: production-инсталляция работает, веб-версия открыта по публичному URL, Android APK скачивается из Releases. Бюджет: **основной стек $0** (Supabase/CF/DuckDNS/GitHub); **VPS FirstVDS ~500–900 ₽/мес** — единственная платная часть MVP.
+**Out**: финальный README.md
+
+**Phase 6 DoD** — ✅ **закрыта**:
+- [x] Prod VDS + LiveKit + DuckDNS + UFW (#76–#84)
+- [x] Supabase prod secrets (#86)
+- [x] CF Pages web (#88)
+- [x] Android APK Releases v0.1.3 (#90, #97)
+- [x] Final README (#98)
+- [x] Бюджет: $0 стек + VPS FirstVDS ~500–900 ₽/мес
+
+**Pitfalls** (Step 6.8):
+- README не дублирует runbooks — ссылки на `infra/prod/`, `infra/pages/`
+- Troubleshooting — из manual QA (#92–#96 fixes)
+- Deferred: screen share prod web, Play Store, iOS
 
 ---
 

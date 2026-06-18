@@ -79,3 +79,5 @@ CF Dashboard → **Settings → Environment variables → Production**:
 
 - GitHub Actions → `cloudflare/pages-action` (CI deploy)
 - Custom domain на DuckDNS
+
+> Troubleshooting (Auth, ringback, camera, VPN) — см. [README.md §Troubleshooting](../../README.md#troubleshooting).
