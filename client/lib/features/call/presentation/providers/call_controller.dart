@@ -83,6 +83,27 @@ class CallController extends _$CallController {
     state = CallStateEnded(outcome: outcome, durationSec: durationSec);
   }
 
+  void _endAfterRoomDisconnect() {
+    final durationSec = _computeDuration();
+    final outcome = switch (state) {
+      CallStateActive() => CallOutcome.accepted,
+      CallStateOutgoing() => CallOutcome.cancelled,
+      CallStateConnecting() => CallOutcome.missed,
+      _ => CallOutcome.missed,
+    };
+    _cleanup();
+    state = CallStateEnded(outcome: outcome, durationSec: durationSec);
+  }
+
+  void _handleSetupFailure({required bool isCallee}) {
+    if (state is CallStateOutgoing || _currentInvitationId != null) {
+      _setEnded(isCallee ? CallOutcome.missed : CallOutcome.cancelled);
+      return;
+    }
+    _cleanup();
+    state = const CallStateError(message: callConnectionLostMessageId);
+  }
+
   Future<void> startCall({
     required String receiverId,
     required bool video,
@@ -117,9 +138,11 @@ class CallController extends _$CallController {
       );
     } on CallBusyException {
       _setEnded(CallOutcome.busy);
-    } catch (e) {
-      _cleanup();
-      state = CallStateError(message: e.toString());
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[CallController] startCall failed: $e\n$st');
+      }
+      _handleSetupFailure(isCallee: false);
     }
   }
 
@@ -145,9 +168,14 @@ class CallController extends _$CallController {
         video: inv.hasVideo,
         enableLocalCamera: false,
       );
-    } catch (e) {
-      _cleanup();
-      state = CallStateError(message: e.toString());
+      if (state is CallStateConnecting) {
+        _setEnded(CallOutcome.missed);
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('[CallController] accept failed: $e\n$st');
+      }
+      _handleSetupFailure(isCallee: true);
     }
   }
 
@@ -391,13 +419,19 @@ class CallController extends _$CallController {
 
     _onParticipantDisconnected =
         room.events.on<ParticipantDisconnectedEvent>((event) {
-      hangup();
+      final current = state;
+      if (current is CallStateActive) {
+        unawaited(hangup());
+      } else if (current is CallStateConnecting) {
+        _setEnded(CallOutcome.missed);
+      } else if (current is CallStateOutgoing) {
+        _setEnded(CallOutcome.cancelled);
+      }
     });
 
     _onRoomDisconnected = room.events.on<RoomDisconnectedEvent>((event) {
-      final durationSec = _computeDuration();
-      _cleanup();
-      state = CallStateEnded(outcome: CallOutcome.accepted, durationSec: durationSec);
+      if (_hangupInProgress) return;
+      _endAfterRoomDisconnect();
     });
 
     _subscribeRoomMedia(room);

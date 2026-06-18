@@ -530,6 +530,12 @@ abstract class AppLocalizations {
   /// **'Microphone or camera permission is required for calls'**
   String get callMediaPermissionRequired;
 
+  /// Error when the call drops due to network or server disconnect
+  ///
+  /// In en, this message translates to:
+  /// **'Connection lost'**
+  String get callConnectionLost;
+
   /// Error when microphone permission was denied
   ///
   /// In en, this message translates to:

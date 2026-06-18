@@ -12,6 +12,8 @@ import 'package:vibecall/features/chat/presentation/providers/total_unread_chat_
 import 'package:vibecall/features/chat/presentation/providers/unread_counts_by_peer_user_id.dart';
 import 'package:vibecall/features/chat/presentation/widgets/chat_unread_badge.dart';
 import 'package:vibecall/features/contacts/data/contacts_repository.dart';
+import 'package:vibecall/features/contacts/domain/contact_lists.dart';
+import 'package:vibecall/features/contacts/presentation/providers/contact_tab_badges_controller.dart';
 import 'package:vibecall/features/contacts/presentation/providers/contacts_controller.dart';
 import 'package:vibecall/features/presence/presentation/providers/presence_controller.dart';
 import 'package:vibecall/features/presence/presentation/widgets/online_indicator.dart';
@@ -32,12 +34,31 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(_onTabChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _markCurrentTabSeen());
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _onTabChanged() {
+    if (_tabController.indexIsChanging) return;
+    _markCurrentTabSeen();
+  }
+
+  void _markCurrentTabSeen() {
+    final contacts = ref.read(contactsControllerProvider).value;
+    final currentUserId = ref.read(contactsRepositoryProvider).currentUserId;
+    if (contacts == null) return;
+    ref.read(contactTabBadgesControllerProvider.notifier).markTabSeen(
+          ContactTabKind.fromIndex(_tabController.index),
+          contacts,
+          currentUserId,
+        );
   }
 
   @override
@@ -48,6 +69,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen>
     final currentUserId = repo.currentUserId;
     final onlineUserIds = ref.watch(presenceControllerProvider);
     final unreadTotal = ref.watch(totalUnreadChatCountProvider);
+    final tabBadges = ref.watch(contactTabBadgesControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -65,9 +87,9 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen>
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: l10n.contactsTab),
-            Tab(text: l10n.incomingTab),
-            Tab(text: l10n.outgoingTab),
+            _ContactTab(label: l10n.contactsTab, count: tabBadges.acceptedUnseen),
+            _ContactTab(label: l10n.incomingTab, count: tabBadges.incomingUnseen),
+            _ContactTab(label: l10n.outgoingTab, count: tabBadges.outgoingUnseen),
           ],
         ),
       ),
@@ -85,36 +107,27 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen>
           Expanded(
             child: contactsAsync.when(
               data: (contacts) {
-                final accepted =
-                    contacts.where((c) => c.status == 'accepted').toList();
-                final incoming = contacts
-                    .where((c) =>
-                        c.status == 'pending' && c.contactId == currentUserId)
-                    .toList();
-                final outgoing = contacts
-                    .where((c) =>
-                        c.status == 'pending' && c.userId == currentUserId)
-                    .toList();
+                final partitioned = partitionContacts(contacts, currentUserId);
 
                   return TabBarView(
                     controller: _tabController,
                     children: [
                       _ContactList(
-                        contacts: accepted,
+                        contacts: partitioned.accepted,
                         repo: repo,
                         onlineUserIds: onlineUserIds,
                         showRemove: true,
                         showCall: true,
                       ),
                       _ContactList(
-                        contacts: incoming,
+                        contacts: partitioned.incoming,
                         repo: repo,
                         onlineUserIds: onlineUserIds,
                         showAccept: true,
                         showReject: true,
                       ),
                       _ContactList(
-                        contacts: outgoing,
+                        contacts: partitioned.outgoing,
                         repo: repo,
                         onlineUserIds: onlineUserIds,
                         showCancel: true,
@@ -126,6 +139,34 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen>
               error: (e, st) => Center(child: Text(e.toString())),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContactTab extends StatelessWidget {
+  final String label;
+  final int count;
+
+  const _ContactTab({required this.label, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    return Tab(
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(top: count > 0 ? 10 : 0),
+            child: Text(label),
+          ),
+          if (count > 0)
+            Positioned(
+              top: 0,
+              child: ChatUnreadCountLabel(count: count),
+            ),
         ],
       ),
     );

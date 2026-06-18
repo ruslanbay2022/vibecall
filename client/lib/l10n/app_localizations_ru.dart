@@ -243,6 +243,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Для звонков нужны разрешения на микрофон и камеру';
 
   @override
+  String get callConnectionLost => 'Соединение прервано';
+
+  @override
   String get callMicPermissionRequired =>
       'Для звонков нужно разрешение на микрофон';
 

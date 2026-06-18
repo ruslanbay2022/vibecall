@@ -287,6 +287,7 @@ class _ErrorView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final displayMessage = switch (message) {
       callMediaPermissionDeniedMessageId => l10n.callMediaPermissionRequired,
+      callConnectionLostMessageId => l10n.callConnectionLost,
       _ => message,
     };
     return Center(

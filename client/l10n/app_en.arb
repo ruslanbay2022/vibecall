@@ -323,6 +323,10 @@
   "@callMediaPermissionRequired": {
     "description": "Error when mic/camera permission was denied before or during a call"
   },
+  "callConnectionLost": "Connection lost",
+  "@callConnectionLost": {
+    "description": "Error when the call drops due to network or server disconnect"
+  },
   "callMicPermissionRequired": "Microphone permission is required for calls",
   "@callMicPermissionRequired": {
     "description": "Error when microphone permission was denied"
